@@ -51,6 +51,40 @@ public sealed class AppStoreConnectClient : IAppStoreConnectClient, IDisposable
     }
 
     /// <summary>
+    /// Builds a client from fastlane's App Store Connect <c>api_key.json</c> shape
+    /// <c>{ "key_id", "issuer_id", "key" }</c> where <c>key</c> is the .p8 PEM.
+    /// Returns null (never throws) if the file is missing or unparseable.
+    /// </summary>
+    public static AppStoreConnectClient? FromKeyFile(string apiKeyJsonPath)
+    {
+        try
+        {
+            if (!File.Exists(apiKeyJsonPath))
+            {
+                return null;
+            }
+
+            using var doc = JsonDocument.Parse(File.ReadAllText(apiKeyJsonPath));
+            var root = doc.RootElement;
+
+            var keyId = root.TryGetProperty("key_id", out var kid) ? kid.GetString() : null;
+            var issuerId = root.TryGetProperty("issuer_id", out var iss) ? iss.GetString() : null;
+            var pem = root.TryGetProperty("key", out var k) ? k.GetString() : null;
+
+            if (keyId is null || issuerId is null || string.IsNullOrWhiteSpace(pem))
+            {
+                return null;
+            }
+
+            return new AppStoreConnectClient(pem, keyId, issuerId);
+        }
+        catch (Exception ex) when (ex is JsonException or IOException or CryptographicException or ArgumentException or UnauthorizedAccessException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
     /// Test seam: an instance backed by an ephemeral P-256 key (so JWT creation works)
     /// and a canned-response handler. Auth is irrelevant for canned responses.
     /// </summary>
