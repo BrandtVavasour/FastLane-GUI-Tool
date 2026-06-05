@@ -40,9 +40,19 @@ Update this as each phase lands. See `claude.md` for goals/architecture.
   fastlane's own view of the real VendingMachine iOS lanes), real `ProcessPtyFactory` streaming,
   real Keychain roundtrip with special chars. GitHub Actions CI (`macos-latest`, builds+tests the
   main solution only), `readme.md`, MIT `license.txt`.
-- 🔨 **Final pass.** Simon-standard cleanup (remove unused JWT package pins, tidy `Task.Run` hop),
-  add a multi-versionCode MapTracks test, UI snapshot tests if feasible, full end-to-end review,
-  flip claude.md/PROGRESS status to complete.
+- ✅ **Final pass.** Removed unused package pins (JWT, DI container); tidied store-status
+  kickoff; added multi-versionCode MapTracks test; **wired Preflight into the run path** and
+  disabled run buttons while a run is in flight (both with tests); full end-to-end review →
+  SHIP-READY. UI **pixel snapshots not feasible** in the build sandbox (no headless Skia render
+  backend / `IPlatformRenderInterface`); construct-without-throw headless tests + 3 real
+  integration tests cover the UI paths instead — revisit pixel snapshots on a real Mac.
+
+## ✅ Sub-project #1 COMPLETE — runnable & reviewed (2026-06-06)
+All planned scope delivered: launcher grid + icons, lane detection, run with live output +
+preflight + stop + one-run gating, env files + Keychain secrets + secret-only gating, per-lane
+store version (iOS + Android) with graceful unavailable. Remaining verification needs the owner's
+Mac (visible window + a real deploy) and real ASC `.p8` / Play service-account JSON for live
+store data. Next: sub-project #2 (lane scaffolding).
 
 ## Cross-cutting (loop requirements)
 
@@ -54,7 +64,8 @@ Update this as each phase lands. See `claude.md` for goals/architecture.
 - ⬜ Final Simon-standard cleanup pass (sealed/records/file-scoped/naming) + full review.
 
 ## Test count (keep current)
-- After store-status UI wiring: **82** passing (Core 69 + App 13), build 0 warnings (Debug + Release).
+- Final: **85** passing (Core 70 + App 15) + **3** integration tests (real fastlane/PTY/Keychain),
+  build 0 warnings (Debug + Release, both solutions).
 
 ## Verification still needing the human
 - Visible window appearance + a real `bundle exec fastlane` run on the owner's Mac.

@@ -11,8 +11,11 @@ Built with Avalonia on .NET 10.
 
 - **Launcher grid** — Android-Studio-style projects/recents grid; opens any Flutter root
   and detects its iOS/Android fastlane setups (and launcher icons).
-- **Lane runner** — runs lanes with **live streaming output** and supports interactive
-  prompts (2FA, passphrases) via the process backend.
+- **Lane runner** — runs lanes with **live streaming output**, a preflight check
+  (Gemfile/bundler) before launch, one-run-at-a-time gating, and stop. Uses a pipe-based
+  process backend; interactive prompts (2FA, match passphrase) are not fully supported —
+  configure credential-based auth (ASC API key, `MATCH_PASSWORD`, Play service account)
+  so lanes run non-interactively.
 - **Keychain secrets** — per-project secrets stored in the macOS login Keychain;
   resolved into the lane environment at run time.
 - **Per-lane store version** — surfaces the current App Store Connect / Google Play

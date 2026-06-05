@@ -112,6 +112,22 @@ Source spec & plan (in the sibling VendingMachine repo's docs):
 
 ## Current status
 
-See **`PROGRESS.md`** for the live checklist. As of this writing: Phases 0–7 complete and
-reviewed (full domain layer + launcher + project detail + run panel); Phases 8–10
-(store status iOS/Android, IntegrationTests/CI/docs) in progress.
+**Sub-project #1 is COMPLETE and reviewed (SHIP-READY) as of 2026-06-06.** All planned scope
+is delivered: launcher grid + icons, lane detection, run with live output + **preflight** + stop
++ one-run gating, env files + Keychain secrets + secret-only gating, per-lane store version
+(iOS + Android) with graceful unavailable, separate IntegrationTests solution + CI + docs.
+**85 unit tests + 3 real integration tests** pass; build is 0/0 (Debug + Release, both solutions).
+See **`PROGRESS.md`** for the phase-by-phase log. Next up is sub-project #2 (lane scaffolding).
+
+Still needs the owner's Mac for manual verification: the visible window appearance and an actual
+`fastlane` run; and real ASC `.p8` + Play service-account JSON for live store-version data.
+
+### Known limitations / conventions to keep in mind
+- **Preflight** (Gemfile/bundler) now runs before a lane launches; failures show in the output
+  panel and block the run.
+- **`LaneDestination.For` hardcodes lane names** → store destination: iOS `beta`→TestFlight,
+  `release`→App Store; Android `internal`/`beta`/`production`→matching Play tracks. Projects
+  using other release-lane names get `Destination.None` (no store line — graceful but silent).
+- **UI pixel snapshots** aren't tested (the build sandbox has no headless Skia render backend);
+  views are covered by construct-without-throw headless tests + the integration suite. The
+  capture harness (flip `UseHeadlessDrawing`, `CaptureRenderedFrame`) is noted for a real Mac.
