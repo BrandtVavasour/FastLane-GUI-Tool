@@ -25,14 +25,19 @@ Update this as each phase lands. See `claude.md` for goals/architecture.
   one-run gating), detail view, run panel, SecretsDialog, navigation.
   - Real run backend `ProcessPtyFactory` (replaces unavailable Pty.Net).
   - Fixed: only genuine secrets gate runs (`SecretEnvFilter`) — control vars don't block.
-- 🔨 **Phase 8 — Store status (iOS / App Store Connect).** LaneDestination mapping,
-  AppStoreConnectClient (ES256 JWT, TestFlight + App Store version reads), StoreStatusProvider
-  with cache + graceful "unavailable". Unit-tested vs recorded JSON.
-- ⬜ **Phase 9 — Store status (Android / Play).** PlayStoreClient (service-account OAuth2,
-  track versions), wire Android branch into StoreStatusProvider.
+- ✅ **Phase 8 — Store status (iOS / App Store Connect) [Core].** LaneDestination mapping,
+  Destination/StoreStatus models, AppStoreConnectClient (ES256 JWT + pure version mappers),
+  StoreStatusProvider (cache successful-only, graceful "unavailable"). Unit-tested vs recorded JSON.
+- ✅ **Phase 9 — Store status (Android / Play) [Core].** PlayStoreClient (service-account auth,
+  pure `MapTracks`), provider wired for Android. (Google.Apis.AndroidPublisher.v3 pinned to
+  1.69.0.3710 — 1.68.0.3675 wasn't on the feed.)
+- 🔨 **Store status — UI wiring.** Show per-lane store-status line in ProjectDetailView
+  (async, non-blocking, "unavailable" graceful); construct ASC/Play clients from the user's
+  configured credentials. (Deferred from Phases 8/9 to wire iOS+Android together.)
 - ⬜ **Phase 10 — IntegrationTests + CI + docs.** Separate `.slnx` (real `fastlane lanes`
-  vs parser, PTY no-op, Keychain roundtrip), GitHub Actions CI, readme/license, UI snapshot
-  tests if feasible.
+  vs parser, PTY no-op, Keychain roundtrip), GitHub Actions CI, readme/license.
+- ⬜ **Final pass.** Simon-standard cleanup (sealed/records/file-scoped/naming, remove unused
+  package pins), UI snapshot tests if feasible, full end-to-end review.
 
 ## Cross-cutting (loop requirements)
 
@@ -44,7 +49,7 @@ Update this as each phase lands. See `claude.md` for goals/architecture.
 - ⬜ Final Simon-standard cleanup pass (sealed/records/file-scoped/naming) + full review.
 
 ## Test count (keep current)
-- After Phase 7: **43** passing (Core 33 + App 10), build 0 warnings.
+- After Phase 9: **71** passing (Core 61 + App 10), build 0 warnings.
 
 ## Verification still needing the human
 - Visible window appearance + a real `bundle exec fastlane` run on the owner's Mac.
