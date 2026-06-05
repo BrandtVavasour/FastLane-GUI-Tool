@@ -1,0 +1,32 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          # global.json pins the SDK (allowPrerelease: true); 10.0.x lets the
+          # installer pick up a matching feature band.
+          dotnet-version: 10.0.x
+
+      - name: Build
+        run: dotnet build LaunchFast.slnx
+
+      - name: Test
+        run: dotnet test LaunchFast.slnx
+
+      # NOTE: the IntegrationTests solution is intentionally NOT run in CI. Those
+      # tests drive the real fastlane CLI, the macOS login keychain, and a checked-out
+      # reference project — none of which are available (or safe with credentials) on
+      # a hosted runner. They are authored to Assert.Ignore when prerequisites are
+      # missing and are run on the owner's Mac. To run them locally:
+      #   dotnet test IntegrationTests/IntegrationTests.slnx
