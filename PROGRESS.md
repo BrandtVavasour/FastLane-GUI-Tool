@@ -31,9 +31,10 @@ Update this as each phase lands. See `claude.md` for goals/architecture.
 - ✅ **Phase 9 — Store status (Android / Play) [Core].** PlayStoreClient (service-account auth,
   pure `MapTracks`), provider wired for Android. (Google.Apis.AndroidPublisher.v3 pinned to
   1.69.0.3710 — 1.68.0.3675 wasn't on the feed.)
-- 🔨 **Store status — UI wiring.** Show per-lane store-status line in ProjectDetailView
-  (async, non-blocking, "unavailable" graceful); construct ASC/Play clients from the user's
-  configured credentials. (Deferred from Phases 8/9 to wire iOS+Android together.)
+- ✅ **Store status — UI wiring.** Per-lane store-status line in ProjectDetailView (async,
+  non-blocking, graceful "unavailable") + Refresh button. `AppfileReader` (bundle id /
+  package name / json_key_file), `AppStoreConnectClient.FromKeyFile`, `StoreStatusFactory`
+  (disk credential discovery, never throws), wired via ShellViewModel. Reviewed/approved.
 - ⬜ **Phase 10 — IntegrationTests + CI + docs.** Separate `.slnx` (real `fastlane lanes`
   vs parser, PTY no-op, Keychain roundtrip), GitHub Actions CI, readme/license.
 - ⬜ **Final pass.** Simon-standard cleanup (sealed/records/file-scoped/naming, remove unused
@@ -49,7 +50,7 @@ Update this as each phase lands. See `claude.md` for goals/architecture.
 - ⬜ Final Simon-standard cleanup pass (sealed/records/file-scoped/naming) + full review.
 
 ## Test count (keep current)
-- After Phase 9: **71** passing (Core 61 + App 10), build 0 warnings.
+- After store-status UI wiring: **82** passing (Core 69 + App 13), build 0 warnings (Debug + Release).
 
 ## Verification still needing the human
 - Visible window appearance + a real `bundle exec fastlane` run on the owner's Mac.
