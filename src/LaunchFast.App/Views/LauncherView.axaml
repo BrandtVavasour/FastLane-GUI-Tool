@@ -1,0 +1,116 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:LaunchFast.App.ViewModels"
+             xmlns:conv="using:LaunchFast.App.Converters"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="500"
+             x:Class="LaunchFast.App.Views.LauncherView"
+             x:DataType="vm:LauncherViewModel"
+             x:CompileBindings="True">
+
+    <UserControl.Resources>
+        <conv:PathToBitmapConverter x:Key="PathToBitmap" />
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <!-- Badge pill -->
+        <Style Selector="Border.badge">
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="8,2" />
+            <Setter Property="Margin" Value="0,0,6,0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Border.badge > TextBlock">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+        <Style Selector="Border.ios">
+            <Setter Property="Background" Value="#0A84FF" />
+        </Style>
+        <Style Selector="Border.android">
+            <Setter Property="Background" Value="#3DDC84" />
+        </Style>
+        <Style Selector="Border.match">
+            <Setter Property="Background" Value="#8E8E93" />
+        </Style>
+        <Style Selector="Border.card">
+            <Setter Property="Width" Value="200" />
+            <Setter Property="Margin" Value="10" />
+            <Setter Property="Padding" Value="16" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+    </UserControl.Styles>
+
+    <DockPanel>
+        <!-- Toolbar -->
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal"
+                    Spacing="8" Margin="16,16,16,8">
+            <Button Content="Open project…" Click="OnOpenProject" />
+            <Button Content="Register workspace…" Click="OnRegisterWorkspace" />
+        </StackPanel>
+
+        <ScrollViewer>
+            <ItemsControl ItemsSource="{Binding Cards}" Margin="6">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:ProjectCardViewModel">
+                        <Border Classes="card">
+                            <StackPanel Spacing="8">
+                                <!-- Icon tile -->
+                                <Border Width="72" Height="72"
+                                        CornerRadius="16"
+                                        HorizontalAlignment="Center"
+                                        Background="{DynamicResource SystemControlBackgroundBaseLowBrush}">
+                                    <Panel>
+                                        <!-- Fallback glyph shown when no icon -->
+                                        <TextBlock Text="📱" FontSize="32"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   IsVisible="{Binding IconPath, Converter={x:Static ObjectConverters.IsNull}}" />
+                                        <Image Width="64" Height="64"
+                                               Stretch="UniformToFill"
+                                               Source="{Binding IconPath, Converter={StaticResource PathToBitmap}}" />
+                                    </Panel>
+                                </Border>
+
+                                <TextBlock Text="{Binding Name}"
+                                           FontWeight="SemiBold" FontSize="15"
+                                           TextAlignment="Center"
+                                           TextTrimming="CharacterEllipsis"
+                                           HorizontalAlignment="Center" />
+
+                                <TextBlock Text="{Binding Version}"
+                                           Opacity="0.7" FontSize="12"
+                                           TextAlignment="Center"
+                                           HorizontalAlignment="Center"
+                                           IsVisible="{Binding Version, Converter={x:Static ObjectConverters.IsNotNull}}" />
+
+                                <!-- Badge pills -->
+                                <WrapPanel HorizontalAlignment="Center">
+                                    <Border Classes="badge ios" IsVisible="{Binding HasIos}">
+                                        <TextBlock Text="iOS" />
+                                    </Border>
+                                    <Border Classes="badge android" IsVisible="{Binding HasAndroid}">
+                                        <TextBlock Text="Android" />
+                                    </Border>
+                                    <Border Classes="badge match" IsVisible="{Binding HasMatch}">
+                                        <TextBlock Text="match" />
+                                    </Border>
+                                </WrapPanel>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>

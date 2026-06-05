@@ -4,7 +4,7 @@ using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
 using System.Linq;
 using Avalonia.Markup.Xaml;
-using LaunchFast.App.ViewModels;
+using LaunchFast.App.Services;
 using LaunchFast.App.Views;
 
 namespace LaunchFast.App;
@@ -20,9 +20,11 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
+            var launcher = AppServices.CreateLauncher();
+            launcher.Load();
             desktop.MainWindow = new MainWindow
             {
-                DataContext = new MainWindowViewModel(),
+                DataContext = launcher,
             };
         }
 
