@@ -77,7 +77,7 @@ public sealed class StoreStatusProviderTests
     }
 
     [Test]
-    public async Task Android_destinations_are_unavailable_for_now()
+    public async Task Android_destinations_are_unavailable_when_no_play_client()
     {
         var provider = new StoreStatusProvider(new CountingClient());
 
@@ -87,6 +87,53 @@ public sealed class StoreStatusProviderTests
         {
             Assert.That(status.Available, Is.False);
             Assert.That(status.Destination, Is.EqualTo(Destination.PlayInternal));
+        });
+    }
+
+    [Test]
+    public async Task Android_lane_uses_play_client()
+    {
+        var play = new CountingPlayClient();
+        var provider = new StoreStatusProvider(asc: null, play: play);
+
+        var status = await provider.GetAsync("com.example.app", Lane("beta", Platform.Android));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(status.Available, Is.True);
+            Assert.That(status.Destination, Is.EqualTo(Destination.PlayBeta));
+            Assert.That(status.Line, Is.EqualTo("1.4.0 (15)"));
+        });
+    }
+
+    [Test]
+    public async Task Android_success_is_cached()
+    {
+        var play = new CountingPlayClient();
+        var provider = new StoreStatusProvider(asc: null, play: play);
+
+        var first = await provider.GetAsync("com.example.app", Lane("internal", Platform.Android));
+        var second = await provider.GetAsync("com.example.app", Lane("internal", Platform.Android));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(first.Available, Is.True);
+            Assert.That(second, Is.EqualTo(first));
+            Assert.That(play.Calls, Is.EqualTo(1));
+        });
+    }
+
+    [Test]
+    public async Task Android_throwing_play_client_is_unavailable()
+    {
+        var provider = new StoreStatusProvider(asc: null, play: new ThrowingPlayClient());
+
+        var status = await provider.GetAsync("com.example.app", Lane("production", Platform.Android));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(status.Available, Is.False);
+            Assert.That(status.Destination, Is.EqualTo(Destination.PlayProduction));
         });
     }
 
@@ -138,5 +185,22 @@ public sealed class StoreStatusProviderTests
             Calls++;
             return Task.FromResult(new StoreStatus(destination, true, "1.0.0 live", null));
         }
+    }
+
+    private sealed class CountingPlayClient : IPlayStoreClient
+    {
+        public int Calls { get; private set; }
+
+        public Task<StoreStatus> GetStatusAsync(string packageName, Destination destination, CancellationToken ct = default)
+        {
+            Calls++;
+            return Task.FromResult(new StoreStatus(destination, true, "1.4.0 (15)", null));
+        }
+    }
+
+    private sealed class ThrowingPlayClient : IPlayStoreClient
+    {
+        public Task<StoreStatus> GetStatusAsync(string packageName, Destination destination, CancellationToken ct = default) =>
+            throw new InvalidOperationException("boom");
     }
 }

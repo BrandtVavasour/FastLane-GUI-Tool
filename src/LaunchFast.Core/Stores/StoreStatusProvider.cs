@@ -12,10 +12,14 @@ namespace LaunchFast.Core.Stores;
 public sealed class StoreStatusProvider
 {
     private readonly IAppStoreConnectClient? _asc;
+    private readonly IPlayStoreClient? _play;
     private readonly ConcurrentDictionary<(string BundleId, Destination Destination), StoreStatus> _cache = new();
 
-    // Phase 9 will add an IPlayStoreClient? play parameter.
-    public StoreStatusProvider(IAppStoreConnectClient? asc) => _asc = asc;
+    public StoreStatusProvider(IAppStoreConnectClient? asc, IPlayStoreClient? play = null)
+    {
+        _asc = asc;
+        _play = play;
+    }
 
     public async Task<StoreStatus> GetAsync(string bundleId, Lane lane, CancellationToken ct = default)
     {
@@ -60,8 +64,23 @@ public sealed class StoreStatusProvider
                     return StoreStatus.Unavailable(destination);
                 }
 
+            case Destination.PlayInternal:
+            case Destination.PlayBeta:
+            case Destination.PlayProduction:
+                if (_play is null)
+                {
+                    return StoreStatus.Unavailable(destination);
+                }
+                try
+                {
+                    return await _play.GetStatusAsync(bundleId, destination, ct).ConfigureAwait(false);
+                }
+                catch
+                {
+                    return StoreStatus.Unavailable(destination);
+                }
+
             default:
-                // Android destinations: filled in by Phase 9.
                 return StoreStatus.Unavailable(destination);
         }
     }
