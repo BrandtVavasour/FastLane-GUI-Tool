@@ -108,4 +108,66 @@ public class ProjectDetailViewModelTests
         vm.RunLaneCommand.Execute(second);
         Assert.That(factory.Last, Is.SameAs(firstProcess));
     }
+
+    [Test]
+    public void Run_is_blocked_by_failed_preflight_when_no_gemfile()
+    {
+        var project = TestProjects.MakeFlutterProjectWithRealFastfiles();
+        // Remove the iOS Gemfile so preflight fails for the iOS platform dir.
+        File.Delete(Path.Combine(project.Path, "ios", "Gemfile"));
+
+        var factory = new RecordingPtyFactory();
+
+        var probe = ProjectDetailViewModel.ForTest(project);
+        probe.Load();
+        var secrets = new FakeSecretStore().Satisfy(project.Path, probe.MissingSecrets);
+
+        var vm = new ProjectDetailViewModel(project, secrets, factory);
+        vm.Load();
+
+        // Gating passes (all secrets satisfied) but preflight should block.
+        Assert.That(vm.MissingSecrets, Is.Empty);
+
+        var betaLane = vm.IosLanes.First(l => l.Name == "beta");
+        vm.RunLaneCommand.Execute(betaLane);
+
+        // No process was spawned, no running state set.
+        Assert.That(factory.Command, Is.Null);
+        Assert.That(factory.Last, Is.Null);
+        Assert.That(vm.IsRunning, Is.False);
+
+        // The user sees a clear preflight-failure message mentioning Gemfile.
+        Assert.That(vm.Run.Lines.Any(l => l.Contains("Preflight") && l.Contains("Gemfile")), Is.True);
+    }
+
+    [Test]
+    public void Run_buttons_disabled_while_running()
+    {
+        var project = TestProjects.MakeFlutterProjectWithRealFastfiles();
+        var factory = new RecordingPtyFactory();
+
+        var probe = ProjectDetailViewModel.ForTest(project);
+        probe.Load();
+        var secrets = new FakeSecretStore().Satisfy(project.Path, probe.MissingSecrets);
+
+        var vm = new ProjectDetailViewModel(project, secrets, factory);
+        vm.Load();
+
+        Assert.That(vm.CanRunIos, Is.True);
+        Assert.That(vm.CanRunAndroid, Is.True);
+
+        var betaLane = vm.IosLanes.First(l => l.Name == "beta");
+        vm.RunLaneCommand.Execute(betaLane);
+
+        // While the fake process is held running, run buttons are disabled.
+        Assert.That(vm.Run.IsRunning, Is.True);
+        Assert.That(vm.CanRunIos, Is.False);
+        Assert.That(vm.CanRunAndroid, Is.False);
+
+        // Once the process finishes, buttons re-enable.
+        factory.Finish(0);
+        Assert.That(vm.Run.IsRunning, Is.False);
+        Assert.That(vm.CanRunIos, Is.True);
+        Assert.That(vm.CanRunAndroid, Is.True);
+    }
 }

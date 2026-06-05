@@ -85,8 +85,8 @@ public partial class ProjectDetailViewModel : ObservableObject
     // MVP: both platforms are gated on the SAME (union) missing-secret set for
     // simplicity. Per-platform gating could split the required set later.
     public bool CanRun => !HasMissingSecrets && !IsRunning;
-    public bool CanRunIos => IosLanes.Count > 0 && !HasMissingSecrets;
-    public bool CanRunAndroid => AndroidLanes.Count > 0 && !HasMissingSecrets;
+    public bool CanRunIos => IosLanes.Count > 0 && !HasMissingSecrets && !IsRunning;
+    public bool CanRunAndroid => AndroidLanes.Count > 0 && !HasMissingSecrets && !IsRunning;
 
     public void Load()
     {
@@ -244,6 +244,18 @@ public partial class ProjectDetailViewModel : ObservableObject
     {
         if (lane is null || IsRunning) return;
 
+        // Preflight: fastlane runs via `bundle exec`, so we need both a Gemfile
+        // in the platform dir and bundler on PATH. Surface a friendly message in
+        // the output panel and bail out before touching running state.
+        var gemfile = Preflight.CheckGemfile(lane.PlatformDir);
+        var bundler = Preflight.CheckTool("bundle");
+        if (!gemfile.Ok || !bundler.Ok)
+        {
+            var failure = !gemfile.Ok ? gemfile : bundler;
+            AppendLine($"⚠ Preflight failed: {failure.Message}");
+            return;
+        }
+
         var env = _resolver.BuildEnv(ProjectId, _required, _fromFiles);
 
         Run.Lines.Clear();
@@ -277,6 +289,13 @@ public partial class ProjectDetailViewModel : ObservableObject
     }
 
     void StopElapsedTimer() => _elapsedTimer?.Stop();
+
+    /// <summary>Appends a single line to the run output, marshalling to the UI thread.</summary>
+    void AppendLine(string line)
+    {
+        if (Dispatcher.UIThread.CheckAccess()) Run.Lines.Add(line);
+        else Dispatcher.UIThread.Post(() => Run.Lines.Add(line));
+    }
 
     void OnOutput(string line)
     {
