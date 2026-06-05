@@ -1,0 +1,29 @@
+{
+  "data": [
+    {
+      "type": "builds",
+      "id": "build-9999",
+      "attributes": {
+        "version": "17",
+        "uploadedDate": "2026-06-02T08:30:00-07:00",
+        "expirationDate": "2026-08-31T08:30:00-07:00",
+        "expired": false,
+        "processingState": "VALID"
+      }
+    },
+    {
+      "type": "builds",
+      "id": "build-8888",
+      "attributes": {
+        "version": "16",
+        "uploadedDate": "2026-05-20T08:30:00-07:00",
+        "expirationDate": "2026-08-18T08:30:00-07:00",
+        "expired": false,
+        "processingState": "VALID"
+      }
+    }
+  ],
+  "links": {
+    "self": "https://api.appstoreconnect.apple.com/v1/apps/123/builds?sort=-version&limit=1"
+  }
+}
