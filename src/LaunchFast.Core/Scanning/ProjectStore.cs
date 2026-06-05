@@ -12,9 +12,15 @@ public sealed class ProjectStore
     public ProjectStore(string file)
     {
         _file = file;
-        _data = File.Exists(file)
-            ? JsonSerializer.Deserialize<Data>(File.ReadAllText(file)) ?? new Data()
-            : new Data();
+        _data = Load(file);
+    }
+
+    static Data Load(string file)
+    {
+        if (!File.Exists(file)) return new Data();
+        var text = File.ReadAllText(file);
+        if (string.IsNullOrWhiteSpace(text)) return new Data();
+        return JsonSerializer.Deserialize<Data>(text) ?? new Data();
     }
 
     public static string DefaultPath =>

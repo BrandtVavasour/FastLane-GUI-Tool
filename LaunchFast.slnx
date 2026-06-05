@@ -9,4 +9,5 @@
   <Project Path="src/LaunchFast.Core/LaunchFast.Core.csproj" />
   <Project Path="src/LaunchFast.Core.Tests/LaunchFast.Core.Tests.csproj" />
   <Project Path="src/LaunchFast.App/LaunchFast.App.csproj" />
+  <Project Path="src/LaunchFast.App.Tests/LaunchFast.App.Tests.csproj" />
 </Solution>
