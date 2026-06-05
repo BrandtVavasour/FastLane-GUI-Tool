@@ -20,11 +20,11 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            var launcher = AppServices.CreateLauncher();
-            launcher.Load();
+            var shell = AppServices.CreateShell();
+            shell.Launcher.Load();
             desktop.MainWindow = new MainWindow
             {
-                DataContext = launcher,
+                DataContext = shell,
             };
         }
 

@@ -35,11 +35,12 @@
         <Style Selector="Border.match">
             <Setter Property="Background" Value="#8E8E93" />
         </Style>
-        <Style Selector="Border.card">
+        <Style Selector="Button.card">
             <Setter Property="Width" Value="200" />
             <Setter Property="Margin" Value="10" />
             <Setter Property="Padding" Value="16" />
             <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}" />
             <Setter Property="BorderThickness" Value="1" />
@@ -63,7 +64,9 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="vm:ProjectCardViewModel">
-                        <Border Classes="card">
+                        <Button Classes="card"
+                                Command="{Binding $parent[ItemsControl].((vm:LauncherViewModel)DataContext).OpenDetailCommand}"
+                                CommandParameter="{Binding}">
                             <StackPanel Spacing="8">
                                 <!-- Icon tile -->
                                 <Border Width="72" Height="72"
@@ -107,7 +110,7 @@
                                     </Border>
                                 </WrapPanel>
                             </StackPanel>
-                        </Border>
+                        </Button>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>

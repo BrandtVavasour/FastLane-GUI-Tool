@@ -6,12 +6,21 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
         x:Class="LaunchFast.App.Views.MainWindow"
-        x:DataType="vm:LauncherViewModel"
+        x:DataType="vm:ShellViewModel"
         x:CompileBindings="True"
         Width="900" Height="600"
         Icon="/Assets/avalonia-logo.ico"
         Title="LaunchFast">
 
-    <views:LauncherView />
+    <Window.DataTemplates>
+        <DataTemplate DataType="vm:LauncherViewModel">
+            <views:LauncherView />
+        </DataTemplate>
+        <DataTemplate DataType="vm:ProjectDetailViewModel">
+            <views:ProjectDetailView />
+        </DataTemplate>
+    </Window.DataTemplates>
+
+    <ContentControl Content="{Binding CurrentView}" />
 
 </Window>

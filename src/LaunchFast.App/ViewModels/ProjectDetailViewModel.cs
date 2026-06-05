@@ -25,6 +25,9 @@ public partial class ProjectDetailViewModel : ObservableObject
     IReadOnlyList<string> _required = [];
     IReadOnlyDictionary<string, string> _fromFiles = new Dictionary<string, string>();
 
+    DispatcherTimer? _elapsedTimer;
+    DateTime _runStarted;
+
     [GeneratedRegex("""ENV\[\s*['"](?<k>[A-Z0-9_]+)['"]""")]
     private static partial Regex EnvRefRegex();
 
@@ -42,6 +45,12 @@ public partial class ProjectDetailViewModel : ObservableObject
     /// </summary>
     public static ProjectDetailViewModel ForTest(Project project) =>
         new(project, new EmptySecretStore(), new NullPtyFactory());
+
+    /// <summary>Set by the shell; invoked by the Back command to return to the launcher.</summary>
+    public Action? GoBack { get; set; }
+
+    /// <summary>The secret store, exposed so the secrets dialog can write into it.</summary>
+    public ISecretStore Secrets => _secrets;
 
     public Project Project => _project;
     public string Name => _project.Name;
@@ -160,7 +169,30 @@ public partial class ProjectDetailViewModel : ObservableObject
         var handle = new LaneRunner(_ptyFactory).Run(lane.Lane, lane.PlatformDir, env, OnOutput);
         Run.Handle = handle;
         handle.Completed += OnCompleted;
+
+        StartElapsedTimer();
     }
+
+    void StartElapsedTimer()
+    {
+        // App-only: a ticking timer needs a dispatcher loop, absent in headless tests.
+        if (!Dispatcher.UIThread.CheckAccess()) return;
+
+        _runStarted = DateTime.UtcNow;
+        Run.Elapsed = "0:00";
+        _elapsedTimer ??= new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+        _elapsedTimer.Tick -= OnElapsedTick;
+        _elapsedTimer.Tick += OnElapsedTick;
+        _elapsedTimer.Start();
+    }
+
+    void OnElapsedTick(object? sender, EventArgs e)
+    {
+        var span = DateTime.UtcNow - _runStarted;
+        Run.Elapsed = $"{(int)span.TotalMinutes}:{span.Seconds:D2}";
+    }
+
+    void StopElapsedTimer() => _elapsedTimer?.Stop();
 
     void OnOutput(string line)
     {
@@ -183,6 +215,7 @@ public partial class ProjectDetailViewModel : ObservableObject
         {
             SetRunning(false);
             Run.Handle = null;
+            StopElapsedTimer();
         }
 
         if (Dispatcher.UIThread.CheckAccess()) Finish();
@@ -201,6 +234,9 @@ public partial class ProjectDetailViewModel : ObservableObject
 
     [RelayCommand]
     void Stop() => Run.Handle?.Stop();
+
+    [RelayCommand]
+    void Back() => GoBack?.Invoke();
 
     sealed class EmptySecretStore : ISecretStore
     {

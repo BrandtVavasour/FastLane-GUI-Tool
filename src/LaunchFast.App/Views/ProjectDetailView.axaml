@@ -1,0 +1,150 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:LaunchFast.App.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
+             x:Class="LaunchFast.App.Views.ProjectDetailView"
+             x:DataType="vm:ProjectDetailViewModel"
+             x:CompileBindings="True">
+
+    <UserControl.Styles>
+        <Style Selector="TextBlock.section">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Opacity" Value="0.6" />
+            <Setter Property="Margin" Value="0,8,0,4" />
+        </Style>
+        <Style Selector="Border.lane">
+            <Setter Property="Padding" Value="12" />
+            <Setter Property="Margin" Value="0,0,0,8" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+    </UserControl.Styles>
+
+    <DockPanel>
+        <!-- Header -->
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal"
+                    Spacing="12" Margin="16,16,16,8" VerticalAlignment="Center">
+            <Button Content="‹ Back" Command="{Binding BackCommand}" />
+            <TextBlock Text="{Binding Name}" FontSize="20" FontWeight="SemiBold"
+                       VerticalAlignment="Center" />
+            <TextBlock Text="{Binding Version}" Opacity="0.6"
+                       VerticalAlignment="Center" />
+        </StackPanel>
+
+        <!-- Secrets banner -->
+        <Border DockPanel.Dock="Top" Margin="16,0,16,8" Padding="12"
+                CornerRadius="8" Background="#33FF9500" BorderBrush="#FF9500"
+                BorderThickness="1"
+                IsVisible="{Binding HasMissingSecrets}">
+            <StackPanel Spacing="6">
+                <TextBlock Text="Missing secrets" FontWeight="SemiBold" />
+                <ItemsControl ItemsSource="{Binding MissingSecrets}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="x:String">
+                            <Border Background="#55000000" CornerRadius="6"
+                                    Padding="6,2" Margin="0,0,6,4">
+                                <TextBlock Text="{Binding}" FontFamily="monospace" FontSize="11" />
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <Button Content="Add secrets…" Click="OnAddSecrets"
+                        HorizontalAlignment="Left" Margin="0,4,0,0" />
+            </StackPanel>
+        </Border>
+
+        <!-- Run panel (dark) at the bottom -->
+        <Border DockPanel.Dock="Bottom" Background="#1E1E1E" Height="220"
+                Margin="16,8,16,16" CornerRadius="8">
+            <DockPanel Margin="12">
+                <!-- Footer: elapsed + current action + Stop -->
+                <Grid DockPanel.Dock="Bottom" ColumnDefinitions="Auto,*,Auto"
+                      Margin="0,8,0,0">
+                    <TextBlock Grid.Column="0" Text="{Binding Run.Elapsed}"
+                               Foreground="#9CDCFE" FontFamily="monospace"
+                               VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="1" Text="{Binding Run.CurrentAction}"
+                               Foreground="#CCCCCC" Margin="12,0"
+                               TextTrimming="CharacterEllipsis"
+                               VerticalAlignment="Center" />
+                    <Button Grid.Column="2" Content="Stop"
+                            Command="{Binding StopCommand}"
+                            IsEnabled="{Binding IsRunning}" />
+                </Grid>
+
+                <ScrollViewer>
+                    <ItemsControl ItemsSource="{Binding Run.Lines}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <TextBlock Text="{Binding}" FontFamily="monospace"
+                                           FontSize="12" Foreground="#D4D4D4"
+                                           TextWrapping="Wrap" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+
+        <!-- Lane sections -->
+        <ScrollViewer Margin="16,0">
+            <StackPanel>
+                <TextBlock Text="iOS" Classes="section"
+                           IsVisible="{Binding IosLanes.Count}" />
+                <ItemsControl ItemsSource="{Binding IosLanes}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:LaneViewModel">
+                            <Border Classes="lane">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <StackPanel Grid.Column="0" Spacing="2">
+                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                                        <TextBlock Text="{Binding Description}" Opacity="0.7"
+                                                   FontSize="12" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                    <Button Grid.Column="1" Content="Run"
+                                            VerticalAlignment="Center"
+                                            Command="{Binding $parent[ItemsControl].((vm:ProjectDetailViewModel)DataContext).RunLaneCommand}"
+                                            CommandParameter="{Binding}"
+                                            IsEnabled="{Binding $parent[ItemsControl].((vm:ProjectDetailViewModel)DataContext).CanRunIos}" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <TextBlock Text="Android" Classes="section"
+                           IsVisible="{Binding AndroidLanes.Count}" />
+                <ItemsControl ItemsSource="{Binding AndroidLanes}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:LaneViewModel">
+                            <Border Classes="lane">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <StackPanel Grid.Column="0" Spacing="2">
+                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                                        <TextBlock Text="{Binding Description}" Opacity="0.7"
+                                                   FontSize="12" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                    <Button Grid.Column="1" Content="Run"
+                                            VerticalAlignment="Center"
+                                            Command="{Binding $parent[ItemsControl].((vm:ProjectDetailViewModel)DataContext).RunLaneCommand}"
+                                            CommandParameter="{Binding}"
+                                            IsEnabled="{Binding $parent[ItemsControl].((vm:ProjectDetailViewModel)DataContext).CanRunAndroid}" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>
