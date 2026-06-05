@@ -1,7 +1,23 @@
 using LaunchFast.Core.Env;
+using LaunchFast.Core.Models;
 using LaunchFast.Core.Running;
+using LaunchFast.Core.Stores;
 
 namespace LaunchFast.App.Tests;
+
+/// <summary>Fake App Store Connect client returning a canned status per call.</summary>
+public sealed class FakeAscClient(StoreStatus status) : IAppStoreConnectClient
+{
+    public Task<StoreStatus> GetStatusAsync(string bundleId, Destination destination, CancellationToken ct = default) =>
+        Task.FromResult(status with { Destination = destination });
+}
+
+/// <summary>Fake Play client returning a canned status per call.</summary>
+public sealed class FakePlayClient(StoreStatus status) : IPlayStoreClient
+{
+    public Task<StoreStatus> GetStatusAsync(string packageName, Destination destination, CancellationToken ct = default) =>
+        Task.FromResult(status with { Destination = destination });
+}
 
 /// <summary>In-memory <see cref="ISecretStore"/> for tests — no Keychain.</summary>
 public sealed class FakeSecretStore : ISecretStore

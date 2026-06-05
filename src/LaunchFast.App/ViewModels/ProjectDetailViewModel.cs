@@ -7,6 +7,7 @@ using LaunchFast.Core.Env;
 using LaunchFast.Core.Models;
 using LaunchFast.Core.Parsing;
 using LaunchFast.Core.Running;
+using LaunchFast.Core.Stores;
 
 namespace LaunchFast.App.ViewModels;
 
@@ -21,6 +22,8 @@ public partial class ProjectDetailViewModel : ObservableObject
     readonly ISecretStore _secrets;
     readonly IPtyFactory _ptyFactory;
     readonly EnvResolver _resolver;
+    readonly StoreStatusProvider _storeStatus;
+    readonly StoreIdentifiers _identifiers;
 
     IReadOnlyList<string> _required = [];
     IReadOnlyDictionary<string, string> _fromFiles = new Dictionary<string, string>();
@@ -31,12 +34,19 @@ public partial class ProjectDetailViewModel : ObservableObject
     [GeneratedRegex("""ENV\[\s*['"](?<k>[A-Z0-9_]+)['"]""")]
     private static partial Regex EnvRefRegex();
 
-    public ProjectDetailViewModel(Project project, ISecretStore secrets, IPtyFactory ptyFactory)
+    public ProjectDetailViewModel(
+        Project project,
+        ISecretStore secrets,
+        IPtyFactory ptyFactory,
+        StoreStatusProvider? storeStatus = null,
+        StoreIdentifiers? identifiers = null)
     {
         _project = project;
         _secrets = secrets;
         _ptyFactory = ptyFactory;
         _resolver = new EnvResolver(secrets);
+        _storeStatus = storeStatus ?? new StoreStatusProvider(null, null);
+        _identifiers = identifiers ?? new StoreIdentifiers(null, null);
     }
 
     /// <summary>
@@ -102,6 +112,69 @@ public partial class ProjectDetailViewModel : ObservableObject
         OnPropertyChanged(nameof(CanRun));
         OnPropertyChanged(nameof(CanRunIos));
         OnPropertyChanged(nameof(CanRunAndroid));
+
+        KickOffStoreStatus();
+    }
+
+    /// <summary>
+    /// Fire-and-forget store-status fetch after a load, so the UI never blocks on
+    /// the network. In headless tests (no UI dispatcher loop) we skip the implicit
+    /// kick-off; the test awaits <see cref="RefreshStoreStatusAsync"/> directly.
+    /// </summary>
+    void KickOffStoreStatus()
+    {
+        if (!Dispatcher.UIThread.CheckAccess()) return;
+        _ = Task.Run(() => RefreshStoreStatusAsync());
+    }
+
+    /// <summary>
+    /// Resolves the current store status for every lane and marshals the updates
+    /// onto the UI thread. Awaitable so tests can drive it deterministically.
+    /// Never throws — the provider degrades each lane to "unavailable" on failure.
+    /// </summary>
+    public async Task RefreshStoreStatusAsync(CancellationToken ct = default)
+    {
+        foreach (var lane in IosLanes.Concat(AndroidLanes))
+        {
+            var identifier = lane.Platform == Platform.Ios
+                ? _identifiers.IosBundleId
+                : _identifiers.AndroidPackageName;
+
+            if (LaneDestination.For(lane.Lane) == Destination.None)
+            {
+                continue;
+            }
+
+            StoreStatus status;
+            if (identifier is null)
+            {
+                continue;
+            }
+
+            try
+            {
+                status = await _storeStatus.GetAsync(identifier, lane.Lane, ct).ConfigureAwait(false);
+            }
+            catch
+            {
+                status = StoreStatus.Unavailable(LaneDestination.For(lane.Lane));
+            }
+
+            SetLaneStore(lane, status);
+        }
+    }
+
+    static void SetLaneStore(LaneViewModel lane, StoreStatus status)
+    {
+        if (Dispatcher.UIThread.CheckAccess()) lane.Store = status;
+        else Dispatcher.UIThread.Post(() => lane.Store = status);
+    }
+
+    [RelayCommand]
+    async Task RefreshStoreStatus()
+    {
+        _storeStatus.Refresh();
+        await RefreshStoreStatusAsync().ConfigureAwait(false);
     }
 
     void LoadPlatform(string? fastlaneDir, Platform platform,
@@ -133,6 +206,14 @@ public partial class ProjectDetailViewModel : ObservableObject
         foreach (Match m in EnvRefRegex().Matches(text))
             into.Add(m.Groups["k"].Value);
     }
+
+    /// <summary>
+    /// Reads the project's <c>.env*</c> files (and <c>scripts/deploy-env.sh</c>)
+    /// into a merged dictionary. Exposed so the composition root can resolve store
+    /// credentials with the same env the run uses.
+    /// </summary>
+    public static IReadOnlyDictionary<string, string> ResolveProjectEnv(string projectRoot) =>
+        ReadEnvFiles(projectRoot);
 
     static IReadOnlyDictionary<string, string> ReadEnvFiles(string projectRoot)
     {

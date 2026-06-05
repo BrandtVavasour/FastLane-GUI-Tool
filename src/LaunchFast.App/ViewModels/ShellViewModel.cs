@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using LaunchFast.App.Services;
 using LaunchFast.Core.Env;
 using LaunchFast.Core.Models;
 using LaunchFast.Core.Running;
@@ -31,7 +32,10 @@ public partial class ShellViewModel : ObservableObject
 
     public void OpenDetail(Project project)
     {
-        var detail = new ProjectDetailViewModel(project, _secrets, _ptyFactory)
+        var env = ProjectDetailViewModel.ResolveProjectEnv(project.Path);
+        var (provider, ids) = StoreStatusFactory.Create(project, env);
+
+        var detail = new ProjectDetailViewModel(project, _secrets, _ptyFactory, provider, ids)
         {
             GoBack = GoHome,
         };

@@ -99,8 +99,13 @@
         <!-- Lane sections -->
         <ScrollViewer Margin="16,0">
             <StackPanel>
-                <TextBlock Text="iOS" Classes="section"
-                           IsVisible="{Binding IosLanes.Count}" />
+                <Grid ColumnDefinitions="*,Auto" Margin="0,8,0,0">
+                    <TextBlock Grid.Column="0" Text="iOS" Classes="section"
+                               IsVisible="{Binding IosLanes.Count}" />
+                    <Button Grid.Column="1" Content="Refresh store status"
+                            Command="{Binding RefreshStoreStatusCommand}"
+                            VerticalAlignment="Center" />
+                </Grid>
                 <ItemsControl ItemsSource="{Binding IosLanes}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="vm:LaneViewModel">
@@ -110,6 +115,18 @@
                                         <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
                                         <TextBlock Text="{Binding Description}" Opacity="0.7"
                                                    FontSize="12" TextWrapping="Wrap" />
+                                        <StackPanel Orientation="Horizontal" Spacing="8"
+                                                    IsVisible="{Binding HasStore}">
+                                            <TextBlock Text="{Binding StoreLine}" FontSize="12"
+                                                       Foreground="#4EC9B0" FontWeight="SemiBold" />
+                                            <TextBlock Text="{Binding StoreSecondary}" FontSize="12"
+                                                       Opacity="0.7"
+                                                       IsVisible="{Binding StoreSecondary,
+                                                           Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                        </StackPanel>
+                                        <TextBlock Text="store status unavailable" FontSize="11"
+                                                   Opacity="0.45" FontStyle="Italic"
+                                                   IsVisible="{Binding StoreUnavailable}" />
                                     </StackPanel>
                                     <Button Grid.Column="1" Content="Run"
                                             VerticalAlignment="Center"
@@ -133,6 +150,18 @@
                                         <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
                                         <TextBlock Text="{Binding Description}" Opacity="0.7"
                                                    FontSize="12" TextWrapping="Wrap" />
+                                        <StackPanel Orientation="Horizontal" Spacing="8"
+                                                    IsVisible="{Binding HasStore}">
+                                            <TextBlock Text="{Binding StoreLine}" FontSize="12"
+                                                       Foreground="#4EC9B0" FontWeight="SemiBold" />
+                                            <TextBlock Text="{Binding StoreSecondary}" FontSize="12"
+                                                       Opacity="0.7"
+                                                       IsVisible="{Binding StoreSecondary,
+                                                           Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                        </StackPanel>
+                                        <TextBlock Text="store status unavailable" FontSize="11"
+                                                   Opacity="0.45" FontStyle="Italic"
+                                                   IsVisible="{Binding StoreUnavailable}" />
                                     </StackPanel>
                                     <Button Grid.Column="1" Content="Run"
                                             VerticalAlignment="Center"
