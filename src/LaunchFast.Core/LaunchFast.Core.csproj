@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <PackageReference Include="Polyfill" PrivateAssets="all" />
+    <PackageReference Include="Google.Apis.AndroidPublisher.v3" />
   </ItemGroup>
 
 </Project>

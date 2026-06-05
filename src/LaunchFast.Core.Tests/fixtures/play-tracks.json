@@ -1,0 +1,23 @@
+{
+  "tracks": [
+    {
+      "track": "internal",
+      "releases": [
+        { "name": "1.4.2", "versionCodes": ["17"], "status": "completed" }
+      ]
+    },
+    {
+      "track": "beta",
+      "releases": [
+        { "name": "1.4.1-beta", "versionCodes": ["16"], "status": "draft" },
+        { "name": "1.4.0", "versionCodes": ["15"], "status": "completed" }
+      ]
+    },
+    {
+      "track": "production",
+      "releases": [
+        { "name": "1.4.0", "versionCodes": ["15"], "status": "completed" }
+      ]
+    }
+  ]
+}
