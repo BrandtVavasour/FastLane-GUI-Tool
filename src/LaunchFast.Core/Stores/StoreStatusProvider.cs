@@ -32,7 +32,12 @@ public sealed class StoreStatusProvider
         }
 
         var status = await ResolveAsync(bundleId, destination, ct).ConfigureAwait(false);
-        _cache[key] = status;
+        // Only cache successful lookups so a transient failure doesn't permanently
+        // suppress retries until Refresh() is called.
+        if (status.Available)
+        {
+            _cache[key] = status;
+        }
         return status;
     }
 

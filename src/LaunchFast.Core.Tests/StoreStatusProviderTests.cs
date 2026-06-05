@@ -90,10 +90,43 @@ public sealed class StoreStatusProviderTests
         });
     }
 
+    [Test]
+    public async Task Unavailable_result_is_not_cached_so_a_transient_failure_retries()
+    {
+        var client = new FailThenSucceedClient();
+        var provider = new StoreStatusProvider(client);
+
+        var first = await provider.GetAsync("com.example.app", Lane("beta", Platform.Ios));
+        var second = await provider.GetAsync("com.example.app", Lane("beta", Platform.Ios));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(first.Available, Is.False, "first call fails and must not be cached");
+            Assert.That(second.Available, Is.True, "second call retries and succeeds");
+            Assert.That(client.Calls, Is.EqualTo(2));
+        });
+    }
+
     private sealed class ThrowingClient : IAppStoreConnectClient
     {
         public Task<StoreStatus> GetStatusAsync(string bundleId, Destination destination, CancellationToken ct = default) =>
             throw new InvalidOperationException("boom");
+    }
+
+    private sealed class FailThenSucceedClient : IAppStoreConnectClient
+    {
+        public int Calls { get; private set; }
+
+        public Task<StoreStatus> GetStatusAsync(string bundleId, Destination destination, CancellationToken ct = default)
+        {
+            Calls++;
+            if (Calls == 1)
+            {
+                throw new InvalidOperationException("transient");
+            }
+
+            return Task.FromResult(new StoreStatus(destination, true, "1.0.0 live", null));
+        }
     }
 
     private sealed class CountingClient : IAppStoreConnectClient
