@@ -65,6 +65,20 @@ public sealed class PlayStoreClientTests
     }
 
     [Test]
+    public void MapTracks_picks_highest_numeric_version_code()
+    {
+        const string json = """
+            {"tracks":[{"track":"internal","releases":[
+                {"name":"2.0.0","versionCodes":["9","17","3"]}]}]}
+            """;
+
+        var result = PlayStoreClient.MapTracks(json);
+
+        // "17" must win over "9" — numeric max, not lexical (where "9" > "17").
+        Assert.That(result["internal"].Line, Is.EqualTo("2.0.0 (17)"));
+    }
+
+    [Test]
     public void TrackName_maps_play_destinations()
     {
         Assert.Multiple(() =>

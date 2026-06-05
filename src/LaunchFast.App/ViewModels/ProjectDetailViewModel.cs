@@ -124,7 +124,7 @@ public partial class ProjectDetailViewModel : ObservableObject
     void KickOffStoreStatus()
     {
         if (!Dispatcher.UIThread.CheckAccess()) return;
-        _ = Task.Run(() => RefreshStoreStatusAsync());
+        _ = RefreshStoreStatusAsync();
     }
 
     /// <summary>
