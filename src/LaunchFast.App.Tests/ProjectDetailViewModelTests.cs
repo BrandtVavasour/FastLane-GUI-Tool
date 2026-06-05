@@ -20,6 +20,33 @@ public class ProjectDetailViewModelTests
     }
 
     [Test]
+    public void Control_env_vars_do_not_gate_runs_only_genuine_secrets_do()
+    {
+        var project = TestProjects.MakeFlutterProjectWithRealFastfiles();
+
+        // Empty store: every genuine secret is missing, but no control var is.
+        var probe = ProjectDetailViewModel.ForTest(project);
+        probe.Load();
+
+        Assert.That(probe.MissingSecrets, Does.Not.Contain("CI"));
+        Assert.That(probe.MissingSecrets, Does.Not.Contain("FASTLANE_ENV"));
+        Assert.That(probe.MissingSecrets, Does.Not.Contain("FLUTTER_LOCALE"));
+        Assert.That(probe.MissingSecrets, Does.Not.Contain("MATCH_KEYCHAIN_NAME"));
+
+        // Sanity: genuine secrets are still required and still missing.
+        Assert.That(probe.MissingSecrets, Does.Contain("MATCH_KEYCHAIN_PASSWORD"));
+        Assert.That(probe.CanRunIos, Is.False);
+
+        // Satisfy exactly the (now narrowed) missing secrets and reload.
+        var secrets = new FakeSecretStore().Satisfy(project.Path, probe.MissingSecrets);
+        var vm = new ProjectDetailViewModel(project, secrets, new RecordingPtyFactory());
+        vm.Load();
+
+        Assert.That(vm.MissingSecrets, Is.Empty);
+        Assert.That(vm.CanRunIos, Is.True);
+    }
+
+    [Test]
     public void Running_a_lane_streams_output_via_factory()
     {
         var project = TestProjects.MakeFlutterProjectWithRealFastfiles();

@@ -89,7 +89,10 @@ public partial class ProjectDetailViewModel : ObservableObject
         LoadPlatform(_project.IosFastlaneDir, Platform.Ios, IosLanes, required);
         LoadPlatform(_project.AndroidFastlaneDir, Platform.Android, AndroidLanes, required);
 
-        _required = required.ToList();
+        // Only genuine secrets gate a run; non-secret control/config vars
+        // (CI, FASTLANE_ENV, locales, ...) are referenced by the Fastfile but
+        // can't be supplied via the secrets dialog, so they must not be required.
+        _required = required.Where(SecretEnvFilter.IsSecret).ToList();
         _fromFiles = ReadEnvFiles(_project.Path);
 
         var status = _resolver.Resolve(ProjectId, _required, _fromFiles);
