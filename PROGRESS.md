@@ -35,10 +35,14 @@ Update this as each phase lands. See `claude.md` for goals/architecture.
   non-blocking, graceful "unavailable") + Refresh button. `AppfileReader` (bundle id /
   package name / json_key_file), `AppStoreConnectClient.FromKeyFile`, `StoreStatusFactory`
   (disk credential discovery, never throws), wired via ShellViewModel. Reviewed/approved.
-- ⬜ **Phase 10 — IntegrationTests + CI + docs.** Separate `.slnx` (real `fastlane lanes`
-  vs parser, PTY no-op, Keychain roundtrip), GitHub Actions CI, readme/license.
-- ⬜ **Final pass.** Simon-standard cleanup (sealed/records/file-scoped/naming, remove unused
-  package pins), UI snapshot tests if feasible, full end-to-end review.
+- ✅ **Phase 10 — IntegrationTests + CI + docs.** Separate `IntegrationTests.slnx`; 3 guarded
+  smoke tests that RAN & PASSED here: real `fastlane lanes` vs `FastfileParser` (parser matches
+  fastlane's own view of the real VendingMachine iOS lanes), real `ProcessPtyFactory` streaming,
+  real Keychain roundtrip with special chars. GitHub Actions CI (`macos-latest`, builds+tests the
+  main solution only), `readme.md`, MIT `license.txt`.
+- 🔨 **Final pass.** Simon-standard cleanup (remove unused JWT package pins, tidy `Task.Run` hop),
+  add a multi-versionCode MapTracks test, UI snapshot tests if feasible, full end-to-end review,
+  flip claude.md/PROGRESS status to complete.
 
 ## Cross-cutting (loop requirements)
 
