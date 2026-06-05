@@ -5,3 +5,20 @@ obj/
 .idea/
 *.received.*
 artifacts/
+
+# Never commit real secrets / credentials. LaunchFast reads these from the user's
+# projects at runtime — they must never live in this repo.
+*.p8
+*.mobileprovision
+*.cer
+*.p12
+api_key.json
+**/service-account*.json
+**/play-store*.json
+deploy-env.sh
+.env
+.env.*
+!.env.example
+*.pem
+*-key.json
+secrets/
