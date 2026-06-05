@@ -1,0 +1,42 @@
+﻿[
+  {
+    Name: build,
+    Description: Build Flutter app bundle,
+    Platform: Android
+  },
+  {
+    Name: internal,
+    Description: Deploy to Google Play internal testing track,
+    Platform: Android
+  },
+  {
+    Name: beta,
+    Description: Promote internal to beta (closed testing),
+    Platform: Android
+  },
+  {
+    Name: production,
+    Description: Promote beta to production,
+    Platform: Android
+  },
+  {
+    Name: screenshots,
+    Description: Capture Play Store screenshots using integration tests,
+    Platform: Android
+  },
+  {
+    Name: all_screenshots,
+    Description: Capture Play Store screenshots on both phone and tablet,
+    Platform: Android
+  },
+  {
+    Name: screenshots_and_upload,
+    Description: Capture screenshots and upload to Play Store,
+    Platform: Android
+  },
+  {
+    Name: metadata,
+    Description: Upload store listing metadata only (no build),
+    Platform: Android
+  }
+]

@@ -1,0 +1,18 @@
+﻿[
+  {
+    Name: sync_certificates,
+    Description: Sync code signing certificates
+  },
+  {
+    Name: beta,
+    Description: Build and upload to TestFlight
+  },
+  {
+    Name: release,
+    Description: Build and upload to App Store
+  },
+  {
+    Name: screenshots,
+    Description: Capture screenshots for App Store
+  }
+]
