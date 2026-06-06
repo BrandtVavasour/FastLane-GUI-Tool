@@ -5,11 +5,14 @@ using LaunchFast.Core.Stores;
 
 namespace LaunchFast.App.Tests;
 
-/// <summary>Fake App Store Connect client returning a canned status per call.</summary>
-public sealed class FakeAscClient(StoreStatus status) : IAppStoreConnectClient
+/// <summary>Fake App Store Connect client returning a canned status / TestFlight info.</summary>
+public sealed class FakeAscClient(StoreStatus status, TestFlightInfo? testFlight = null) : IAppStoreConnectClient
 {
     public Task<StoreStatus> GetStatusAsync(string bundleId, Destination destination, CancellationToken ct = default) =>
         Task.FromResult(status with { Destination = destination });
+
+    public Task<TestFlightInfo> GetTestFlightAsync(string bundleId, CancellationToken ct = default) =>
+        Task.FromResult(testFlight ?? TestFlightInfo.Empty);
 }
 
 /// <summary>Fake Play client returning a canned status per call.</summary>

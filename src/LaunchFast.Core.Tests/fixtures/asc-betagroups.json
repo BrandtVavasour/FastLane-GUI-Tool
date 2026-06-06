@@ -1,0 +1,45 @@
+{
+  "data": [
+    {
+      "type": "betaGroups",
+      "id": "g-internal",
+      "attributes": {
+        "name": "App Store Connect Users",
+        "isInternalGroup": true
+      },
+      "relationships": {
+        "betaTesters": {
+          "meta": {
+            "paging": { "total": 2, "limit": 50 }
+          }
+        }
+      }
+    },
+    {
+      "type": "betaGroups",
+      "id": "g-external",
+      "attributes": {
+        "name": "Beta Crew",
+        "isInternalGroup": false
+      },
+      "relationships": {
+        "betaTesters": {
+          "meta": {
+            "paging": { "total": 3, "limit": 50 }
+          }
+        }
+      }
+    },
+    {
+      "type": "betaGroups",
+      "id": "g-nometa",
+      "attributes": {
+        "name": "Early Access",
+        "isInternalGroup": false
+      },
+      "relationships": {
+        "betaTesters": {}
+      }
+    }
+  ]
+}

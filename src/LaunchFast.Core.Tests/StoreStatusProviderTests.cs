@@ -158,6 +158,9 @@ public sealed class StoreStatusProviderTests
     {
         public Task<StoreStatus> GetStatusAsync(string bundleId, Destination destination, CancellationToken ct = default) =>
             throw new InvalidOperationException("boom");
+
+        public Task<TestFlightInfo> GetTestFlightAsync(string bundleId, CancellationToken ct = default) =>
+            throw new InvalidOperationException("boom");
     }
 
     private sealed class FailThenSucceedClient : IAppStoreConnectClient
@@ -174,6 +177,9 @@ public sealed class StoreStatusProviderTests
 
             return Task.FromResult(new StoreStatus(destination, true, "1.0.0 live", null));
         }
+
+        public Task<TestFlightInfo> GetTestFlightAsync(string bundleId, CancellationToken ct = default) =>
+            Task.FromResult(TestFlightInfo.Empty);
     }
 
     private sealed class CountingClient : IAppStoreConnectClient
@@ -185,6 +191,9 @@ public sealed class StoreStatusProviderTests
             Calls++;
             return Task.FromResult(new StoreStatus(destination, true, "1.0.0 live", null));
         }
+
+        public Task<TestFlightInfo> GetTestFlightAsync(string bundleId, CancellationToken ct = default) =>
+            Task.FromResult(TestFlightInfo.Empty);
     }
 
     private sealed class CountingPlayClient : IPlayStoreClient

@@ -66,6 +66,80 @@ public sealed class AppStoreConnectClientTests
     }
 
     [Test]
+    public void MapBuildsDetailed_maps_newest_build()
+    {
+        var build = AppStoreConnectClient.MapBuildsDetailed(Fixture("asc-builds-detailed.json"));
+
+        Assert.That(build, Is.Not.Null);
+        Assert.Multiple(() =>
+        {
+            Assert.That(build!.Version, Is.EqualTo("1.4.2"));
+            Assert.That(build.BuildNumber, Is.EqualTo("18"));
+            Assert.That(build.ProcessingState, Is.EqualTo("VALID"));
+            Assert.That(build.ExpiredCompliance, Is.False);
+            Assert.That(build.ExpiresText, Does.Contain("expires in"));
+            Assert.That(build.WhatsToTest, Does.Contain("onboarding"));
+        });
+    }
+
+    [Test]
+    public void MapBuildsDetailed_returns_null_on_empty_or_garbage()
+    {
+        Assert.That(AppStoreConnectClient.MapBuildsDetailed("""{"data":[]}"""), Is.Null);
+        Assert.That(AppStoreConnectClient.MapBuildsDetailed("not json"), Is.Null);
+    }
+
+    [Test]
+    public void MapBetaGroups_maps_internal_external_and_counts()
+    {
+        var groups = AppStoreConnectClient.MapBetaGroups(Fixture("asc-betagroups.json"));
+
+        Assert.That(groups, Has.Count.EqualTo(3));
+
+        var internalGroup = groups.Single(g => g.IsInternal);
+        var external = groups.First(g => !g.IsInternal);
+        var noMeta = groups.Single(g => g.Name == "Early Access");
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(internalGroup.TesterCount, Is.EqualTo(2));
+            Assert.That(external.Name, Is.EqualTo("Beta Crew"));
+            Assert.That(external.TesterCount, Is.EqualTo(3));
+            Assert.That(noMeta.TesterCount, Is.EqualTo(0));
+        });
+    }
+
+    [Test]
+    public void MapBetaGroups_does_not_throw_on_garbage()
+    {
+        Assert.That(AppStoreConnectClient.MapBetaGroups("not json"), Is.Empty);
+    }
+
+    [Test]
+    public void MapBetaTesters_maps_names_emails_and_normalised_states()
+    {
+        var testers = AppStoreConnectClient.MapBetaTesters(Fixture("asc-betatesters.json"));
+
+        Assert.That(testers, Has.Count.EqualTo(4));
+        Assert.Multiple(() =>
+        {
+            Assert.That(testers[0].FirstName, Is.EqualTo("Ada"));
+            Assert.That(testers[0].Email, Is.EqualTo("ada@example.com"));
+            Assert.That(testers[0].State, Is.EqualTo("Installed"));
+            Assert.That(testers[1].State, Is.EqualTo("Accepted"));
+            Assert.That(testers[2].State, Is.EqualTo("Invited"));
+            // No "state" attribute → falls back to inviteType (PUBLIC_LINK).
+            Assert.That(testers[3].State, Is.EqualTo("Public link"));
+        });
+    }
+
+    [Test]
+    public void MapBetaTesters_does_not_throw_on_garbage()
+    {
+        Assert.That(AppStoreConnectClient.MapBetaTesters("not json"), Is.Empty);
+    }
+
+    [Test]
     public void CreateJwt_produces_three_part_token()
     {
         var client = AppStoreConnectClient.WithHandler(new StubHandler());

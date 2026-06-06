@@ -1,0 +1,49 @@
+{
+  "data": [
+    {
+      "type": "builds",
+      "id": "b1000",
+      "attributes": {
+        "version": "18",
+        "processingState": "VALID",
+        "usesNonExemptEncryption": false,
+        "expired": false,
+        "expirationDate": "2026-09-03T00:00:00-07:00",
+        "preReleaseVersion": {
+          "version": "1.4.2"
+        }
+      },
+      "relationships": {
+        "betaBuildLocalizations": {
+          "data": [
+            { "type": "betaBuildLocalizations", "id": "loc-en" }
+          ]
+        }
+      }
+    },
+    {
+      "type": "builds",
+      "id": "b0999",
+      "attributes": {
+        "version": "17",
+        "processingState": "VALID",
+        "usesNonExemptEncryption": false,
+        "expired": false,
+        "expirationDate": "2026-08-20T00:00:00-07:00",
+        "preReleaseVersion": {
+          "version": "1.4.1"
+        }
+      }
+    }
+  ],
+  "included": [
+    {
+      "type": "betaBuildLocalizations",
+      "id": "loc-en",
+      "attributes": {
+        "locale": "en-US",
+        "whatsNew": "Focus testing on the new onboarding flow and report anything odd."
+      }
+    }
+  ]
+}

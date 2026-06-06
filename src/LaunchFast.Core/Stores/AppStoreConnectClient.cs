@@ -247,6 +247,249 @@ public sealed class AppStoreConnectClient : IAppStoreConnectClient, IDisposable
             Secondary: null);
     }
 
+    /// <summary>
+    /// Resolves the app id from its bundle id, then reads the newest build,
+    /// the beta groups and the beta testers and maps them into a single
+    /// <see cref="TestFlightInfo"/>. Returns <see cref="TestFlightInfo.Empty"/>
+    /// when the app cannot be resolved; never fabricates data.
+    /// </summary>
+    public async Task<TestFlightInfo> GetTestFlightAsync(string bundleId, CancellationToken ct = default)
+    {
+        var appId = await ResolveAppIdAsync(bundleId, ct).ConfigureAwait(false);
+        if (appId is null)
+        {
+            return TestFlightInfo.Empty;
+        }
+
+        var buildsJson = await GetAsync(
+            $"/v1/apps/{appId}/builds?sort=-version&limit=1&include=betaBuildLocalizations", ct)
+            .ConfigureAwait(false);
+        var groupsJson = await GetAsync(
+            $"/v1/apps/{appId}/betaGroups?limit=50", ct).ConfigureAwait(false);
+        var testersJson = await GetAsync(
+            $"/v1/apps/{appId}/betaTesters?limit=50", ct).ConfigureAwait(false);
+
+        return new TestFlightInfo(
+            MapBuildsDetailed(buildsJson),
+            MapBetaGroups(groupsJson),
+            MapBetaTesters(testersJson));
+    }
+
+    /// <summary>
+    /// Pure mapper for an App Store Connect <c>builds</c> list. Picks the newest
+    /// build (first, given <c>sort=-version</c>) and maps its processing/compliance
+    /// state. Never throws; missing fields → defaults.
+    /// </summary>
+    public static BuildInfo? MapBuildsDetailed(string json)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            if (!doc.RootElement.TryGetProperty("data", out var data) ||
+                data.ValueKind != JsonValueKind.Array ||
+                data.GetArrayLength() == 0 ||
+                !data[0].TryGetProperty("attributes", out var attrs))
+            {
+                return null;
+            }
+
+            var buildNumber = attrs.TryGetProperty("version", out var v) ? v.GetString() : null;
+            var processing = attrs.TryGetProperty("processingState", out var p) ? p.GetString() : null;
+            var marketingVersion = attrs.TryGetProperty("preReleaseVersion", out var pre) &&
+                pre.TryGetProperty("version", out var pv)
+                    ? pv.GetString()
+                    : null;
+
+            // Export compliance: usesNonExemptEncryption == true with no docs filed
+            // is the "expired/blocking" case ASC surfaces; map pragmatically.
+            bool? expiredCompliance = null;
+            if (attrs.TryGetProperty("usesNonExemptEncryption", out var enc) &&
+                (enc.ValueKind == JsonValueKind.True || enc.ValueKind == JsonValueKind.False))
+            {
+                expiredCompliance = enc.GetBoolean();
+            }
+
+            string? expiresText = null;
+            if (attrs.TryGetProperty("expired", out var expired) &&
+                expired.ValueKind == JsonValueKind.True)
+            {
+                expiresText = "Expired";
+            }
+            else if (attrs.TryGetProperty("expirationDate", out var ed) &&
+                ed.ValueKind == JsonValueKind.String &&
+                DateTimeOffset.TryParse(ed.GetString(), out var when))
+            {
+                var days = (int)Math.Round((when - DateTimeOffset.UtcNow).TotalDays);
+                expiresText = days <= 0 ? "Expired" : $"expires in {days} days";
+            }
+
+            var whatsToTest = ExtractWhatsToTest(doc.RootElement);
+
+            return new BuildInfo(
+                marketingVersion ?? "—",
+                buildNumber ?? "—",
+                processing ?? "—",
+                expiredCompliance,
+                expiresText,
+                whatsToTest);
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Pulls the first non-empty <c>whatsNew</c> from any included
+    /// <c>betaBuildLocalizations</c> resource, if present.
+    /// </summary>
+    private static string? ExtractWhatsToTest(JsonElement root)
+    {
+        if (!root.TryGetProperty("included", out var included) ||
+            included.ValueKind != JsonValueKind.Array)
+        {
+            return null;
+        }
+
+        foreach (var item in included.EnumerateArray())
+        {
+            if (item.TryGetProperty("type", out var type) &&
+                type.GetString() == "betaBuildLocalizations" &&
+                item.TryGetProperty("attributes", out var attrs) &&
+                attrs.TryGetProperty("whatsNew", out var wn) &&
+                wn.ValueKind == JsonValueKind.String)
+            {
+                var text = wn.GetString();
+                if (!string.IsNullOrWhiteSpace(text))
+                {
+                    return text;
+                }
+            }
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Pure mapper for an App Store Connect <c>betaGroups</c> list. Tester count is
+    /// read from <c>relationships.betaTesters.meta.paging.total</c> when present.
+    /// Never throws; missing fields → defaults.
+    /// </summary>
+    public static IReadOnlyList<BetaGroup> MapBetaGroups(string json)
+    {
+        var groups = new List<BetaGroup>();
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            if (!doc.RootElement.TryGetProperty("data", out var data) ||
+                data.ValueKind != JsonValueKind.Array)
+            {
+                return groups;
+            }
+
+            foreach (var item in data.EnumerateArray())
+            {
+                if (!item.TryGetProperty("attributes", out var attrs))
+                {
+                    continue;
+                }
+
+                var name = attrs.TryGetProperty("name", out var n) ? n.GetString() : null;
+                if (name is null)
+                {
+                    continue;
+                }
+
+                var isInternal = attrs.TryGetProperty("isInternalGroup", out var ig) &&
+                    ig.ValueKind == JsonValueKind.True;
+
+                var count = 0;
+                if (item.TryGetProperty("relationships", out var rels) &&
+                    rels.TryGetProperty("betaTesters", out var bt) &&
+                    bt.TryGetProperty("meta", out var meta) &&
+                    meta.TryGetProperty("paging", out var paging) &&
+                    paging.TryGetProperty("total", out var total) &&
+                    total.ValueKind == JsonValueKind.Number)
+                {
+                    count = total.GetInt32();
+                }
+
+                groups.Add(new BetaGroup(name, isInternal, count));
+            }
+        }
+        catch (JsonException)
+        {
+            // total mapper
+        }
+        return groups;
+    }
+
+    /// <summary>
+    /// Pure mapper for an App Store Connect <c>betaTesters</c> list. Maps the
+    /// tester's name/email and normalises their state from the <c>state</c> /
+    /// <c>inviteType</c> attributes. Never throws; missing fields → defaults.
+    /// </summary>
+    public static IReadOnlyList<BetaTester> MapBetaTesters(string json)
+    {
+        var testers = new List<BetaTester>();
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            if (!doc.RootElement.TryGetProperty("data", out var data) ||
+                data.ValueKind != JsonValueKind.Array)
+            {
+                return testers;
+            }
+
+            foreach (var item in data.EnumerateArray())
+            {
+                if (!item.TryGetProperty("attributes", out var attrs))
+                {
+                    continue;
+                }
+
+                var first = attrs.TryGetProperty("firstName", out var fn) ? fn.GetString() : null;
+                var last = attrs.TryGetProperty("lastName", out var ln) ? ln.GetString() : null;
+                var email = attrs.TryGetProperty("email", out var em) ? em.GetString() : null;
+
+                var state = attrs.TryGetProperty("state", out var st) ? st.GetString() : null;
+                if (string.IsNullOrWhiteSpace(state) &&
+                    attrs.TryGetProperty("inviteType", out var it))
+                {
+                    state = it.GetString();
+                }
+
+                testers.Add(new BetaTester(
+                    first ?? "",
+                    last ?? "",
+                    email ?? "",
+                    NormalizeTesterState(state),
+                    GroupName: null));
+            }
+        }
+        catch (JsonException)
+        {
+            // total mapper
+        }
+        return testers;
+    }
+
+    /// <summary>Normalises ASC tester state codes into a display token.</summary>
+    private static string NormalizeTesterState(string? raw) => raw switch
+    {
+        null or "" => "Pending",
+        "INSTALLED" => "Installed",
+        "INVITED" or "EMAIL" => "Invited",
+        "ACCEPTED" => "Accepted",
+        "NOT_INSTALLED" => "Pending",
+        _ => CapitalizeToken(raw),
+    };
+
+    private static string CapitalizeToken(string raw)
+    {
+        var lower = raw.Replace('_', ' ').ToLowerInvariant();
+        return lower.Length == 0 ? lower : char.ToUpperInvariant(lower[0]) + lower[1..];
+    }
+
     private static string Base64UrlEncode(byte[] bytes) =>
         Convert.ToBase64String(bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_');
 

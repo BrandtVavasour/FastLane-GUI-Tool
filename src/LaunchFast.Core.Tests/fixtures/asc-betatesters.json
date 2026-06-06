@@ -1,0 +1,47 @@
+{
+  "data": [
+    {
+      "type": "betaTesters",
+      "id": "t-1",
+      "attributes": {
+        "firstName": "Ada",
+        "lastName": "Lovelace",
+        "email": "ada@example.com",
+        "state": "INSTALLED",
+        "inviteType": "EMAIL"
+      }
+    },
+    {
+      "type": "betaTesters",
+      "id": "t-2",
+      "attributes": {
+        "firstName": "Grace",
+        "lastName": "Hopper",
+        "email": "grace@example.com",
+        "state": "ACCEPTED",
+        "inviteType": "EMAIL"
+      }
+    },
+    {
+      "type": "betaTesters",
+      "id": "t-3",
+      "attributes": {
+        "firstName": "Alan",
+        "lastName": "Turing",
+        "email": "alan@example.com",
+        "state": "INVITED",
+        "inviteType": "EMAIL"
+      }
+    },
+    {
+      "type": "betaTesters",
+      "id": "t-4",
+      "attributes": {
+        "firstName": "Edsger",
+        "lastName": "Dijkstra",
+        "email": "edsger@example.com",
+        "inviteType": "PUBLIC_LINK"
+      }
+    }
+  ]
+}
