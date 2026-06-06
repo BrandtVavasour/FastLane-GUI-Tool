@@ -53,6 +53,37 @@ public class SectionShellViewTests
     }
 
     [AvaloniaTest]
+    public void StoreListingSectionView_renders_with_real_metadata_without_throwing()
+    {
+        var project = TestProjects.MakeProjectWithStoreMetadata();
+        var vm = new StoreListingSectionViewModel(project);
+
+        var window = new Window { Content = new StoreListingSectionView { DataContext = vm } };
+        window.Show();
+
+        Assert.That(window.IsVisible, Is.True);
+        Assert.That(vm.Fields, Is.Not.Empty);
+
+        window.Close();
+    }
+
+    [AvaloniaTest]
+    public void StoreListingSectionView_renders_empty_state_without_throwing()
+    {
+        var root = TestProjects.MakeFlutterProject();
+        var project = LaunchFast.Core.Scanning.ProjectScanner.TryScanRoot(root)!;
+        var vm = new StoreListingSectionViewModel(project);
+
+        var window = new Window { Content = new StoreListingSectionView { DataContext = vm } };
+        window.Show();
+
+        Assert.That(window.IsVisible, Is.True);
+        Assert.That(vm.IsEmpty, Is.True);
+
+        window.Close();
+    }
+
+    [AvaloniaTest]
     public void BuildTestSectionView_renders_with_placeholder_vm_without_throwing()
     {
         var project = TestProjects.MakeFlutterProjectWithRealFastfiles();

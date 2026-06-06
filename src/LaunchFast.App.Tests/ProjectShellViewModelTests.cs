@@ -77,6 +77,26 @@ public class ProjectShellViewModelTests
     }
 
     [Test]
+    public void Store_and_release_sections_resolve_to_listing_and_placeholders()
+    {
+        var shell = MakeShell(out _);
+
+        shell.SelectSectionCommand.Execute(ProjectSection.StoreListing);
+        Assert.That(shell.CurrentContent, Is.InstanceOf<StoreListingSectionViewModel>());
+
+        shell.SelectSectionCommand.Execute(ProjectSection.WhatsNew);
+        Assert.That(shell.CurrentContent, Is.InstanceOf<SectionPlaceholderViewModel>());
+
+        shell.SelectSectionCommand.Execute(ProjectSection.Release);
+        Assert.That(shell.CurrentContent, Is.InstanceOf<SectionPlaceholderViewModel>());
+
+        // All three new sidebar entries exist.
+        Assert.That(shell.Sections.Any(s => s.Section == ProjectSection.StoreListing), Is.True);
+        Assert.That(shell.Sections.Any(s => s.Section == ProjectSection.WhatsNew), Is.True);
+        Assert.That(shell.Sections.Any(s => s.Section == ProjectSection.Release), Is.True);
+    }
+
+    [Test]
     public void Screenshots_and_BuildTest_run_actions_reflect_lane_presence_for_real_fastfiles()
     {
         var shell = MakeShell(out _);

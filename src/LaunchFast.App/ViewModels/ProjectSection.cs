@@ -11,6 +11,9 @@ public enum ProjectSection
     TestFlight,
     Screenshots,
     BuildTest,
+    StoreListing,
+    WhatsNew,
+    Release,
 }
 
 /// <summary>

@@ -39,6 +39,56 @@ public static class TestProjects
         return ProjectScanner.TryScanRoot(root)!;
     }
 
+    /// <summary>
+    /// Creates a temp Flutter project with a real fastlane store-metadata tree:
+    /// iOS deliver metadata + screenshots for en-US/ja, and Android supply metadata
+    /// + a phone screenshot for en-US. Returns the scanned Project. Used by the
+    /// Store Listing tests so the reader surfaces real on-disk content.
+    /// </summary>
+    public static Project MakeProjectWithStoreMetadata(string name = "store")
+    {
+        var root = Path.Combine(Path.GetTempPath(), "lf-store-" + Guid.NewGuid().ToString("N"), name);
+        var iosFl = Path.Combine(root, "ios", "fastlane");
+        var androidFl = Path.Combine(root, "android", "fastlane");
+        Directory.CreateDirectory(iosFl);
+        Directory.CreateDirectory(androidFl);
+        File.WriteAllText(Path.Combine(root, "pubspec.yaml"), "name: demo\nversion: 1.2.3+9\n");
+
+        // ---- iOS deliver metadata (en-US, ja) ----
+        var iosEn = Path.Combine(iosFl, "metadata", "en-US");
+        Directory.CreateDirectory(iosEn);
+        File.WriteAllText(Path.Combine(iosEn, "name.txt"), "Demo App\n");
+        File.WriteAllText(Path.Combine(iosEn, "subtitle.txt"), "Track everything\n");
+        File.WriteAllText(Path.Combine(iosEn, "promotional_text.txt"), "Now faster than ever.\n");
+        File.WriteAllText(Path.Combine(iosEn, "keywords.txt"), "demo,track,fast\n");
+        File.WriteAllText(Path.Combine(iosEn, "description.txt"), "A long full description of the demo app.\n");
+        File.WriteAllText(Path.Combine(iosEn, "marketing_url.txt"), "https://example.com\n");
+
+        Directory.CreateDirectory(Path.Combine(iosFl, "metadata", "ja"));
+        File.WriteAllText(Path.Combine(iosFl, "metadata", "ja", "name.txt"), "デモアプリ\n");
+
+        var iosShots = Path.Combine(iosFl, "screenshots", "en-US");
+        Directory.CreateDirectory(iosShots);
+        WriteFakePng(Path.Combine(iosShots, "0_iphone.png"));
+        WriteFakePng(Path.Combine(iosShots, "1_iphone.png"));
+
+        // ---- Android supply metadata (en-US) ----
+        var aEn = Path.Combine(androidFl, "metadata", "android", "en-US");
+        Directory.CreateDirectory(aEn);
+        File.WriteAllText(Path.Combine(aEn, "title.txt"), "Demo Play\n");
+        File.WriteAllText(Path.Combine(aEn, "short_description.txt"), "Short blurb\n");
+        File.WriteAllText(Path.Combine(aEn, "full_description.txt"), "Full Android description.\n");
+        WriteFakePng(Path.Combine(aEn, "images", "phoneScreenshots", "1.png"));
+
+        return ProjectScanner.TryScanRoot(root)!;
+    }
+
+    static void WriteFakePng(string path)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        File.WriteAllBytes(path, new byte[] { 0x89, 0x50, 0x4E, 0x47 });
+    }
+
     static string ReadFixture(string fileName)
     {
         // Walk up from the test assembly to the repo, then into Core.Tests/fixtures.

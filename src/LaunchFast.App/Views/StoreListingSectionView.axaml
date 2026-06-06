@@ -1,0 +1,245 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:LaunchFast.App.ViewModels"
+             xmlns:conv="using:LaunchFast.App.Converters"
+             mc:Ignorable="d" d:DesignWidth="980" d:DesignHeight="640"
+             x:Class="LaunchFast.App.Views.StoreListingSectionView"
+             x:DataType="vm:StoreListingSectionViewModel"
+             x:CompileBindings="True"
+             Background="{DynamicResource Surface0Brush}">
+
+    <UserControl.Resources>
+        <conv:PathToBitmapConverter x:Key="PathToBitmap" />
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <!-- platform badge (iOS / Android), matching the design's .os pill -->
+        <Style Selector="Border.osbadge">
+            <Setter Property="Background" Value="{DynamicResource BadgeBgBrush}" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Padding" Value="5,1" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Border.osbadge > TextBlock">
+            <Setter Property="FontSize" Value="9.5" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{DynamicResource BadgeTextBrush}" />
+        </Style>
+        <!-- char counter -->
+        <Style Selector="TextBlock.counter">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Foreground" Value="{DynamicResource Text3Brush}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="TextBlock.counter.warn">
+            <Setter Property="Foreground" Value="{DynamicResource AmberBrush}" />
+        </Style>
+        <Style Selector="TextBlock.counter.over">
+            <Setter Property="Foreground" Value="{DynamicResource RedBrush}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <!-- section title -->
+        <Style Selector="TextBlock.sectitle">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource Text3Brush}" />
+        </Style>
+        <!-- screenshot frame: phone aspect (9:19) -->
+        <Style Selector="Border.shotframe">
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="ClipToBounds" Value="True" />
+            <Setter Property="Background" Value="{DynamicResource Surface1Brush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SeparatorBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Height" Value="232" />
+        </Style>
+        <Style Selector="Border.shotadd">
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1.5" />
+            <Setter Property="Height" Value="232" />
+        </Style>
+    </UserControl.Styles>
+
+    <DockPanel>
+        <!-- Toolbar -->
+        <Border DockPanel.Dock="Top"
+                Background="{DynamicResource Surface1Brush}"
+                BorderBrush="{DynamicResource SeparatorBrush}"
+                BorderThickness="0,0,0,1">
+            <Grid ColumnDefinitions="*,Auto,Auto" Margin="16,11">
+                <Button Grid.Column="1" Classes="btn" Margin="0,0,8,0"
+                        Content="Discard" IsEnabled="False" />
+                <Button Grid.Column="2" Classes="accent"
+                        Content="Save" IsEnabled="False" />
+            </Grid>
+        </Border>
+
+        <!-- Subbar -->
+        <Border DockPanel.Dock="Top" Classes="subbar">
+            <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*,Auto"
+                  HorizontalAlignment="Stretch">
+                <TextBlock Grid.Column="0" Classes="h2" Text="{Binding Name}" />
+
+                <TextBlock Grid.Column="1" Classes="lbl" Text="Platform"
+                           Margin="18,0,8,0" />
+                <Border Grid.Column="2" Classes="seg sm">
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton Classes="seg-item" GroupName="platform"
+                                     Content="App Store · iOS"
+                                     IsChecked="{Binding IsIosSelected, Mode=TwoWay}" />
+                        <RadioButton Classes="seg-item" GroupName="platform"
+                                     Content="Google Play · Android"
+                                     IsChecked="{Binding IsAndroidSelected, Mode=TwoWay}" />
+                    </StackPanel>
+                </Border>
+
+                <TextBlock Grid.Column="3" Classes="lbl" Text="Locale"
+                           Margin="18,0,8,0" />
+                <ComboBox Grid.Column="4" Classes="sel" MinWidth="150"
+                          ItemsSource="{Binding Locales}"
+                          SelectedItem="{Binding SelectedLocale, Mode=TwoWay}" />
+                <TextBlock Grid.Column="5" Classes="lbl" Margin="10,0,0,0"
+                           Foreground="{DynamicResource Text3Brush}"
+                           Text="{Binding LocalizedNote}" />
+
+                <StackPanel Grid.Column="7" Classes="synced" Orientation="Horizontal" Spacing="6">
+                    <Border Classes="synced-dot" />
+                    <TextBlock Text="{Binding LastSyncedText}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Empty state -->
+        <Border IsVisible="{Binding IsEmpty}">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
+                        Spacing="10" MaxWidth="420">
+                <TextBlock Text="🏷" FontSize="34" HorizontalAlignment="Center" />
+                <TextBlock Text="No store metadata" FontSize="16" FontWeight="SemiBold"
+                           HorizontalAlignment="Center"
+                           Foreground="{DynamicResource Text1Brush}" />
+                <TextBlock Text="{Binding EmptyStateText}" FontSize="12.5"
+                           TextWrapping="Wrap" TextAlignment="Center"
+                           Foreground="{DynamicResource Text3Brush}" />
+            </StackPanel>
+        </Border>
+
+        <!-- Two-column body -->
+        <Grid ColumnDefinitions="1.22*,1*" IsVisible="{Binding !IsEmpty}">
+
+            <!-- LEFT: metadata form -->
+            <ScrollViewer Grid.Column="0">
+                <StackPanel Margin="22,20" Spacing="16">
+                    <TextBlock Classes="sectitle" Text="{Binding PlatformMetaTitle}" />
+
+                    <ItemsControl ItemsSource="{Binding Fields}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:StoreFieldViewModel">
+                                <StackPanel Margin="0,0,0,2" Spacing="5">
+                                    <Grid ColumnDefinitions="Auto,Auto,*,Auto">
+                                        <TextBlock Grid.Column="0" Classes="fldlabel"
+                                                   VerticalAlignment="Center"
+                                                   Text="{Binding Label}" />
+                                        <Border Grid.Column="1" Classes="osbadge" Margin="6,0,0,0"
+                                                IsVisible="{Binding HasBadge}">
+                                            <TextBlock Text="{Binding Badge}" />
+                                        </Border>
+                                        <TextBlock Grid.Column="3" Classes="counter"
+                                                   Classes.warn="{Binding IsNearLimit}"
+                                                   Classes.over="{Binding IsOverLimit}"
+                                                   Text="{Binding CounterText}" />
+                                    </Grid>
+                                    <TextBox Classes="inp"
+                                             Text="{Binding Value, Mode=OneWay}"
+                                             IsReadOnly="True"
+                                             AcceptsReturn="{Binding Multiline}"
+                                             TextWrapping="Wrap"
+                                             MaxHeight="160"
+                                             Watermark="—" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- RIGHT: screenshots gallery -->
+            <Border Grid.Column="1" Background="{DynamicResource Surface2Brush}"
+                    BorderBrush="{DynamicResource SeparatorBrush}"
+                    BorderThickness="1,0,0,0">
+                <ScrollViewer>
+                    <StackPanel Margin="22,20" Spacing="12">
+                        <TextBlock Classes="sectitle" Text="Screenshots" />
+
+                        <Border Classes="seg sm" HorizontalAlignment="Left">
+                            <ItemsControl ItemsSource="{Binding Devices}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:DeviceOption">
+                                        <RadioButton Classes="seg-item" GroupName="device"
+                                                     Content="{Binding Title}"
+                                                     IsChecked="{Binding IsSelected, Mode=OneWay}"
+                                                     Command="{Binding $parent[ItemsControl].((vm:StoreListingSectionViewModel)DataContext).SelectDeviceCommand}"
+                                                     CommandParameter="{Binding}" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Border>
+
+                        <TextBlock FontSize="12.5" Foreground="{DynamicResource Text2Brush}"
+                                   Text="{Binding ScreenshotCountText}" />
+
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button Classes="btn" Content="Capture screenshots" IsEnabled="False" />
+                            <Button Classes="btn" Content="Upload" IsEnabled="False" />
+                        </StackPanel>
+
+                        <!-- screenshots grid (real PNGs) -->
+                        <ItemsControl ItemsSource="{Binding Screenshots}" Margin="0,2,0,0"
+                                      IsVisible="{Binding HasScreenshots}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid Columns="3" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="x:String">
+                                    <Border Classes="shotframe" Margin="6">
+                                        <Image Stretch="UniformToFill"
+                                               Source="{Binding Converter={StaticResource PathToBitmap}}" />
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <!-- Add tile -->
+                        <UniformGrid Columns="3">
+                            <Border Classes="shotadd" Margin="6">
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
+                                            Spacing="6">
+                                    <TextBlock Text="＋" FontSize="22"
+                                               HorizontalAlignment="Center"
+                                               Foreground="{DynamicResource Text3Brush}" />
+                                    <TextBlock Text="Add" FontSize="11" FontWeight="SemiBold"
+                                               HorizontalAlignment="Center"
+                                               Foreground="{DynamicResource Text3Brush}" />
+                                </StackPanel>
+                            </Border>
+                        </UniformGrid>
+
+                        <TextBlock IsVisible="{Binding !HasScreenshots}"
+                                   FontSize="12" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource Text3Brush}"
+                                   Text="{Binding ScreenshotsEmptyText}" />
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+    </DockPanel>
+</UserControl>

@@ -50,6 +50,9 @@ public partial class ProjectShellViewModel : ObservableObject
             new(ProjectSection.TestFlight, "TestFlight", "✈"),
             new(ProjectSection.Screenshots, "Screenshots", "🖼"),
             new(ProjectSection.BuildTest, "Build & Test", "🧪"),
+            new(ProjectSection.StoreListing, "Store Listing", "🏷"),
+            new(ProjectSection.WhatsNew, "What's New", "📝"),
+            new(ProjectSection.Release, "Release", "📦"),
         };
 
         SelectSection(ProjectSection.Lanes);
@@ -101,6 +104,9 @@ public partial class ProjectShellViewModel : ObservableObject
         ProjectSection.TestFlight => BuildTestFlight(),
         ProjectSection.Screenshots => BuildScreenshots(),
         ProjectSection.BuildTest => BuildBuildTest(),
+        ProjectSection.StoreListing => BuildStoreListing(),
+        ProjectSection.WhatsNew => Placeholder("What's New"),
+        ProjectSection.Release => Placeholder("Release"),
         _ => Placeholder(section.ToString()),
     };
 
@@ -138,6 +144,9 @@ public partial class ProjectShellViewModel : ObservableObject
         new(_project, RunLane,
             hasTestLane: () => Lanes.HasLane(Platform.Ios, "test"),
             hasBuildLane: () => Lanes.HasLane(Platform.Ios, "build"));
+
+    StoreListingSectionViewModel BuildStoreListing() =>
+        new(_project);
 
     /// <summary>
     /// Runs a lane on behalf of a section screen: switches to the Lanes section so

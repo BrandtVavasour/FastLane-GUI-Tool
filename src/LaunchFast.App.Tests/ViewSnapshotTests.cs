@@ -127,6 +127,17 @@ public class ViewSnapshotTests
     }
 
     [AvaloniaTest]
+    public void StoreListingSectionView_snapshot()
+    {
+        ForEachTheme("StoreListingSectionView", () =>
+        {
+            var project = TestProjects.MakeProjectWithStoreMetadata();
+            var vm = new StoreListingSectionViewModel(project);
+            return new StoreListingSectionView { DataContext = vm };
+        });
+    }
+
+    [AvaloniaTest]
     public void SecretsDialog_snapshot()
     {
         // SecretsDialog is itself a Window, so it is rendered directly rather than
