@@ -46,6 +46,9 @@
         <DataTemplate DataType="vm:ReleaseSectionViewModel">
             <views:ReleaseSectionView />
         </DataTemplate>
+        <DataTemplate DataType="vm:RunHistorySectionViewModel">
+            <views:RunHistorySectionView />
+        </DataTemplate>
         <DataTemplate DataType="vm:SectionPlaceholderViewModel">
             <Border Background="{DynamicResource Surface0Brush}">
                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">

@@ -3,6 +3,7 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LaunchFast.Core.Env;
+using LaunchFast.Core.History;
 using LaunchFast.Core.Models;
 using LaunchFast.Core.Parsing;
 using LaunchFast.Core.Running;
@@ -23,6 +24,7 @@ public partial class ProjectDetailViewModel : ObservableObject
     readonly EnvResolver _resolver;
     readonly StoreStatusProvider _storeStatus;
     readonly StoreIdentifiers _identifiers;
+    readonly RunHistoryStore _history;
 
     IReadOnlyList<string> _required = [];
     IReadOnlyDictionary<string, string> _fromFiles = new Dictionary<string, string>();
@@ -30,12 +32,18 @@ public partial class ProjectDetailViewModel : ObservableObject
     DispatcherTimer? _elapsedTimer;
     DateTime _runStarted;
 
+    // Lane + start instant captured when a run launches, used to build the audit
+    // record on completion (independent of the UI-only elapsed timer).
+    LaneViewModel? _activeLane;
+    DateTime _activeRunStartedUtc;
+
     public ProjectDetailViewModel(
         Project project,
         ISecretStore secrets,
         IPtyFactory ptyFactory,
         StoreStatusProvider? storeStatus = null,
-        StoreIdentifiers? identifiers = null)
+        StoreIdentifiers? identifiers = null,
+        RunHistoryStore? history = null)
     {
         _project = project;
         _secrets = secrets;
@@ -43,7 +51,16 @@ public partial class ProjectDetailViewModel : ObservableObject
         _resolver = new EnvResolver(secrets);
         _storeStatus = storeStatus ?? new StoreStatusProvider(null, null);
         _identifiers = identifiers ?? new StoreIdentifiers(null, null);
+        _history = history ?? new RunHistoryStore(NoOpHistoryDir());
     }
+
+    /// <summary>
+    /// A throwaway temp directory for the history store when none is injected, so
+    /// the default ctor never writes into the real user history. Real composition
+    /// (the shell) always passes the shared store.
+    /// </summary>
+    static string NoOpHistoryDir() =>
+        Path.Combine(Path.GetTempPath(), "lf-history-noop", Guid.NewGuid().ToString("N"));
 
     /// <summary>
     /// Test convenience: wires an empty in-memory secret store and a no-op PTY
@@ -229,6 +246,9 @@ public partial class ProjectDetailViewModel : ObservableObject
         Run.CurrentAction = null;
         SetRunning(true);
 
+        _activeLane = lane;
+        _activeRunStartedUtc = DateTime.UtcNow;
+
         var handle = new LaneRunner(_ptyFactory).Run(lane.Lane, lane.PlatformDir, env, OnOutput);
         Run.Handle = handle;
         handle.Completed += OnCompleted;
@@ -283,13 +303,54 @@ public partial class ProjectDetailViewModel : ObservableObject
     {
         void Finish()
         {
+            // Persist the audit record BEFORE clearing run state, while the output
+            // and active lane are still available. Guarded so a recording failure
+            // never affects the run's completion semantics.
+            RecordRun(code);
+
             SetRunning(false);
             Run.Handle = null;
             StopElapsedTimer();
+            _activeLane = null;
         }
 
         if (Dispatcher.UIThread.CheckAccess()) Finish();
         else Dispatcher.UIThread.Post(Finish);
+    }
+
+    /// <summary>
+    /// Builds and appends a <see cref="RunRecord"/> for the just-finished run.
+    /// Best-effort: any failure here is swallowed so it cannot break a run.
+    /// </summary>
+    void RecordRun(int code)
+    {
+        try
+        {
+            if (_activeLane is not { } lane) return;
+
+            var lines = Run.Lines.ToList();
+            var lastMeaningful = lines.LastOrDefault(l => !string.IsNullOrWhiteSpace(l))?.Trim();
+            var tail = string.Join("\n", lines.TakeLast(50));
+
+            var record = new RunRecord
+            {
+                Platform = lane.Platform,
+                LaneName = lane.Name,
+                Status = code == 0 ? RunStatus.Succeeded : RunStatus.Failed,
+                ExitCode = code,
+                StartedUtc = _activeRunStartedUtc,
+                Duration = DateTime.UtcNow - _activeRunStartedUtc,
+                Trigger = "Local",
+                ResultSummary = string.IsNullOrEmpty(lastMeaningful) ? $"exit {code}" : lastMeaningful,
+                OutputTail = tail,
+            };
+
+            _history.Append(ProjectId, record);
+        }
+        catch
+        {
+            // Recording is never allowed to break a run.
+        }
     }
 
     void SetRunning(bool running)

@@ -1,0 +1,247 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:LaunchFast.App.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="980" d:DesignHeight="640"
+             x:Class="LaunchFast.App.Views.RunHistorySectionView"
+             x:DataType="vm:RunHistorySectionViewModel"
+             x:CompileBindings="True"
+             Background="{DynamicResource Surface0Brush}">
+
+    <UserControl.Styles>
+        <!-- stat card -->
+        <Style Selector="Border.stat">
+            <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="11" />
+            <Setter Property="Background" Value="{DynamicResource CardBgBrush}" />
+            <Setter Property="Padding" Value="13,12" />
+        </Style>
+        <Style Selector="Border.stat TextBlock.sv">
+            <Setter Property="FontSize" Value="22" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{DynamicResource Text1Brush}" />
+        </Style>
+        <Style Selector="Border.stat TextBlock.sk">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Foreground" Value="{DynamicResource Text2Brush}" />
+            <Setter Property="Margin" Value="0,3,0,0" />
+        </Style>
+
+        <!-- run rows -->
+        <Style Selector="Border.hdot">
+            <Setter Property="Width" Value="9" />
+            <Setter Property="Height" Value="9" />
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="TextBlock.hlane">
+            <Setter Property="FontFamily" Value="{DynamicResource MonoFontFamily}" />
+            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource Text1Brush}" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="TextBlock.hres">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{DynamicResource Text2Brush}" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="TextBlock.hmeta">
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="Foreground" Value="{DynamicResource Text2Brush}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Border.av">
+            <Setter Property="Width" Value="22" />
+            <Setter Property="Height" Value="22" />
+            <Setter Property="CornerRadius" Value="11" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Border.av TextBlock">
+            <Setter Property="FontSize" Value="9" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.hrow">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="15,12" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Button.hrow:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource Surface1Brush}" />
+        </Style>
+        <!-- mini terminal -->
+        <Style Selector="TextBox.miniterm">
+            <Setter Property="FontFamily" Value="{DynamicResource MonoFontFamily}" />
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="Foreground" Value="{DynamicResource TermTextBrush}" />
+            <Setter Property="Background" Value="{DynamicResource TermBgBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="13,11" />
+            <Setter Property="IsReadOnly" Value="True" />
+            <Setter Property="AcceptsReturn" Value="True" />
+            <Setter Property="TextWrapping" Value="NoWrap" />
+        </Style>
+    </UserControl.Styles>
+
+    <DockPanel>
+        <!-- Toolbar: lane filter, status filter, Export logs -->
+        <Border DockPanel.Dock="Top"
+                Background="{DynamicResource Surface1Brush}"
+                BorderBrush="{DynamicResource SeparatorBrush}"
+                BorderThickness="0,0,0,1">
+            <Grid ColumnDefinitions="Auto,Auto,*,Auto" Margin="16,11">
+                <ComboBox Grid.Column="0" Classes="sel" Width="160" Margin="0,0,8,0"
+                          ItemsSource="{Binding LaneFilters}"
+                          SelectedItem="{Binding SelectedLaneFilter, Mode=TwoWay}" />
+                <ComboBox Grid.Column="1" Classes="sel" Width="140"
+                          ItemsSource="{Binding StatusFilters}"
+                          SelectedItem="{Binding SelectedStatusFilter, Mode=TwoWay}" />
+                <Button Grid.Column="3" Classes="btn" Content="Export logs"
+                        Command="{Binding ExportLogsCommand}" />
+            </Grid>
+        </Border>
+
+        <!-- Subbar -->
+        <Border DockPanel.Dock="Top" Classes="subbar">
+            <Grid ColumnDefinitions="Auto,*">
+                <TextBlock Grid.Column="0" Classes="h2" Text="Run history" />
+                <TextBlock Grid.Column="1" Classes="lbl" Margin="12,0,0,0"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource Text3Brush}"
+                           Text="{Binding ExportStatus}"
+                           IsVisible="{Binding ExportStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+            </Grid>
+        </Border>
+
+        <!-- Stats row -->
+        <Border DockPanel.Dock="Top"
+                BorderBrush="{DynamicResource SeparatorBrush}"
+                BorderThickness="0,0,0,1"
+                IsVisible="{Binding !IsEmpty}">
+            <Grid ColumnDefinitions="*,*,*,*" Margin="20,16">
+                <Border Grid.Column="0" Classes="stat" Margin="0,0,6,0">
+                    <StackPanel>
+                        <TextBlock Classes="sv" Text="{Binding RunsLast30Days}" />
+                        <TextBlock Classes="sk" Text="Runs · last 30 days" />
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="1" Classes="stat" Margin="6,0">
+                    <StackPanel>
+                        <TextBlock Classes="sv" Foreground="{DynamicResource GreenBrush}"
+                                   Text="{Binding SuccessRate}" />
+                        <TextBlock Classes="sk" Text="Success rate" />
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="2" Classes="stat" Margin="6,0">
+                    <StackPanel>
+                        <TextBlock Classes="sv" Text="{Binding MedianDuration}" />
+                        <TextBlock Classes="sk" Text="Median duration" />
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="3" Classes="stat" Margin="6,0,0,0">
+                    <StackPanel>
+                        <TextBlock Classes="sv" Foreground="{DynamicResource RedBrush}"
+                                   Text="{Binding LastFailure}" />
+                        <TextBlock Classes="sk" Text="Last failure" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- Empty state -->
+        <Border IsVisible="{Binding IsEmpty}">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
+                        Spacing="10" MaxWidth="420">
+                <TextBlock Text="🕘" FontSize="34" HorizontalAlignment="Center" />
+                <TextBlock Text="No runs yet" FontSize="16" FontWeight="SemiBold"
+                           HorizontalAlignment="Center"
+                           Foreground="{DynamicResource Text1Brush}" />
+                <TextBlock Text="{Binding EmptyStateText}" FontSize="12.5"
+                           TextWrapping="Wrap" TextAlignment="Center"
+                           Foreground="{DynamicResource Text3Brush}" />
+            </StackPanel>
+        </Border>
+
+        <!-- Run list -->
+        <ScrollViewer IsVisible="{Binding !IsEmpty}">
+            <ItemsControl ItemsSource="{Binding Rows}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:RunHistoryRowViewModel">
+                        <Border BorderBrush="{DynamicResource SeparatorBrush}"
+                                BorderThickness="0,0,0,1">
+                            <StackPanel>
+                                <!-- clickable row -->
+                                <Button Classes="hrow"
+                                        Command="{Binding $parent[ItemsControl].((vm:RunHistorySectionViewModel)DataContext).ToggleRowCommand}"
+                                        CommandParameter="{Binding}">
+                                    <Grid ColumnDefinitions="Auto,128,*,Auto,62,64,Auto">
+                                        <Border Grid.Column="0" Classes="hdot" Margin="0,0,13,0"
+                                                Background="{DynamicResource GreenBrush}"
+                                                IsVisible="{Binding Succeeded}" />
+                                        <Border Grid.Column="0" Classes="hdot" Margin="0,0,13,0"
+                                                Background="{DynamicResource RedBrush}"
+                                                IsVisible="{Binding Failed}" />
+
+                                        <TextBlock Grid.Column="1" Classes="hlane" Margin="0,0,13,0"
+                                                   Text="{Binding LaneLabel}" />
+                                        <TextBlock Grid.Column="2" Classes="hres" Margin="0,0,13,0"
+                                                   Text="{Binding ResultSummary}" />
+
+                                        <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="7"
+                                                    Margin="0,0,13,0" VerticalAlignment="Center">
+                                            <Border Classes="av" Background="{Binding AvatarColor}">
+                                                <TextBlock Text="{Binding Initials}" />
+                                            </Border>
+                                            <TextBlock Classes="hmeta" Text="{Binding Trigger}" />
+                                        </StackPanel>
+
+                                        <TextBlock Grid.Column="4" Classes="hmeta" TextAlignment="Right"
+                                                   Margin="0,0,13,0" Text="{Binding DurationText}" />
+                                        <TextBlock Grid.Column="5" Classes="hmeta" TextAlignment="Right"
+                                                   Margin="0,0,13,0"
+                                                   Foreground="{DynamicResource Text3Brush}"
+                                                   Text="{Binding WhenText}" />
+                                        <TextBlock Grid.Column="6" Classes="hmeta" Text="›"
+                                                   Foreground="{DynamicResource Text3Brush}" />
+                                    </Grid>
+                                </Button>
+
+                                <!-- expandable detail -->
+                                <StackPanel Margin="40,0,16,16" Spacing="10"
+                                            IsVisible="{Binding IsExpanded}">
+                                    <Border CornerRadius="9" ClipToBounds="True"
+                                            Background="{DynamicResource TermBgBrush}"
+                                            IsVisible="{Binding HasOutput}">
+                                        <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                                                      VerticalScrollBarVisibility="Auto"
+                                                      MaxHeight="220">
+                                            <TextBox Classes="miniterm" Text="{Binding OutputTail, Mode=OneWay}" />
+                                        </ScrollViewer>
+                                    </Border>
+                                    <TextBlock IsVisible="{Binding !HasOutput}"
+                                               FontSize="12" Foreground="{DynamicResource Text3Brush}"
+                                               Text="No output captured for this run." />
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <Button Classes="btn" Content="Re-run lane"
+                                                Command="{Binding $parent[ItemsControl].((vm:RunHistorySectionViewModel)DataContext).RerunCommand}"
+                                                CommandParameter="{Binding}" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>

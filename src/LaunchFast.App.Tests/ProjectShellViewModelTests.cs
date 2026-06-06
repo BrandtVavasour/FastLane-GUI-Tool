@@ -125,10 +125,14 @@ public class ProjectShellViewModelTests
         shell.SelectSectionCommand.Execute(ProjectSection.Release);
         Assert.That(shell.CurrentContent, Is.InstanceOf<ReleaseSectionViewModel>());
 
-        // All three new sidebar entries exist.
+        shell.SelectSectionCommand.Execute(ProjectSection.History);
+        Assert.That(shell.CurrentContent, Is.InstanceOf<RunHistorySectionViewModel>());
+
+        // All sidebar entries exist.
         Assert.That(shell.Sections.Any(s => s.Section == ProjectSection.StoreListing), Is.True);
         Assert.That(shell.Sections.Any(s => s.Section == ProjectSection.WhatsNew), Is.True);
         Assert.That(shell.Sections.Any(s => s.Section == ProjectSection.Release), Is.True);
+        Assert.That(shell.Sections.Any(s => s.Section == ProjectSection.History), Is.True);
     }
 
     [Test]

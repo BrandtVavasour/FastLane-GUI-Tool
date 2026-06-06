@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LaunchFast.Core.Env;
+using LaunchFast.Core.History;
 using LaunchFast.Core.Models;
 using LaunchFast.Core.Running;
 using LaunchFast.Core.Stores;
@@ -26,6 +27,7 @@ public partial class ProjectShellViewModel : ObservableObject
     readonly IPtyFactory _ptyFactory;
     readonly StoreStatusProvider _storeStatus;
     readonly StoreIdentifiers _identifiers;
+    readonly RunHistoryStore _history;
 
     readonly Dictionary<ProjectSection, object> _contentCache = new();
 
@@ -34,13 +36,15 @@ public partial class ProjectShellViewModel : ObservableObject
         ISecretStore secrets,
         IPtyFactory ptyFactory,
         StoreStatusProvider storeStatus,
-        StoreIdentifiers identifiers)
+        StoreIdentifiers identifiers,
+        RunHistoryStore? history = null)
     {
         _project = project;
         _secrets = secrets;
         _ptyFactory = ptyFactory;
         _storeStatus = storeStatus;
         _identifiers = identifiers;
+        _history = history ?? new RunHistoryStore();
 
         Sections = new ObservableCollection<ProjectSectionViewModel>
         {
@@ -54,6 +58,7 @@ public partial class ProjectShellViewModel : ObservableObject
             new(ProjectSection.StoreListing, "Store Listing", "🏷"),
             new(ProjectSection.WhatsNew, "What's New", "📝"),
             new(ProjectSection.Release, "Release", "📦"),
+            new(ProjectSection.History, "History", "🕘"),
         };
 
         SelectSection(ProjectSection.Lanes);
@@ -109,6 +114,7 @@ public partial class ProjectShellViewModel : ObservableObject
         ProjectSection.StoreListing => BuildStoreListing(),
         ProjectSection.WhatsNew => BuildWhatsNew(),
         ProjectSection.Release => BuildRelease(),
+        ProjectSection.History => BuildHistory(),
         _ => Placeholder(section.ToString()),
     };
 
@@ -124,7 +130,8 @@ public partial class ProjectShellViewModel : ObservableObject
         get
         {
             if (_lanes is not null) return _lanes;
-            _lanes = new ProjectDetailViewModel(_project, _secrets, _ptyFactory, _storeStatus, _identifiers);
+            _lanes = new ProjectDetailViewModel(
+                _project, _secrets, _ptyFactory, _storeStatus, _identifiers, _history);
             _lanes.Load();
             return _lanes;
         }
@@ -158,6 +165,9 @@ public partial class ProjectShellViewModel : ObservableObject
 
     ReleaseSectionViewModel BuildRelease() =>
         new(_project, RunLane, (p, lane) => Lanes.HasLane(p, lane));
+
+    RunHistorySectionViewModel BuildHistory() =>
+        new(_history, _project.Path, RunLane, () => DateTime.UtcNow);
 
     /// <summary>
     /// Runs a lane on behalf of a section screen: switches to the Lanes section so

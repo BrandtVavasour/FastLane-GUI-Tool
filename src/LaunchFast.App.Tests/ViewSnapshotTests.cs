@@ -186,6 +186,59 @@ public class ViewSnapshotTests
     }
 
     [AvaloniaTest]
+    public void RunHistorySectionView_snapshot()
+    {
+        ForEachTheme("RunHistorySectionView", () =>
+        {
+            var now = new DateTime(2026, 6, 1, 12, 0, 0, DateTimeKind.Utc);
+            var store = new LaunchFast.Core.History.RunHistoryStore(
+                Path.Combine(Path.GetTempPath(), "lf-historysnap-" + Guid.NewGuid().ToString("N")));
+            const string proj = "/projects/snapshot";
+
+            store.Append(proj, new LaunchFast.Core.History.RunRecord
+            {
+                Platform = LaunchFast.Core.Models.Platform.Ios,
+                LaneName = "beta",
+                Status = LaunchFast.Core.History.RunStatus.Succeeded,
+                StartedUtc = now.AddMinutes(-12),
+                Duration = TimeSpan.FromSeconds(107),
+                ResultSummary = "1.4.2 (18) → TestFlight · submitted for review",
+                OutputTail = "▸ build_app\nBUILD SUCCEEDED\n▸ upload_to_testflight",
+            });
+            store.Append(proj, new LaunchFast.Core.History.RunRecord
+            {
+                Platform = LaunchFast.Core.Models.Platform.Android,
+                LaneName = "release",
+                Status = LaunchFast.Core.History.RunStatus.Failed,
+                ExitCode = 1,
+                StartedUtc = now.AddHours(-2),
+                Duration = TimeSpan.FromSeconds(38),
+                ResultSummary = "Failed · supply: 403 from Google Play API",
+                OutputTail = "▸ gradle bundleRelease\nBUILD SUCCESSFUL in 32s\n✗ 403 permission denied",
+            });
+
+            var vm = new RunHistorySectionViewModel(store, proj,
+                runLane: (_, _) => { }, nowUtc: () => now);
+            // Expand a row so the mini-terminal detail renders in the snapshot.
+            vm.ToggleRowCommand.Execute(vm.Rows[1]);
+            return new RunHistorySectionView { DataContext = vm };
+        });
+    }
+
+    [AvaloniaTest]
+    public void RunHistorySectionView_empty_snapshot()
+    {
+        ForEachTheme("RunHistorySectionViewEmpty", () =>
+        {
+            var store = new LaunchFast.Core.History.RunHistoryStore(
+                Path.Combine(Path.GetTempPath(), "lf-historysnap-" + Guid.NewGuid().ToString("N")));
+            var vm = new RunHistorySectionViewModel(store, "/projects/empty",
+                nowUtc: () => DateTime.UtcNow);
+            return new RunHistorySectionView { DataContext = vm };
+        });
+    }
+
+    [AvaloniaTest]
     public void SecretsDialog_snapshot()
     {
         // SecretsDialog is itself a Window, so it is rendered directly rather than

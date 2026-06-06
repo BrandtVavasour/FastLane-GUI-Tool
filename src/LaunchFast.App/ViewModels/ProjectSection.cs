@@ -15,6 +15,7 @@ public enum ProjectSection
     StoreListing,
     WhatsNew,
     Release,
+    History,
 }
 
 /// <summary>
