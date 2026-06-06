@@ -102,7 +102,13 @@ Goal: cover most of fastlane via per-project section screens. Built as shells no
   args + JUnit test-results parse; honest empty state; nothing illustrative remains).
   ✅ **Signing iOS — REAL** (`IosSigningReader`: Matchfile + provisioning profiles parsed from disk +
   codesigning certs via `security`; only the destructive match-nuke button stays inert).
-  ⬜ TestFlight (ASC builds/testers via AppStoreConnectClient — last shell) — next.
+  ✅ **TestFlight — REAL** (ASC build status + beta groups + testers via the App Store Connect client;
+  honest "connect an API key" state when uncredentialed; never fabricates testers).
+- 🎉 **ALL 12 sections are now real** (or honestly unavailable). The only remaining illustrative
+  sub-elements are clearly flagged: the Screenshots framed-preview mock, the destructive match-nuke
+  button (intentionally inert), and the Release CI/precheck checks (need external systems).
+- ✅ Closing review (309 tests): **SHIP-READY** — all readers correct/total/honest/tested, no author
+  names in file content, Core has zero Avalonia dep, no secrets, build 0/0 (both solutions).
 
 ## UI design
 - ✅ **macOS-native restyle** from a Claude Design handoff (`LaunchFast.html`): tokenised

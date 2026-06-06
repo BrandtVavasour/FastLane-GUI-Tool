@@ -121,11 +121,15 @@ Store Listing, What's New, Release, Android Signing — built from the three Cla
 Real features: lane running (live output + preflight + gating + store status), Fastfile inspector
 (`ParseDetailed`), run history (`RunHistoryStore`), Secrets (Keychain/.env), Store Listing +
 What's New (`StoreMetadataReader`), Release pre-flight checks, Android Signing (`AndroidSigningReader`).
-The iOS Signing/TestFlight/Screenshots/Build & Test screens are themed shells with clearly-flagged
-illustrative data + wired Run buttons (their real backends — cert parsing, ASC testers/builds,
-snapshot/frameit config, gym/scan results — are the next make-real slices).
-**244 unit tests + 3 real integration tests** pass; build 0/0 (both solutions); real headless Skia
-UI snapshot coverage for every view. See **`PROGRESS.md`** for the full log.
+All 12 sections now surface REAL data (or an honest unavailable/empty state) — the former iOS shells
+were made real: **Screenshots** (`SnapshotConfigReader` — Snapfile + captured shots), **Build & Test**
+(`BuildTestConfigReader` — gym/scan config + JUnit results), **iOS Signing** (`IosSigningReader` —
+Matchfile + provisioning profiles + `security` certs), **TestFlight** (App Store Connect build status
++ beta groups/testers, graceful when uncredentialed). Only a few clearly-flagged illustrative
+sub-elements remain (Screenshots framed-preview mock, the inert destructive match-nuke button, the
+Release CI/precheck checks). **309 unit tests + 3 real integration tests** pass; build 0/0 (both
+solutions); real headless Skia UI snapshot coverage for every view; reviewed SHIP-READY.
+See **`PROGRESS.md`** for the full log.
 
 Still needs the owner's Mac for manual verification: visible window appearance and an actual
 `fastlane` run; and real ASC `.p8` + Play service-account JSON for live store-version data.
