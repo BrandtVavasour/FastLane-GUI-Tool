@@ -83,7 +83,13 @@ Goal: cover most of fastlane via per-project section screens. Built as shells no
   rendered and asserted to draw real pixels (`SnapshotHarness`, `ViewSnapshotTests`, `RenderProbeTests`).
   No committed `.verified.png` baselines (cross-machine AA/font instability) — PNGs emitted to gitignored
   output for eyeballing; tests catch crashes/blank-render, not subtle pixel regressions.
-- ⬜ Remaining design files: `Store & Release` (685 lines), `Lanes, History & Android Signing` (492).
+- 🔨 **Store & Release** design (3 screens): ✅ **Store Listing — REAL** (Core `StoreMetadataReader`
+  reads deliver/supply metadata text + screenshots from disk, per platform/locale, with char limits;
+  read-only this pass, edit/Save is a follow-up). ⬜ What's New (per-version/locale release-notes editor)
+  + ⬜ Release Flow (compose + pre-flight checklist + mini terminal) — placeholder nav sections, next.
+- ⬜ Remaining design file: `Lanes, History & Android Signing` (492 lines).
+- Per-project sidebar now: Lanes · Signing · Secrets · TestFlight · Screenshots · Build & Test ·
+  Store Listing · What's New · Release.
 
 ## UI design
 - ✅ **macOS-native restyle** from a Claude Design handoff (`LaunchFast.html`): tokenised
