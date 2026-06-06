@@ -40,15 +40,15 @@ public class ProjectShellViewModelTests
     }
 
     [Test]
-    public void SelectSection_Secrets_swaps_to_placeholder()
+    public void SelectSection_Secrets_swaps_to_secrets_section()
     {
         var shell = MakeShell(out _);
 
         shell.SelectSectionCommand.Execute(ProjectSection.Secrets);
 
         Assert.That(shell.SelectedSection, Is.EqualTo(ProjectSection.Secrets));
-        Assert.That(shell.CurrentContent, Is.InstanceOf<SectionPlaceholderViewModel>());
-        Assert.That(((SectionPlaceholderViewModel)shell.CurrentContent!).Title, Is.EqualTo("Secrets"));
+        Assert.That(shell.CurrentContent, Is.InstanceOf<SecretsSectionViewModel>());
+        Assert.That(((SecretsSectionViewModel)shell.CurrentContent!).Secrets, Is.Not.Empty);
 
         Assert.That(shell.Sections.Single(s => s.Section == ProjectSection.Secrets).IsSelected, Is.True);
         Assert.That(shell.Sections.Single(s => s.Section == ProjectSection.Lanes).IsSelected, Is.False);

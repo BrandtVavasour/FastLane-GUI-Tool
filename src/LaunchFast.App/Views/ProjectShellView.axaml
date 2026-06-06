@@ -19,6 +19,9 @@
         <DataTemplate DataType="vm:ProjectDetailViewModel">
             <views:ProjectDetailView />
         </DataTemplate>
+        <DataTemplate DataType="vm:SecretsSectionViewModel">
+            <views:SecretsSectionView />
+        </DataTemplate>
         <DataTemplate DataType="vm:SectionPlaceholderViewModel">
             <Border Background="{DynamicResource Surface0Brush}">
                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">

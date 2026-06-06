@@ -97,7 +97,7 @@ public partial class ProjectShellViewModel : ObservableObject
     {
         ProjectSection.Lanes => BuildLanes(),
         ProjectSection.Signing => Placeholder("Signing"),
-        ProjectSection.Secrets => Placeholder("Secrets"),
+        ProjectSection.Secrets => BuildSecrets(),
         ProjectSection.TestFlight => Placeholder("TestFlight"),
         ProjectSection.Screenshots => Placeholder("Screenshots"),
         ProjectSection.BuildTest => Placeholder("Build & Test"),
@@ -110,6 +110,9 @@ public partial class ProjectShellViewModel : ObservableObject
         detail.Load();
         return detail;
     }
+
+    SecretsSectionViewModel BuildSecrets() =>
+        new(_project, _secrets);
 
     static SectionPlaceholderViewModel Placeholder(string title) =>
         new(title, "Coming up — not wired yet");

@@ -51,10 +51,16 @@ public class ProjectDetailViewTests
         window.Show();
         Assert.That(window.IsVisible, Is.True);
 
-        // Selecting another section swaps the content to a placeholder.
-        projectShell.SelectSectionCommand.Execute(ProjectSection.Secrets);
-        Assert.That(projectShell.SelectedSection, Is.EqualTo(ProjectSection.Secrets));
+        // Selecting a not-yet-wired section swaps the content to a placeholder.
+        projectShell.SelectSectionCommand.Execute(ProjectSection.Signing);
+        Assert.That(projectShell.SelectedSection, Is.EqualTo(ProjectSection.Signing));
         Assert.That(projectShell.CurrentContent, Is.InstanceOf<SectionPlaceholderViewModel>());
+
+        // The Secrets section has a real screen (SecretsSectionView) that renders
+        // in the shell host without throwing.
+        projectShell.SelectSectionCommand.Execute(ProjectSection.Secrets);
+        Assert.That(projectShell.CurrentContent, Is.InstanceOf<SecretsSectionViewModel>());
+        Assert.That(window.IsVisible, Is.True);
 
         // Back returns to the launcher.
         projectShell.BackCommand.Execute(null);
