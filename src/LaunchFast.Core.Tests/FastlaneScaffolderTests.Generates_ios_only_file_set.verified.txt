@@ -1,0 +1,127 @@
+﻿[
+  {
+    Path: /proj/ios/fastlane/Fastfile,
+    NewContent:
+require 'dotenv'
+
+default_platform(:ios)
+
+# Flutter project root: ios/fastlane/ -> up two levels.
+def flutter_root
+  File.expand_path('../..', __dir__)
+end
+
+platform :ios do
+  before_all do
+    setup_ci if ENV['CI']
+    env_file = ENV['FASTLANE_ENV'] || '.env.production'
+    env_path = File.join(flutter_root, env_file)
+    Dotenv.load(env_path) if File.exist?(env_path)
+  end
+
+  desc "Sync code signing certificates"
+  lane :sync_certificates do
+    match(type: "appstore", readonly: is_ci, git_url: ENV["MATCH_GIT_URL"])
+  end
+
+  desc "Build and upload to TestFlight"
+  lane :beta do
+    sync_certificates
+    export_options_path = File.expand_path("../ExportOptions.plist", __dir__)
+    Dir.chdir("..") do
+      sh("flutter", "clean")
+      sh("flutter", "pub", "get")
+      sh(
+        "flutter", "build", "ipa",
+        "--release",
+        "--dart-define=API_URL=#{ENV['API_URL']}",
+        "--dart-define=API_TOKEN=#{ENV['API_TOKEN']}",
+        "--export-options-plist=#{export_options_path}"
+      )
+    end
+    upload_to_testflight(
+      ipa: "../build/ios/ipa/#{ENV['IPA_NAME'] || 'app'}.ipa",
+      skip_waiting_for_build_processing: true,
+      api_key_path: ENV["APP_STORE_CONNECT_API_KEY_PATH"]
+    )
+  end
+
+  desc "Build and upload to App Store"
+  lane :release do
+    sync_certificates
+    export_options_path = File.expand_path("../ExportOptions.plist", __dir__)
+    Dir.chdir("..") do
+      sh("flutter", "clean")
+      sh("flutter", "pub", "get")
+      sh(
+        "flutter", "build", "ipa",
+        "--release",
+        "--dart-define=API_URL=#{ENV['API_URL']}",
+        "--dart-define=API_TOKEN=#{ENV['API_TOKEN']}",
+        "--export-options-plist=#{export_options_path}"
+      )
+    end
+    upload_to_app_store(
+      ipa: "../build/ios/ipa/#{ENV['IPA_NAME'] || 'app'}.ipa",
+      submit_for_review: false,
+      automatic_release: false,
+      api_key_path: ENV["APP_STORE_CONNECT_API_KEY_PATH"]
+    )
+  end
+
+  desc "Capture screenshots for App Store"
+  lane :screenshots do
+    capture_screenshots
+    upload_to_app_store(
+      skip_binary_upload: true,
+      skip_metadata: true,
+      api_key_path: ENV["APP_STORE_CONNECT_API_KEY_PATH"]
+    )
+  end
+
+end
+
+  },
+  {
+    Path: /proj/ios/fastlane/Appfile,
+    NewContent:
+app_identifier("com.acme.demo")
+apple_id(ENV["APPLE_ID"])
+itc_team_id(ENV["ITC_TEAM_ID"])
+team_id("ABCDE12345")
+
+  },
+  {
+    Path: /proj/ios/fastlane/Matchfile,
+    NewContent:
+git_url(ENV["MATCH_GIT_URL"])
+storage_mode("git")
+type("appstore")
+app_identifier(["com.acme.demo"])
+username(ENV["APPLE_ID"])
+team_id("ABCDE12345")
+readonly(true)
+
+  },
+  {
+    Path: /proj/ios/Gemfile,
+    NewContent:
+source "https://rubygems.org"
+
+gem "fastlane"
+gem "dotenv"
+
+  },
+  {
+    Path: /proj/.env.example,
+    NewContent:
+API_URL=
+API_TOKEN=
+MATCH_GIT_URL=
+MATCH_PASSWORD=
+APPLE_ID=
+ITC_TEAM_ID=
+APP_STORE_CONNECT_API_KEY_PATH=
+
+  }
+]
