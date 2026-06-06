@@ -1,4 +1,7 @@
+using Avalonia.Controls;
+using Avalonia.Headless.NUnit;
 using LaunchFast.App.ViewModels;
+using LaunchFast.App.Views;
 using LaunchFast.Core.Models;
 using LaunchFast.Core.Scanning;
 
@@ -6,6 +9,21 @@ namespace LaunchFast.App.Tests;
 
 public class FastfileSectionViewModelTests
 {
+    [AvaloniaTest]
+    public void FastfileSectionView_renders_with_add_lane_toolbar_button()
+    {
+        var project = TestProjects.MakeFlutterProjectWithRealFastfiles();
+        var vm = new FastfileSectionViewModel(project, runLane: null, openWizard: _ => { });
+
+        var window = new Window { Content = new FastfileSectionView { DataContext = vm } };
+        window.Show();
+
+        Assert.That(window.IsVisible, Is.True);
+        Assert.That(vm.AddLaneCommand.CanExecute(null), Is.True);
+
+        window.Close();
+    }
+
     [Test]
     public void Lanes_are_grouped_per_platform_from_real_fastfiles()
     {
@@ -120,6 +138,18 @@ public class FastfileSectionViewModelTests
 
         Assert.That(vm.CanRunSelected, Is.False);
         Assert.That(vm.RunSelectedLaneCommand.CanExecute(null), Is.False);
+    }
+
+    [Test]
+    public void AddLane_invokes_the_open_wizard_callback_with_add_to_existing()
+    {
+        var project = TestProjects.MakeFlutterProjectWithRealFastfiles();
+        var opens = new List<bool>();
+        var vm = new FastfileSectionViewModel(project, runLane: null, openWizard: install => opens.Add(install));
+
+        vm.AddLaneCommand.Execute(null);
+
+        Assert.That(opens, Is.EqualTo(new[] { false }));
     }
 
     [Test]

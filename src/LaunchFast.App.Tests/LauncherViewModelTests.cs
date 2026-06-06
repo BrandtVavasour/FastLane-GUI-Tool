@@ -57,6 +57,30 @@ public class LauncherViewModelTests
         Assert.That(vm.Cards.Count(c => c.Project.Path == childA), Is.EqualTo(1));
     }
 
+    [Test]
+    public void Opening_a_setup_candidate_card_routes_to_the_setup_request()
+    {
+        var candidate = new Project("New App", "/p", "1.0.0+1", null, null, false, null);
+        var configured = new Project("Done", "/q", "1.0.0+1", "/q/ios/fastlane", null, false, null);
+
+        var storeFile = Path.GetTempFileName();
+        var store = new ProjectStore(storeFile);
+        var vm = new LauncherViewModel(store);
+
+        var setupRequests = new List<Project>();
+        var detailRequests = new List<Project>();
+        vm.OpenSetupRequested = setupRequests.Add;
+        vm.OpenDetailRequested = detailRequests.Add;
+
+        vm.OpenDetailCommand.Execute(new ProjectCardViewModel(candidate));
+        vm.OpenDetailCommand.Execute(new ProjectCardViewModel(configured));
+
+        // The fastlane-less candidate routes to the setup wizard; the configured
+        // project opens the normal project shell.
+        Assert.That(setupRequests, Is.EqualTo(new[] { candidate }));
+        Assert.That(detailRequests, Is.EqualTo(new[] { configured }));
+    }
+
     static string TestProjectInside(string workspace, string name)
     {
         var root = Path.Combine(workspace, name);

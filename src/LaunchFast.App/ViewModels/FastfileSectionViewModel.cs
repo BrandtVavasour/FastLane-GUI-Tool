@@ -24,12 +24,15 @@ public enum FastfileView { Steps, Source }
 public partial class FastfileSectionViewModel : ObservableObject
 {
     readonly Action<Platform, string>? _runLane;
+    readonly Action<bool>? _openWizard;
 
     public FastfileSectionViewModel(
         Project project,
-        Action<Platform, string>? runLane = null)
+        Action<Platform, string>? runLane = null,
+        Action<bool>? openWizard = null)
     {
         _runLane = runLane;
+        _openWizard = openWizard;
 
         Lanes = new ObservableCollection<LaneRowViewModel>();
         IosLanes = new ObservableCollection<LaneRowViewModel>();
@@ -182,6 +185,12 @@ public partial class FastfileSectionViewModel : ObservableObject
         if (SelectedLane is not { } l) return;
         _runLane?.Invoke(l.Platform, l.Name);
     }
+
+    // ---- add lane / platform -------------------------------------------------
+
+    /// <summary>Opens the setup wizard in "add to existing" mode (install: false).</summary>
+    [RelayCommand]
+    void AddLane() => _openWizard?.Invoke(false);
 }
 
 /// <summary>One lane row in the rail: its name, description, platform, source and steps.</summary>

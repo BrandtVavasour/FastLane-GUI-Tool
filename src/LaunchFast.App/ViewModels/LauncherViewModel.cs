@@ -16,6 +16,9 @@ public partial class LauncherViewModel(ProjectStore store) : ObservableObject
     /// <summary>Set by the shell; invoked when a card asks to open its detail view.</summary>
     public Action<Project>? OpenDetailRequested { get; set; }
 
+    /// <summary>Set by the shell; invoked when a fastlane-less card asks to run setup.</summary>
+    public Action<Project>? OpenSetupRequested { get; set; }
+
     public void Load()
     {
         Cards.Clear();
@@ -48,6 +51,11 @@ public partial class LauncherViewModel(ProjectStore store) : ObservableObject
     {
         if (card is null) return;
         store.AddRecent(card.Project.Path);
-        OpenDetailRequested?.Invoke(card.Project);
+
+        // A fastlane-less card opens the setup wizard rather than a (non-existent)
+        // project shell; this also routes the card's "Set up →" affordance, whose
+        // click bubbles to the whole-card OpenDetail command.
+        if (card.NeedsSetup) OpenSetupRequested?.Invoke(card.Project);
+        else OpenDetailRequested?.Invoke(card.Project);
     }
 }

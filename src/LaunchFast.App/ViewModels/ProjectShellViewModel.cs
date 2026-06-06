@@ -71,6 +71,13 @@ public partial class ProjectShellViewModel : ObservableObject
     /// <summary>Set by the shell; invoked by the Back command to return to the launcher.</summary>
     public Action? GoBack { get; set; }
 
+    /// <summary>
+    /// Set by the shell; opens the setup wizard for this project. The bool is the
+    /// install flag (false = add a lane/platform to the existing setup), so the
+    /// Fastfile section's "Add lane / platform" reaches the root shell through here.
+    /// </summary>
+    public Action<bool>? OpenWizard { get; set; }
+
     public Project Project => _project;
     public string Name => _project.Name;
     public string? Version => _project.Version;
@@ -143,7 +150,7 @@ public partial class ProjectShellViewModel : ObservableObject
     }
 
     FastfileSectionViewModel BuildFastfile() =>
-        new(_project, RunLane);
+        new(_project, RunLane, openWizard: install => OpenWizard?.Invoke(install));
 
     SigningSectionViewModel BuildSigning() =>
         new(_project, _secrets,

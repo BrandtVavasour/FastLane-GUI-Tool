@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using LaunchFast.App.Services;
+using LaunchFast.App.ViewModels.Wizard;
 using LaunchFast.Core.Env;
 using LaunchFast.Core.Models;
 using LaunchFast.Core.Running;
@@ -29,6 +30,7 @@ public partial class ShellViewModel : ObservableObject
         _ptyFactory = ptyFactory;
         _currentView = launcher;
         launcher.OpenDetailRequested = OpenDetail;
+        launcher.OpenSetupRequested = project => OpenSetupWizard(project, install: true);
     }
 
     public void OpenDetail(Project project)
@@ -40,9 +42,33 @@ public partial class ShellViewModel : ObservableObject
         var shell = new ProjectShellViewModel(project, _secrets, _ptyFactory, provider, ids, asc: asc)
         {
             GoBack = GoHome,
+            OpenWizard = install => OpenSetupWizard(project, install),
         };
         CurrentView = shell;
     }
 
+    /// <summary>
+    /// Builds and shows the fastlane setup wizard with the REAL apply pipeline. The
+    /// shell's own secret store + PTY factory (the production Keychain + process
+    /// backends; fakes under test) back the scaffold service, so a successful apply
+    /// writes the rendered files, stores the chosen secrets and streams
+    /// <c>bundle install</c> into the wizard's apply log. On Cancel OR a successful
+    /// apply the wizard returns to the launcher and re-scans it, so a now-configured
+    /// project loses its "Set up" CTA and opens the normal project shell next time.
+    /// </summary>
+    public void OpenSetupWizard(Project project, bool install)
+    {
+        var svc = new ProjectScaffoldService(_secrets, _ptyFactory, project.Path);
+        var wizard = install
+            ? SetupWizardViewModel.ForInstall(project, apply: p => svc.ApplyAsync(p, project.Path))
+            : SetupWizardViewModel.ForAddToExisting(project, apply: p => svc.ApplyAsync(p, project.Path));
+        svc.Output += wizard.AppendApplyLog;
+        wizard.Closed = () => { GoHome(); RefreshLauncher(); };
+        CurrentView = wizard;
+    }
+
     public void GoHome() => CurrentView = Launcher;
+
+    /// <summary>Re-scans the launcher's projects (e.g. after a setup completes).</summary>
+    public void RefreshLauncher() => Launcher.Load();
 }
