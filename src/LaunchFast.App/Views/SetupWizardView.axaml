@@ -1,0 +1,506 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:LaunchFast.App.ViewModels.Wizard"
+             xmlns:scaf="using:LaunchFast.Core.Scaffolding"
+             xmlns:conv="using:LaunchFast.App.Converters"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
+             x:Class="LaunchFast.App.Views.SetupWizardView"
+             x:DataType="vm:SetupWizardViewModel"
+             x:CompileBindings="True"
+             Background="{DynamicResource Surface0Brush}">
+
+    <UserControl.Styles>
+        <!-- step rail (display-only ListBox; selection follows StepIndex) -->
+        <Style Selector="ListBox.steprail">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+        </Style>
+        <Style Selector="ListBox.steprail ListBoxItem">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="10,9" />
+            <Setter Property="Margin" Value="0,1" />
+            <Setter Property="MinHeight" Value="0" />
+        </Style>
+        <Style Selector="ListBox.steprail ListBoxItem:selected /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource TintBlueBrush}" />
+        </Style>
+        <Style Selector="ListBox.steprail ListBoxItem:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <!-- step number circle -->
+        <Style Selector="Border.stepnum">
+            <Setter Property="Width" Value="22" />
+            <Setter Property="Height" Value="22" />
+            <Setter Property="CornerRadius" Value="11" />
+            <Setter Property="Background" Value="{DynamicResource BadgeBgBrush}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Border.stepnum > TextBlock">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{DynamicResource Text2Brush}" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="ListBox.steprail ListBoxItem:selected Border.stepnum">
+            <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+        </Style>
+        <Style Selector="ListBox.steprail ListBoxItem:selected Border.stepnum > TextBlock">
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+        <!-- step title text -->
+        <Style Selector="TextBlock.steptitle">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontWeight" Value="Medium" />
+            <Setter Property="Foreground" Value="{DynamicResource Text2Brush}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="ListBox.steprail ListBoxItem:selected TextBlock.steptitle">
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
+        <!-- content heading -->
+        <Style Selector="TextBlock.steph">
+            <Setter Property="FontSize" Value="18" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource Text1Brush}" />
+        </Style>
+        <Style Selector="TextBlock.stepsub">
+            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="Foreground" Value="{DynamicResource Text3Brush}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+
+        <!-- platform select card -->
+        <Style Selector="ToggleButton.platcard">
+            <Setter Property="Background" Value="{DynamicResource CardBgBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="11" />
+            <Setter Property="Padding" Value="18" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="ToggleButton.platcard /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="ToggleButton.platcard:checked">
+            <Setter Property="Background" Value="{DynamicResource TintBlueBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+        </Style>
+        <Style Selector="ToggleButton.platcard:checked /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="ToggleButton.platcard TextBlock.platname">
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource Text1Brush}" />
+        </Style>
+        <Style Selector="ToggleButton.platcard TextBlock.platnote">
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="Foreground" Value="{DynamicResource Text3Brush}" />
+        </Style>
+
+        <!-- form field label -->
+        <Style Selector="TextBlock.fldlabel">
+            <Setter Property="Margin" Value="0,0,0,5" />
+        </Style>
+
+        <!-- lanes section head -->
+        <Style Selector="TextBlock.lanehead">
+            <Setter Property="FontSize" Value="10.5" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{DynamicResource Text3Brush}" />
+        </Style>
+        <Style Selector="TextBlock.lanename">
+            <Setter Property="FontFamily" Value="{DynamicResource MonoFontFamily}" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource Text1Brush}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <!-- review code block -->
+        <Style Selector="TextBlock.codeline">
+            <Setter Property="FontFamily" Value="{DynamicResource MonoFontFamily}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{DynamicResource TermTextBrush}" />
+            <Setter Property="TextWrapping" Value="NoWrap" />
+        </Style>
+        <Style Selector="TextBlock.reviewpath">
+            <Setter Property="FontFamily" Value="{DynamicResource MonoFontFamily}" />
+            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource Text1Brush}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <!-- apply panel terminal line -->
+        <Style Selector="TextBlock.applyline">
+            <Setter Property="FontFamily" Value="{DynamicResource MonoFontFamily}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="LineHeight" Value="18" />
+            <Setter Property="Foreground" Value="{DynamicResource TermTextBrush}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid>
+        <!-- ====================== Main wizard layout ====================== -->
+        <Grid ColumnDefinitions="210,*">
+
+            <!-- LEFT: step rail -->
+            <Border Grid.Column="0"
+                    Background="{DynamicResource Surface1Brush}"
+                    BorderBrush="{DynamicResource SeparatorBrush}"
+                    BorderThickness="0,0,1,0">
+                <StackPanel Margin="14,18" Spacing="14">
+                    <StackPanel Spacing="3">
+                        <TextBlock Text="SET UP FASTLANE"
+                                   FontSize="10.5" FontWeight="Bold"
+                                   Foreground="{DynamicResource Text3Brush}" />
+                        <TextBlock Text="{Binding Project.Name}"
+                                   FontSize="15" FontWeight="SemiBold"
+                                   TextTrimming="CharacterEllipsis"
+                                   Foreground="{DynamicResource Text1Brush}" />
+                    </StackPanel>
+
+                    <ListBox Classes="steprail"
+                             ItemsSource="{Binding StepTitles}"
+                             SelectedIndex="{Binding StepIndex, Mode=OneWay}"
+                             IsHitTestVisible="False">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <Border Classes="stepnum">
+                                        <TextBlock>
+                                            <TextBlock.Text>
+                                                <MultiBinding Converter="{x:Static conv:StepNumberConverter.Instance}">
+                                                    <Binding />
+                                                    <Binding Path="$parent[ListBox].((vm:SetupWizardViewModel)DataContext).StepTitles" />
+                                                </MultiBinding>
+                                            </TextBlock.Text>
+                                        </TextBlock>
+                                    </Border>
+                                    <TextBlock Classes="steptitle" Text="{Binding}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </StackPanel>
+            </Border>
+
+            <!-- RIGHT: content host + footer -->
+            <DockPanel Grid.Column="1">
+
+                <!-- footer -->
+                <Border DockPanel.Dock="Bottom"
+                        Background="{DynamicResource Surface1Brush}"
+                        BorderBrush="{DynamicResource SeparatorBrush}"
+                        BorderThickness="0,1,0,0">
+                    <Grid ColumnDefinitions="Auto,*,Auto,Auto" Margin="20,12">
+                        <Button Grid.Column="0" Classes="btn" Content="Cancel"
+                                Command="{Binding CancelCommand}" />
+
+                        <Button Grid.Column="2" Classes="btn" Content="Back" Margin="0,0,8,0"
+                                IsEnabled="{Binding CanGoBack}"
+                                Command="{Binding BackCommand}" />
+
+                        <!-- Next (hidden on Review) -->
+                        <Button Grid.Column="3" Classes="btn accent" Content="Next →"
+                                IsEnabled="{Binding CanGoNext}"
+                                Command="{Binding NextCommand}">
+                            <Button.IsVisible>
+                                <MultiBinding Converter="{x:Static conv:CurrentStepTitleEqualsConverter.Instance}"
+                                              ConverterParameter="!Review">
+                                    <Binding Path="StepIndex" />
+                                    <Binding Path="StepTitles" />
+                                </MultiBinding>
+                            </Button.IsVisible>
+                        </Button>
+
+                        <!-- Generate (Review only) -->
+                        <Button Grid.Column="3" Classes="btn accent" Content="Generate"
+                                Command="{Binding ApplyCommand}">
+                            <Button.IsVisible>
+                                <MultiBinding Converter="{x:Static conv:CurrentStepTitleEqualsConverter.Instance}"
+                                              ConverterParameter="Review">
+                                    <Binding Path="StepIndex" />
+                                    <Binding Path="StepTitles" />
+                                </MultiBinding>
+                            </Button.IsVisible>
+                        </Button>
+                    </Grid>
+                </Border>
+
+                <!-- content -->
+                <ScrollViewer>
+                    <ContentControl Content="{Binding CurrentStep}" Margin="28,26">
+                        <ContentControl.DataTemplates>
+
+                            <!-- ===================== Platforms ===================== -->
+                            <DataTemplate DataType="vm:WizardPlatformsStepViewModel">
+                                <StackPanel Spacing="18" MaxWidth="540" HorizontalAlignment="Left">
+                                    <StackPanel Spacing="5">
+                                        <TextBlock Classes="steph" Text="Platforms" />
+                                        <TextBlock Classes="stepsub"
+                                                   Text="Choose which platforms to set up fastlane for." />
+                                    </StackPanel>
+
+                                    <ToggleButton Classes="platcard" IsChecked="{Binding Ios, Mode=TwoWay}">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <StackPanel Grid.Column="0" Spacing="3">
+                                                <TextBlock Classes="platname" Text="iOS" />
+                                                <TextBlock Classes="platnote"
+                                                           Text="Xcode project · App Store / TestFlight" />
+                                            </StackPanel>
+                                            <Border Grid.Column="1" Classes="pill ok"
+                                                    VerticalAlignment="Center"
+                                                    IsVisible="{Binding IosAlreadyPresent}">
+                                                <TextBlock Text="ALREADY SET UP" />
+                                            </Border>
+                                        </Grid>
+                                    </ToggleButton>
+
+                                    <ToggleButton Classes="platcard" IsChecked="{Binding Android, Mode=TwoWay}">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <StackPanel Grid.Column="0" Spacing="3">
+                                                <TextBlock Classes="platname" Text="Android" />
+                                                <TextBlock Classes="platnote"
+                                                           Text="Gradle project · Google Play" />
+                                            </StackPanel>
+                                            <Border Grid.Column="1" Classes="pill ok"
+                                                    VerticalAlignment="Center"
+                                                    IsVisible="{Binding AndroidAlreadyPresent}">
+                                                <TextBlock Text="ALREADY SET UP" />
+                                            </Border>
+                                        </Grid>
+                                    </ToggleButton>
+                                </StackPanel>
+                            </DataTemplate>
+
+                            <!-- ======================== iOS ======================= -->
+                            <DataTemplate DataType="vm:WizardIosStepViewModel">
+                                <StackPanel Spacing="16" MaxWidth="560" HorizontalAlignment="Left">
+                                    <StackPanel Spacing="5">
+                                        <TextBlock Classes="steph" Text="iOS settings" />
+                                        <TextBlock Classes="stepsub"
+                                                   Text="Identifiers and credentials referenced by the generated Appfile and lanes. Secrets are stored in the macOS Keychain." />
+                                    </StackPanel>
+
+                                    <StackPanel Spacing="4">
+                                        <TextBlock Classes="fldlabel" Text="Bundle identifier" />
+                                        <TextBox Classes="inp mono-inp" Watermark="com.acme.app"
+                                                 Text="{Binding BundleId, Mode=TwoWay}" />
+                                    </StackPanel>
+
+                                    <Grid ColumnDefinitions="*,14,*">
+                                        <StackPanel Grid.Column="0" Spacing="4">
+                                            <TextBlock Classes="fldlabel" Text="Team ID" />
+                                            <TextBox Classes="inp mono-inp" Watermark="ABCDE12345"
+                                                     Text="{Binding TeamId, Mode=TwoWay}" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2" Spacing="4">
+                                            <TextBlock Classes="fldlabel" Text="iTunes Connect team ID" />
+                                            <TextBox Classes="inp mono-inp" Watermark="optional"
+                                                     Text="{Binding ItcTeamId, Mode=TwoWay}" />
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <StackPanel Spacing="4">
+                                        <TextBlock Classes="fldlabel" Text="Apple ID (secret)" />
+                                        <TextBox Classes="inp" PasswordChar="•" Watermark="you@example.com"
+                                                 Text="{Binding AppleId, Mode=TwoWay}" />
+                                    </StackPanel>
+
+                                    <StackPanel Spacing="4">
+                                        <TextBlock Classes="fldlabel" Text="match git URL" />
+                                        <TextBox Classes="inp mono-inp" Watermark="git@github.com:acme/certs.git"
+                                                 Text="{Binding MatchGitUrl, Mode=TwoWay}" />
+                                    </StackPanel>
+
+                                    <StackPanel Spacing="4">
+                                        <TextBlock Classes="fldlabel" Text="match password (secret)" />
+                                        <TextBox Classes="inp" PasswordChar="•" Watermark="match passphrase"
+                                                 Text="{Binding MatchPassword, Mode=TwoWay}" />
+                                    </StackPanel>
+
+                                    <StackPanel Spacing="4">
+                                        <TextBlock Classes="fldlabel" Text="App Store Connect API key path" />
+                                        <TextBox Classes="inp mono-inp" Watermark="~/keys/AuthKey_XXXX.p8"
+                                                 Text="{Binding AppStoreConnectKeyPath, Mode=TwoWay}" />
+                                    </StackPanel>
+
+                                    <Grid ColumnDefinitions="*,14,*">
+                                        <StackPanel Grid.Column="0" Spacing="4">
+                                            <TextBlock Classes="fldlabel" Text="API URL" />
+                                            <TextBox Classes="inp mono-inp" Watermark="https://api.example.com"
+                                                     Text="{Binding ApiUrl, Mode=TwoWay}" />
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2" Spacing="4">
+                                            <TextBlock Classes="fldlabel" Text="API token (secret)" />
+                                            <TextBox Grid.Column="2" Classes="inp" PasswordChar="•"
+                                                     Watermark="optional"
+                                                     Text="{Binding ApiToken, Mode=TwoWay}" />
+                                        </StackPanel>
+                                    </Grid>
+                                </StackPanel>
+                            </DataTemplate>
+
+                            <!-- ====================== Android ===================== -->
+                            <DataTemplate DataType="vm:WizardAndroidStepViewModel">
+                                <StackPanel Spacing="16" MaxWidth="560" HorizontalAlignment="Left">
+                                    <StackPanel Spacing="5">
+                                        <TextBlock Classes="steph" Text="Android settings" />
+                                        <TextBlock Classes="stepsub"
+                                                   Text="The application id and the Google Play service-account JSON key referenced by the generated Appfile." />
+                                    </StackPanel>
+
+                                    <StackPanel Spacing="4">
+                                        <TextBlock Classes="fldlabel" Text="Package (application id)" />
+                                        <TextBox Classes="inp mono-inp" Watermark="com.acme.app"
+                                                 Text="{Binding Package, Mode=TwoWay}" />
+                                    </StackPanel>
+
+                                    <StackPanel Spacing="4">
+                                        <TextBlock Classes="fldlabel" Text="Play service-account JSON key path" />
+                                        <TextBox Classes="inp mono-inp" Watermark="~/keys/play-store.json"
+                                                 Text="{Binding PlayJsonKeyPath, Mode=TwoWay}" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </DataTemplate>
+
+                            <!-- ======================= Lanes ====================== -->
+                            <DataTemplate DataType="vm:WizardLanesStepViewModel">
+                                <StackPanel Spacing="18" MaxWidth="560" HorizontalAlignment="Left">
+                                    <StackPanel Spacing="5">
+                                        <TextBlock Classes="steph" Text="Lanes" />
+                                        <TextBlock Classes="stepsub"
+                                                   Text="Pick the fastlane lanes to generate. Unchecked lanes are left out." />
+                                    </StackPanel>
+
+                                    <StackPanel Spacing="8" IsVisible="{Binding IosLanes.Count}">
+                                        <TextBlock Classes="lanehead" Text="IOS" />
+                                        <Border Classes="listcard">
+                                            <ItemsControl ItemsSource="{Binding IosLanes}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate x:DataType="vm:LaneCheck">
+                                                        <Border Classes="lrow">
+                                                            <Grid ColumnDefinitions="*,Auto">
+                                                                <TextBlock Grid.Column="0" Classes="lanename"
+                                                                           Text="{Binding Name}" />
+                                                                <ToggleSwitch Grid.Column="1"
+                                                                              IsChecked="{Binding Chosen, Mode=TwoWay}" />
+                                                            </Grid>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </Border>
+                                    </StackPanel>
+
+                                    <StackPanel Spacing="8" IsVisible="{Binding AndroidLanes.Count}">
+                                        <TextBlock Classes="lanehead" Text="ANDROID" />
+                                        <Border Classes="listcard">
+                                            <ItemsControl ItemsSource="{Binding AndroidLanes}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate x:DataType="vm:LaneCheck">
+                                                        <Border Classes="lrow">
+                                                            <Grid ColumnDefinitions="*,Auto">
+                                                                <TextBlock Grid.Column="0" Classes="lanename"
+                                                                           Text="{Binding Name}" />
+                                                                <ToggleSwitch Grid.Column="1"
+                                                                              IsChecked="{Binding Chosen, Mode=TwoWay}" />
+                                                            </Grid>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </Border>
+                                    </StackPanel>
+                                </StackPanel>
+                            </DataTemplate>
+
+                            <!-- ====================== Review ====================== -->
+                            <DataTemplate DataType="vm:WizardReviewStepViewModel">
+                                <StackPanel Spacing="16" MaxWidth="640" HorizontalAlignment="Left">
+                                    <StackPanel Spacing="5">
+                                        <TextBlock Classes="steph" Text="Review" />
+                                        <TextBlock Classes="stepsub"
+                                                   Text="These files will be written when you generate. Existing Fastfiles are merged, not overwritten." />
+                                    </StackPanel>
+
+                                    <ItemsControl ItemsSource="{Binding Files}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="scaf:FileChange">
+                                                <StackPanel Spacing="8" Margin="0,0,0,18">
+                                                    <Grid ColumnDefinitions="*,Auto">
+                                                        <TextBlock Grid.Column="0" Classes="reviewpath"
+                                                                   Text="{Binding Path, Converter={x:Static conv:ShortPathConverter.Instance}}"
+                                                                   TextTrimming="CharacterEllipsis" />
+                                                        <Border Grid.Column="1" Classes="pill accent">
+                                                            <TextBlock Text="{Binding Kind, Converter={x:Static conv:FileChangeKindLabelConverter.Instance}}" />
+                                                        </Border>
+                                                    </Grid>
+                                                    <Border Background="{DynamicResource TermBgBrush}"
+                                                            CornerRadius="9" ClipToBounds="True"
+                                                            MaxHeight="280">
+                                                        <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                                                                      VerticalScrollBarVisibility="Auto"
+                                                                      Padding="14,12">
+                                                            <ItemsControl ItemsSource="{Binding NewContent, Converter={x:Static conv:ContentToLinesConverter.Instance}}">
+                                                                <ItemsControl.ItemTemplate>
+                                                                    <DataTemplate x:DataType="x:String">
+                                                                        <TextBlock Classes="codeline" Text="{Binding}" />
+                                                                    </DataTemplate>
+                                                                </ItemsControl.ItemTemplate>
+                                                            </ItemsControl>
+                                                        </ScrollViewer>
+                                                    </Border>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </DataTemplate>
+
+                        </ContentControl.DataTemplates>
+                    </ContentControl>
+                </ScrollViewer>
+            </DockPanel>
+        </Grid>
+
+        <!-- ====================== Apply overlay ====================== -->
+        <Border IsVisible="{Binding IsApplying}"
+                Background="{DynamicResource TermBgBrush}">
+            <DockPanel Margin="0">
+                <Border DockPanel.Dock="Top"
+                        BorderBrush="#1AFFFFFF" BorderThickness="0,0,0,1"
+                        Padding="22,16">
+                    <StackPanel Orientation="Horizontal" Spacing="11">
+                        <Border Classes="spinner" />
+                        <TextBlock Text="Running bundle install…"
+                                   FontSize="13.5" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TermTextBrush}"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+                </Border>
+                <ScrollViewer Padding="22,14">
+                    <ItemsControl ItemsSource="{Binding ApplyLog}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <TextBlock Classes="applyline" Text="{Binding}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+    </Grid>
+</UserControl>

@@ -304,6 +304,30 @@ public class ViewSnapshotTests
         }
     }
 
+    [AvaloniaTest]
+    public void SetupWizardView_review_snapshot()
+    {
+        ForEachTheme("SetupWizardView", () =>
+        {
+            var root = Path.Combine(Path.GetTempPath(), "lf-wizsnap-" + Guid.NewGuid().ToString("N"), "demo");
+            Directory.CreateDirectory(Path.Combine(root, "ios"));
+            Directory.CreateDirectory(Path.Combine(root, "android"));
+            File.WriteAllText(Path.Combine(root, "pubspec.yaml"), "name: demo\nversion: 1.0.0+1\n");
+            var project = LaunchFast.Core.Scanning.ProjectScanner.TryScanRoot(root)!;
+
+            var vm = LaunchFast.App.ViewModels.Wizard.SetupWizardViewModel.ForInstall(project);
+            vm.Platforms.Ios = true;
+            vm.Platforms.Android = false;
+            vm.Next();                                  // iOS
+            vm.Ios.BundleId = "com.acme.demo";
+            vm.Ios.TeamId = "ABCDE12345";
+            vm.Next();                                  // Lanes
+            vm.Next();                                  // Review (builds the plan)
+            Assert.That(vm.Review.Files, Is.Not.Empty);
+            return new LaunchFast.App.Views.SetupWizardView { DataContext = vm };
+        });
+    }
+
     static ProjectStore NewStore(out string path)
     {
         path = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N") + ".json");
