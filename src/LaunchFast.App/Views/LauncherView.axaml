@@ -31,8 +31,9 @@
         </Border>
 
         <!-- Card grid -->
-        <ScrollViewer>
-            <ItemsControl ItemsSource="{Binding Cards}" Margin="20,20,20,24">
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+            <ItemsControl ItemsSource="{Binding Cards}" Margin="20,20,20,24"
+                          HorizontalAlignment="Stretch" VerticalAlignment="Top">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                         <UniformGrid Columns="2" />
