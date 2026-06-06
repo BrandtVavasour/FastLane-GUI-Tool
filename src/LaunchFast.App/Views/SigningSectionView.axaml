@@ -1,0 +1,224 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:LaunchFast.App.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="640"
+             x:Class="LaunchFast.App.Views.SigningSectionView"
+             x:DataType="vm:SigningSectionViewModel"
+             x:CompileBindings="True"
+             Background="{DynamicResource Surface0Brush}">
+
+    <DockPanel>
+        <!-- Toolbar -->
+        <Border DockPanel.Dock="Top"
+                Background="{DynamicResource Surface1Brush}"
+                BorderBrush="{DynamicResource SeparatorBrush}"
+                BorderThickness="0,0,0,1">
+            <Grid ColumnDefinitions="*,Auto,Auto" Margin="16,11">
+                <Button Grid.Column="1" Classes="btn" Margin="0,0,8,0"
+                        Content="Refresh from Apple" />
+                <Button Grid.Column="2" Classes="accent" Content="Run match"
+                        IsEnabled="{Binding CanRunMatch}"
+                        Command="{Binding RunMatchCommand}" />
+            </Grid>
+        </Border>
+
+        <!-- Subbar -->
+        <Border DockPanel.Dock="Top" Classes="subbar">
+            <Grid ColumnDefinitions="Auto,Auto,Auto,*,Auto">
+                <TextBlock Grid.Column="0" Classes="h2" Text="Signing &amp; Certificates" />
+                <Border Grid.Column="1" Classes="chip" Margin="14,0,8,0">
+                    <TextBlock Text="{Binding BundleId}" />
+                </Border>
+                <Border Grid.Column="2" Classes="pill accent">
+                    <TextBlock Text="match · git" />
+                </Border>
+                <StackPanel Grid.Column="4" Classes="synced" Orientation="Horizontal" Spacing="7">
+                    <Border Classes="synced-dot" />
+                    <TextBlock Text="{Binding SyncedText}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Two-column content -->
+        <Grid ColumnDefinitions="*,360">
+
+            <!-- LEFT column -->
+            <Border Grid.Column="0"
+                    BorderBrush="{DynamicResource SeparatorBrush}"
+                    BorderThickness="0,0,1,0">
+                <ScrollViewer>
+                    <StackPanel Margin="20,16,20,20" Spacing="16">
+
+                        <!-- Certificates block -->
+                        <StackPanel Spacing="9">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Grid.Column="0" Classes="blk-t" Text="CERTIFICATES" />
+                                <TextBlock Grid.Column="1" Classes="blk-x" Text="Illustrative" />
+                            </Grid>
+                            <Border Classes="listcard">
+                                <ItemsControl ItemsSource="{Binding Certificates}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:SigningCertRow">
+                                            <Border Classes="lrow">
+                                                <Grid ColumnDefinitions="Auto,12,*,Auto">
+                                                    <Border Grid.Column="0" Classes="lic green">
+                                                        <TextBlock Text="🛡" FontSize="15" />
+                                                    </Border>
+                                                    <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="3">
+                                                        <StackPanel Orientation="Horizontal" Spacing="9">
+                                                            <TextBlock Classes="ltitle" Text="{Binding Title}"
+                                                                       VerticalAlignment="Center" />
+                                                            <Border Classes="pill ok">
+                                                                <TextBlock Text="{Binding StatusText}" />
+                                                            </Border>
+                                                        </StackPanel>
+                                                        <TextBlock Classes="lsub" Text="{Binding Sub}"
+                                                                   TextWrapping="Wrap" />
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="3" Orientation="Horizontal"
+                                                                Spacing="10" VerticalAlignment="Center">
+                                                        <TextBlock Classes="lmeta" Text="{Binding ExpiresMeta}" />
+                                                        <Button Classes="btn small" Content="Revoke" />
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Border>
+                        </StackPanel>
+
+                        <!-- Provisioning profiles block -->
+                        <StackPanel Spacing="9">
+                            <TextBlock Classes="blk-t" Text="PROVISIONING PROFILES" />
+                            <Border Classes="listcard">
+                                <ItemsControl ItemsSource="{Binding Profiles}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:SigningProfileRow">
+                                            <Border Classes="lrow">
+                                                <Grid ColumnDefinitions="Auto,12,*,Auto">
+                                                    <Border Grid.Column="0" Classes="lic"
+                                                            Classes.blue="{Binding IsOk}"
+                                                            Classes.amber="{Binding IsWarn}"
+                                                            Classes.red="{Binding IsBad}">
+                                                        <TextBlock Text="📄" FontSize="15" />
+                                                    </Border>
+                                                    <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="3">
+                                                        <StackPanel Orientation="Horizontal" Spacing="9">
+                                                            <TextBlock Classes="ltitle" Text="{Binding Title}"
+                                                                       VerticalAlignment="Center" />
+                                                            <Border Classes="pill"
+                                                                    Classes.ok="{Binding IsOk}"
+                                                                    Classes.warn="{Binding IsWarn}"
+                                                                    Classes.bad="{Binding IsBad}">
+                                                                <TextBlock Text="{Binding StatusText}" />
+                                                            </Border>
+                                                        </StackPanel>
+                                                        <TextBlock Classes="lsub mono"
+                                                                   FontFamily="{DynamicResource MonoFontFamily}"
+                                                                   Text="{Binding Sub}" TextWrapping="Wrap" />
+                                                    </StackPanel>
+                                                    <TextBlock Grid.Column="3" Classes="lmeta"
+                                                               Text="{Binding ExpiresMeta}"
+                                                               VerticalAlignment="Center" />
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Border>
+                        </StackPanel>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <!-- RIGHT column -->
+            <Border Grid.Column="1" Background="{DynamicResource Surface2Brush}">
+                <ScrollViewer>
+                    <StackPanel Margin="18,16,18,20" Spacing="16">
+
+                        <!-- match storage -->
+                        <StackPanel Spacing="9">
+                            <TextBlock Classes="blk-t" Text="MATCH STORAGE" />
+                            <Border Classes="panel">
+                                <StackPanel>
+                                    <Border Classes="dl-row">
+                                        <Grid ColumnDefinitions="Auto,*">
+                                            <TextBlock Grid.Column="0" Classes="k" Text="Repo" />
+                                            <TextBlock Grid.Column="1" Classes="v" Text="{Binding MatchRepo}" />
+                                        </Grid>
+                                    </Border>
+                                    <Border Classes="dl-row">
+                                        <Grid ColumnDefinitions="Auto,*">
+                                            <TextBlock Grid.Column="0" Classes="k" Text="Branch" />
+                                            <TextBlock Grid.Column="1" Classes="v" Text="{Binding MatchBranch}" />
+                                        </Grid>
+                                    </Border>
+                                    <Border Classes="dl-row">
+                                        <Grid ColumnDefinitions="Auto,*">
+                                            <TextBlock Grid.Column="0" Classes="k" Text="Storage" />
+                                            <TextBlock Grid.Column="1" Classes="v" Text="{Binding MatchStorage}" />
+                                        </Grid>
+                                    </Border>
+                                    <Border Classes="dl-row last">
+                                        <Grid ColumnDefinitions="Auto,*">
+                                            <TextBlock Grid.Column="0" Classes="k" Text="Last synced" />
+                                            <TextBlock Grid.Column="1" Classes="v" Text="{Binding MatchLastSynced}" />
+                                        </Grid>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <!-- Registered devices -->
+                        <StackPanel Spacing="9">
+                            <TextBlock Classes="blk-t" Text="REGISTERED DEVICES" />
+                            <Border Classes="listcard">
+                                <ItemsControl ItemsSource="{Binding Devices}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:SigningDeviceRow">
+                                            <Border Classes="lrow">
+                                                <Grid ColumnDefinitions="Auto,12,*">
+                                                    <Border Grid.Column="0" Classes="lic neutral">
+                                                        <TextBlock Text="📱" FontSize="15" />
+                                                    </Border>
+                                                    <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="3">
+                                                        <TextBlock Classes="ltitle" Text="{Binding Name}" />
+                                                        <TextBlock Classes="lsub mono"
+                                                                   FontFamily="{DynamicResource MonoFontFamily}"
+                                                                   Text="{Binding Udid}" />
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Border>
+                            <Button Classes="btn small" HorizontalAlignment="Left"
+                                    Content="Register device…" />
+                        </StackPanel>
+
+                        <!-- Danger zone -->
+                        <Border Classes="danger">
+                            <StackPanel Spacing="8">
+                                <TextBlock FontSize="12.5" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource BadgeBadTextBrush}"
+                                           Text="Danger zone · match nuke" />
+                                <TextBlock FontSize="11.5" TextWrapping="Wrap"
+                                           Foreground="{DynamicResource Text2Brush}"
+                                           Text="Permanently revokes all certificates and provisioning profiles for this app and deletes them from the match repo. This cannot be undone — every machine and CI runner will need to re-run match." />
+                                <Button Classes="btn red" HorizontalAlignment="Left"
+                                        Content="Nuke certs &amp; profiles…" />
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+        </Grid>
+    </DockPanel>
+</UserControl>

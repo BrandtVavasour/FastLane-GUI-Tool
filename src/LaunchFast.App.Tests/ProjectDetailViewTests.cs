@@ -51,9 +51,13 @@ public class ProjectDetailViewTests
         window.Show();
         Assert.That(window.IsVisible, Is.True);
 
-        // Selecting a not-yet-wired section swaps the content to a placeholder.
+        // Selecting the Signing section swaps to its real section view-model.
         projectShell.SelectSectionCommand.Execute(ProjectSection.Signing);
         Assert.That(projectShell.SelectedSection, Is.EqualTo(ProjectSection.Signing));
+        Assert.That(projectShell.CurrentContent, Is.InstanceOf<SigningSectionViewModel>());
+
+        // A still-placeholder section (Screenshots) keeps the placeholder content.
+        projectShell.SelectSectionCommand.Execute(ProjectSection.Screenshots);
         Assert.That(projectShell.CurrentContent, Is.InstanceOf<SectionPlaceholderViewModel>());
 
         // The Secrets section has a real screen (SecretsSectionView) that renders

@@ -1,0 +1,181 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:LaunchFast.App.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="640"
+             x:Class="LaunchFast.App.Views.TestFlightSectionView"
+             x:DataType="vm:TestFlightSectionViewModel"
+             x:CompileBindings="True"
+             Background="{DynamicResource Surface0Brush}">
+
+    <DockPanel>
+        <!-- Toolbar -->
+        <Border DockPanel.Dock="Top"
+                Background="{DynamicResource Surface1Brush}"
+                BorderBrush="{DynamicResource SeparatorBrush}"
+                BorderThickness="0,0,0,1">
+            <Grid ColumnDefinitions="*,Auto,Auto" Margin="16,11">
+                <Button Grid.Column="1" Classes="btn" Margin="0,0,8,0"
+                        Content="Add testers…" />
+                <Button Grid.Column="2" Classes="accent" Content="Distribute build"
+                        IsEnabled="{Binding CanDistribute}"
+                        Command="{Binding DistributeCommand}" />
+            </Grid>
+        </Border>
+
+        <!-- Subbar -->
+        <Border DockPanel.Dock="Top" Classes="subbar">
+            <Grid ColumnDefinitions="Auto,Auto,Auto,*,Auto">
+                <TextBlock Grid.Column="0" Classes="h2" Text="TestFlight" />
+                <Border Grid.Column="1" Classes="chip" Margin="14,0,8,0">
+                    <TextBlock Text="{Binding VersionBuild}" />
+                </Border>
+                <Border Grid.Column="2" Classes="pill ok">
+                    <TextBlock Text="Ready to test" />
+                </Border>
+                <StackPanel Grid.Column="4" Classes="synced" Orientation="Horizontal" Spacing="7">
+                    <Border Classes="synced-dot" />
+                    <TextBlock Text="{Binding SyncedText}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Content -->
+        <ScrollViewer>
+            <StackPanel Margin="20,16,20,20" Spacing="16">
+
+                <!-- Build status + What to test -->
+                <Grid ColumnDefinitions="*,16,*">
+
+                    <!-- Build status -->
+                    <StackPanel Grid.Column="0" Spacing="9">
+                        <TextBlock Classes="blk-t" Text="BUILD STATUS" />
+                        <Border Classes="panel">
+                            <StackPanel>
+                                <Border Classes="dl-row">
+                                    <Grid ColumnDefinitions="Auto,*">
+                                        <TextBlock Grid.Column="0" Classes="k" Text="Build" />
+                                        <TextBlock Grid.Column="1" Classes="v" Text="{Binding BuildVersion}" />
+                                    </Grid>
+                                </Border>
+                                <Border Classes="dl-row">
+                                    <Grid ColumnDefinitions="Auto,*">
+                                        <TextBlock Grid.Column="0" Classes="k" Text="Processing" />
+                                        <TextBlock Grid.Column="1" Classes="v" Text="{Binding Processing}" />
+                                    </Grid>
+                                </Border>
+                                <Border Classes="dl-row">
+                                    <Grid ColumnDefinitions="Auto,*">
+                                        <TextBlock Grid.Column="0" Classes="k" Text="Export compliance" />
+                                        <TextBlock Grid.Column="1" Classes="v" Text="{Binding ExportCompliance}" />
+                                    </Grid>
+                                </Border>
+                                <Border Classes="dl-row last">
+                                    <Grid ColumnDefinitions="Auto,*">
+                                        <TextBlock Grid.Column="0" Classes="k" Text="Distributed to" />
+                                        <TextBlock Grid.Column="1" Classes="v" Text="{Binding DistributedTo}" />
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- What to test -->
+                    <StackPanel Grid.Column="2" Spacing="9">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Grid.Column="0" Classes="blk-t" Text="WHAT TO TEST" />
+                            <TextBlock Grid.Column="1" Classes="blk-x" Text="{Binding NotesCountText}" />
+                        </Grid>
+                        <TextBox Classes="inp" AcceptsReturn="True" TextWrapping="Wrap"
+                                 MinHeight="150" VerticalContentAlignment="Top"
+                                 Text="{Binding ReleaseNotes, Mode=OneWay}" />
+                    </StackPanel>
+
+                </Grid>
+
+                <!-- Testers -->
+                <StackPanel Spacing="9">
+                    <Grid ColumnDefinitions="Auto,*">
+                        <TextBlock Grid.Column="0" Classes="blk-t" Text="TESTERS"
+                                   VerticalAlignment="Center" />
+                        <Border Grid.Column="1" Classes="seg sm" HorizontalAlignment="Right">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Classes="seg-item" GroupName="tf-filter" Content="All"
+                                             IsChecked="{Binding FilterAll, Mode=TwoWay}" />
+                                <RadioButton Classes="seg-item" GroupName="tf-filter" Content="Internal"
+                                             IsChecked="{Binding FilterInternal, Mode=TwoWay}" />
+                                <RadioButton Classes="seg-item" GroupName="tf-filter" Content="External"
+                                             IsChecked="{Binding FilterExternal, Mode=TwoWay}" />
+                                <RadioButton Classes="seg-item" GroupName="tf-filter" Content="Pending"
+                                             IsChecked="{Binding FilterPending, Mode=TwoWay}" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <Border Classes="listcard">
+                        <StackPanel>
+                            <!-- Header row -->
+                            <Border Background="{DynamicResource Surface1Brush}"
+                                    BorderBrush="{DynamicResource SeparatorBrush}"
+                                    BorderThickness="0,0,0,1" Padding="15,10">
+                                <Grid ColumnDefinitions="*,140,110,80,120">
+                                    <TextBlock Grid.Column="0" Classes="blk-t" Text="TESTER" />
+                                    <TextBlock Grid.Column="1" Classes="blk-t" Text="GROUP" />
+                                    <TextBlock Grid.Column="2" Classes="blk-t" Text="STATUS" />
+                                    <TextBlock Grid.Column="3" Classes="blk-t" Text="SESSIONS" />
+                                    <TextBlock Grid.Column="4" Classes="blk-t" Text="LAST SESSION" />
+                                </Grid>
+                            </Border>
+
+                            <!-- Rows -->
+                            <ItemsControl ItemsSource="{Binding Testers}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:TesterRow">
+                                        <Border Classes="lrow">
+                                            <Grid ColumnDefinitions="*,140,110,80,120">
+                                                <!-- Tester -->
+                                                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10"
+                                                            VerticalAlignment="Center">
+                                                    <Border Width="30" Height="30" CornerRadius="15"
+                                                            Background="{DynamicResource TintBlueBrush}">
+                                                        <TextBlock Text="{Binding Initials}" FontSize="11"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="{DynamicResource AccentBrush}"
+                                                                   HorizontalAlignment="Center"
+                                                                   VerticalAlignment="Center" />
+                                                    </Border>
+                                                    <StackPanel VerticalAlignment="Center" Spacing="2">
+                                                        <TextBlock Classes="ltitle" Text="{Binding Name}" />
+                                                        <TextBlock Classes="lsub" Text="{Binding Email}" />
+                                                    </StackPanel>
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="1" Classes="lsub" Text="{Binding Group}"
+                                                           VerticalAlignment="Center" />
+                                                <Border Grid.Column="2" HorizontalAlignment="Left"
+                                                        VerticalAlignment="Center" Classes="pill"
+                                                        Classes.ok="{Binding IsOk}"
+                                                        Classes.warn="{Binding IsWarn}"
+                                                        Classes.neutral="{Binding IsNeutral}">
+                                                    <TextBlock Text="{Binding StatusText}" />
+                                                </Border>
+                                                <TextBlock Grid.Column="3" Classes="lsub" Text="{Binding Sessions}"
+                                                           VerticalAlignment="Center" />
+                                                <TextBlock Grid.Column="4" Classes="lsub" Text="{Binding LastSession}"
+                                                           VerticalAlignment="Center" />
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock FontSize="11" Foreground="{DynamicResource Text3Brush}"
+                               Text="Illustrative tester data — TestFlight backend not wired yet." />
+                </StackPanel>
+
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>

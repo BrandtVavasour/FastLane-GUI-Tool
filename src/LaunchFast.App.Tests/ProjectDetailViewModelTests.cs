@@ -85,6 +85,34 @@ public class ProjectDetailViewModelTests
     }
 
     [Test]
+    public void TryRunLane_runs_an_existing_lane_and_returns_false_for_a_missing_one()
+    {
+        var project = TestProjects.MakeFlutterProjectWithRealFastfiles();
+        var factory = new RecordingPtyFactory();
+
+        var probe = ProjectDetailViewModel.ForTest(project);
+        probe.Load();
+        var secrets = new FakeSecretStore().Satisfy(project.Path, probe.MissingSecrets);
+
+        var vm = new ProjectDetailViewModel(project, secrets, factory);
+        vm.Load();
+
+        // Missing lane → no run, returns false.
+        Assert.That(vm.TryRunLane(LaunchFast.Core.Models.Platform.Ios, "does_not_exist"), Is.False);
+        Assert.That(factory.Command, Is.Null);
+        Assert.That(vm.IsRunning, Is.False);
+
+        // Existing lane (sync_certificates) → runs through the normal command path.
+        Assert.That(vm.TryRunLane(LaunchFast.Core.Models.Platform.Ios, "sync_certificates"), Is.True);
+        Assert.That(vm.IsRunning, Is.True);
+        Assert.That(factory.Command, Is.EqualTo("bundle"));
+        Assert.That(factory.Args, Is.EqualTo(new[] { "exec", "fastlane", "ios", "sync_certificates" }));
+
+        factory.Finish(0);
+        Assert.That(vm.IsRunning, Is.False);
+    }
+
+    [Test]
     public void Only_one_run_at_a_time()
     {
         var project = TestProjects.MakeFlutterProjectWithRealFastfiles();

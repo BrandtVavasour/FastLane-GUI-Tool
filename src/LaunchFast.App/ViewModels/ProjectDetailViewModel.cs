@@ -302,6 +302,29 @@ public partial class ProjectDetailViewModel : ObservableObject
         RunLaneCommand.NotifyCanExecuteChanged();
     }
 
+    /// <summary>
+    /// Finds the lane named <paramref name="laneName"/> on the given platform and
+    /// triggers its run through the normal <see cref="RunLaneCommand"/> — so the
+    /// existing preflight, secret-gating and one-run-at-a-time guards all apply.
+    /// Returns false (without running) when the project has no such lane, which
+    /// lets section screens disable their primary action honestly rather than
+    /// faking a run. Invoked by section shells (Signing → sync_certificates,
+    /// TestFlight → beta) via <see cref="ProjectShellViewModel.RunLane"/>.
+    /// </summary>
+    public bool TryRunLane(Platform platform, string laneName)
+    {
+        var lanes = platform == Platform.Ios ? IosLanes : AndroidLanes;
+        var lane = lanes.FirstOrDefault(l => l.Name == laneName);
+        if (lane is null) return false;
+
+        RunLaneCommand.Execute(lane);
+        return true;
+    }
+
+    /// <summary>True when a lane named <paramref name="laneName"/> exists on the platform.</summary>
+    public bool HasLane(Platform platform, string laneName) =>
+        (platform == Platform.Ios ? IosLanes : AndroidLanes).Any(l => l.Name == laneName);
+
     [RelayCommand]
     void Stop() => Run.Handle?.Stop();
 

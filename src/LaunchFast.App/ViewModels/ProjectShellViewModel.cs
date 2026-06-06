@@ -95,24 +95,52 @@ public partial class ProjectShellViewModel : ObservableObject
 
     object Build(ProjectSection section) => section switch
     {
-        ProjectSection.Lanes => BuildLanes(),
-        ProjectSection.Signing => Placeholder("Signing"),
+        ProjectSection.Lanes => Lanes,
+        ProjectSection.Signing => BuildSigning(),
         ProjectSection.Secrets => BuildSecrets(),
-        ProjectSection.TestFlight => Placeholder("TestFlight"),
+        ProjectSection.TestFlight => BuildTestFlight(),
         ProjectSection.Screenshots => Placeholder("Screenshots"),
         ProjectSection.BuildTest => Placeholder("Build & Test"),
         _ => Placeholder(section.ToString()),
     };
 
-    ProjectDetailViewModel BuildLanes()
+    ProjectDetailViewModel? _lanes;
+
+    /// <summary>
+    /// The Lanes content VM, lazily built and shared. It owns the real lane runner;
+    /// the Signing/TestFlight shells route their primary-action buttons through it
+    /// via <see cref="RunLane"/>.
+    /// </summary>
+    ProjectDetailViewModel Lanes
     {
-        var detail = new ProjectDetailViewModel(_project, _secrets, _ptyFactory, _storeStatus, _identifiers);
-        detail.Load();
-        return detail;
+        get
+        {
+            if (_lanes is not null) return _lanes;
+            _lanes = new ProjectDetailViewModel(_project, _secrets, _ptyFactory, _storeStatus, _identifiers);
+            _lanes.Load();
+            return _lanes;
+        }
     }
+
+    SigningSectionViewModel BuildSigning() =>
+        new(_project, RunLane, () => Lanes.HasLane(Platform.Ios, "sync_certificates"));
+
+    TestFlightSectionViewModel BuildTestFlight() =>
+        new(_project, RunLane, () => Lanes.HasLane(Platform.Ios, "beta"));
 
     SecretsSectionViewModel BuildSecrets() =>
         new(_project, _secrets);
+
+    /// <summary>
+    /// Runs a lane on behalf of a section screen: switches to the Lanes section so
+    /// the user sees the live run panel, then delegates to the Lanes VM (which keeps
+    /// its preflight / gating / one-run guards). No-op when the lane is absent.
+    /// </summary>
+    public void RunLane(Platform platform, string laneName)
+    {
+        SelectSection(ProjectSection.Lanes);
+        Lanes.TryRunLane(platform, laneName);
+    }
 
     static SectionPlaceholderViewModel Placeholder(string title) =>
         new(title, "Coming up — not wired yet");
