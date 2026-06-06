@@ -1,0 +1,21 @@
+﻿  desc "Build and upload to TestFlight"
+  lane :beta do
+    sync_certificates
+    export_options_path = File.expand_path("../ExportOptions.plist", __dir__)
+    Dir.chdir("..") do
+      sh("flutter", "clean")
+      sh("flutter", "pub", "get")
+      sh(
+        "flutter", "build", "ipa",
+        "--release",
+        "--dart-define=API_URL=#{ENV['API_URL']}",
+        "--dart-define=API_TOKEN=#{ENV['API_TOKEN']}",
+        "--export-options-plist=#{export_options_path}"
+      )
+    end
+    upload_to_testflight(
+      ipa: "../build/ios/ipa/#{ENV['IPA_NAME'] || 'app'}.ipa",
+      skip_waiting_for_build_processing: true,
+      api_key_path: ENV["APP_STORE_CONNECT_API_KEY_PATH"]
+    )
+  end

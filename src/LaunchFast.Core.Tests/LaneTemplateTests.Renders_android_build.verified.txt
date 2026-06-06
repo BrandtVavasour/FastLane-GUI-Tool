@@ -1,0 +1,8 @@
+﻿  desc "Build Flutter app bundle"
+  lane :build do
+    Dir.chdir(flutter_root) do
+      sh("flutter", "clean")
+      sh("flutter", "pub", "get")
+      sh("flutter", "build", "appbundle", "--release", "--dart-define=API_URL=#{ENV['API_URL']}", "--dart-define=API_TOKEN=#{ENV['API_TOKEN']}")
+    end
+  end
