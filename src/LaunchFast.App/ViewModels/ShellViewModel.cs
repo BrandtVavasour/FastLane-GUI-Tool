@@ -8,8 +8,9 @@ namespace LaunchFast.App.ViewModels;
 
 /// <summary>
 /// Root navigation host. Swaps <see cref="CurrentView"/> between the launcher
-/// and a project-detail view-model. Owns the production secret store + PTY
-/// factory so detail view-models are wired with the real backends.
+/// and a project shell view-model. Owns the production secret store + PTY
+/// factory so the per-project shell (and its sections) are wired with the real
+/// backends.
 /// </summary>
 public partial class ShellViewModel : ObservableObject
 {
@@ -35,12 +36,11 @@ public partial class ShellViewModel : ObservableObject
         var env = ProjectDetailViewModel.ResolveProjectEnv(project.Path);
         var (provider, ids) = StoreStatusFactory.Create(project, env);
 
-        var detail = new ProjectDetailViewModel(project, _secrets, _ptyFactory, provider, ids)
+        var shell = new ProjectShellViewModel(project, _secrets, _ptyFactory, provider, ids)
         {
             GoBack = GoHome,
         };
-        detail.Load();
-        CurrentView = detail;
+        CurrentView = shell;
     }
 
     public void GoHome() => CurrentView = Launcher;

@@ -1,0 +1,111 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:LaunchFast.App.ViewModels"
+             xmlns:views="using:LaunchFast.App.Views"
+             xmlns:conv="using:LaunchFast.App.Converters"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
+             x:Class="LaunchFast.App.Views.ProjectShellView"
+             x:DataType="vm:ProjectShellViewModel"
+             x:CompileBindings="True"
+             Background="{DynamicResource Surface0Brush}">
+
+    <UserControl.Resources>
+        <conv:PathToBitmapConverter x:Key="PathToBitmap" />
+    </UserControl.Resources>
+
+    <UserControl.DataTemplates>
+        <DataTemplate DataType="vm:ProjectDetailViewModel">
+            <views:ProjectDetailView />
+        </DataTemplate>
+        <DataTemplate DataType="vm:SectionPlaceholderViewModel">
+            <Border Background="{DynamicResource Surface0Brush}">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+                    <TextBlock Text="{Binding Title}" FontSize="20" FontWeight="SemiBold"
+                               HorizontalAlignment="Center"
+                               Foreground="{DynamicResource Text1Brush}" />
+                    <TextBlock Text="{Binding Subtitle}" FontSize="13"
+                               HorizontalAlignment="Center"
+                               Foreground="{DynamicResource Text3Brush}" />
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+    </UserControl.DataTemplates>
+
+    <Grid ColumnDefinitions="210,*">
+
+        <!-- Sidebar -->
+        <Border Grid.Column="0"
+                Background="{DynamicResource Surface1Brush}"
+                BorderBrush="{DynamicResource SeparatorBrush}"
+                BorderThickness="0,0,1,0">
+            <DockPanel>
+                <!-- Back button -->
+                <Border DockPanel.Dock="Top" Padding="12,11,12,6">
+                    <Button Classes="btn ghost small" Content="‹ Projects"
+                            HorizontalAlignment="Left"
+                            Command="{Binding BackCommand}" />
+                </Border>
+
+                <!-- Project header -->
+                <Border DockPanel.Dock="Top" Padding="14,8,14,14"
+                        BorderBrush="{DynamicResource SeparatorBrush}"
+                        BorderThickness="0,0,0,1">
+                    <StackPanel Spacing="9">
+                        <Border Width="44" Height="44"
+                                CornerRadius="{DynamicResource IconRadiusLg}"
+                                ClipToBounds="True" HorizontalAlignment="Left"
+                                BoxShadow="0 2 5 0 #2E000000">
+                            <Panel>
+                                <Panel IsVisible="{Binding IconPath, Converter={x:Static ObjectConverters.IsNull}}">
+                                    <Panel.Background>
+                                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                                            <GradientStop Offset="0" Color="#3DBE8B" />
+                                            <GradientStop Offset="1" Color="#1E8E64" />
+                                        </LinearGradientBrush>
+                                    </Panel.Background>
+                                    <TextBlock Text="📱" FontSize="22"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Panel>
+                                <Image Stretch="UniformToFill"
+                                       Source="{Binding IconPath, Converter={StaticResource PathToBitmap}}" />
+                            </Panel>
+                        </Border>
+                        <StackPanel>
+                            <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource Text1Brush}"
+                                       TextTrimming="CharacterEllipsis" />
+                            <TextBlock Text="{Binding Version}" FontSize="12" Margin="0,2,0,0"
+                                       Foreground="{DynamicResource Text2Brush}"
+                                       TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Section nav list -->
+                <ScrollViewer>
+                    <ItemsControl ItemsSource="{Binding Sections}" Padding="10,10">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ProjectSectionViewModel">
+                                <Button Classes="navitem"
+                                        Classes.selected="{Binding IsSelected}"
+                                        Command="{Binding $parent[ItemsControl].((vm:ProjectShellViewModel)DataContext).SelectSectionCommand}"
+                                        CommandParameter="{Binding Section}">
+                                    <StackPanel Orientation="Horizontal" Spacing="7">
+                                        <TextBlock Classes="nav-glyph" Text="{Binding Glyph}" />
+                                        <TextBlock Classes="nav-label" Text="{Binding Title}" />
+                                    </StackPanel>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+
+        <!-- Content host -->
+        <ContentControl Grid.Column="1" Content="{Binding CurrentContent}" />
+
+    </Grid>
+</UserControl>

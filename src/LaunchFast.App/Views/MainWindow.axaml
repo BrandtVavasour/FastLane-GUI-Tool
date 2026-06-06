@@ -16,8 +16,8 @@
         <DataTemplate DataType="vm:LauncherViewModel">
             <views:LauncherView />
         </DataTemplate>
-        <DataTemplate DataType="vm:ProjectDetailViewModel">
-            <views:ProjectDetailView />
+        <DataTemplate DataType="vm:ProjectShellViewModel">
+            <views:ProjectShellView />
         </DataTemplate>
     </Window.DataTemplates>
 

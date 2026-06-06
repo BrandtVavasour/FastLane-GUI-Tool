@@ -25,7 +25,7 @@ public class ProjectDetailViewTests
     }
 
     [AvaloniaTest]
-    public void Shell_navigates_launcher_to_detail_and_back()
+    public void Shell_navigates_launcher_to_project_shell_then_sections_then_back()
     {
         var project = TestProjects.MakeFlutterProjectWithRealFastfiles();
         var storeFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N") + ".json");
@@ -38,10 +38,28 @@ public class ProjectDetailViewTests
 
         Assert.That(shell.CurrentView, Is.SameAs(launcher));
 
+        // Opening a project shows the per-project shell with the Lanes section
+        // (ProjectDetailViewModel) selected by default.
         shell.OpenDetail(project);
-        Assert.That(shell.CurrentView, Is.InstanceOf<ProjectDetailViewModel>());
+        Assert.That(shell.CurrentView, Is.InstanceOf<ProjectShellViewModel>());
+        var projectShell = (ProjectShellViewModel)shell.CurrentView;
+        Assert.That(projectShell.SelectedSection, Is.EqualTo(ProjectSection.Lanes));
+        Assert.That(projectShell.CurrentContent, Is.InstanceOf<ProjectDetailViewModel>());
 
-        ((ProjectDetailViewModel)shell.CurrentView).BackCommand.Execute(null);
+        // The shell view hosts the Lanes content (ProjectDetailView) without throwing.
+        var window = new Window { Content = new ProjectShellView { DataContext = projectShell } };
+        window.Show();
+        Assert.That(window.IsVisible, Is.True);
+
+        // Selecting another section swaps the content to a placeholder.
+        projectShell.SelectSectionCommand.Execute(ProjectSection.Secrets);
+        Assert.That(projectShell.SelectedSection, Is.EqualTo(ProjectSection.Secrets));
+        Assert.That(projectShell.CurrentContent, Is.InstanceOf<SectionPlaceholderViewModel>());
+
+        // Back returns to the launcher.
+        projectShell.BackCommand.Execute(null);
         Assert.That(shell.CurrentView, Is.SameAs(launcher));
+
+        window.Close();
     }
 }
