@@ -13,24 +13,29 @@ namespace IntegrationTests;
 [TestFixture]
 public sealed class FastlaneSmokeTests
 {
-    const string IosDir =
-        "/Users/brandtvavasour/Documents/JABTech/VendingMachine/vending_machine_tracker-UI/ios";
+    // Point LAUNCHFAST_REFERENCE_IOS_DIR at the `ios/` directory of a fastlane-enabled
+    // Flutter project to run this drift check; otherwise the test ignores itself.
+    static string? ReferenceIosDir =>
+        System.Environment.GetEnvironmentVariable("LAUNCHFAST_REFERENCE_IOS_DIR");
 
     [Test]
     public void Parser_matches_real_fastlane_lanes()
     {
-        if (!Directory.Exists(IosDir))
+        var iosDir = ReferenceIosDir;
+        if (string.IsNullOrWhiteSpace(iosDir) || !Directory.Exists(iosDir))
         {
-            Assert.Ignore($"Reference iOS dir not present: {IosDir}");
+            Assert.Ignore(
+                "Set LAUNCHFAST_REFERENCE_IOS_DIR to a fastlane-enabled Flutter project's ios/ dir to run this.");
+            return;
         }
 
-        var fastfile = Path.Combine(IosDir, "fastlane", "Fastfile");
+        var fastfile = Path.Combine(iosDir, "fastlane", "Fastfile");
         if (!File.Exists(fastfile))
         {
             Assert.Ignore($"Reference Fastfile not present: {fastfile}");
         }
 
-        if (!TryRunFastlaneLanes(IosDir, out var stdout, out var reason))
+        if (!TryRunFastlaneLanes(iosDir, out var stdout, out var reason))
         {
             Assert.Ignore($"Could not run fastlane lanes: {reason}");
         }

@@ -61,7 +61,7 @@ store data. Next: sub-project #2 (lane scaffolding).
 - ✅ `claude.md` + this `PROGRESS.md` for session continuity.
 - 🔨 Every phase committed with a useful message.
 - ⬜ UI snapshot tests (Avalonia headless frame capture) — Phase 10 if feasible.
-- ⬜ Final Simon-standard cleanup pass (sealed/records/file-scoped/naming) + full review.
+- ✅ Final conventions cleanup pass (sealed/records/file-scoped/naming) + full review.
 
 ## Fastlane feature expansion (from Claude Design "Signing, Beta & Build")
 Goal: cover most of fastlane via per-project section screens. Built as shells now, made real incrementally.

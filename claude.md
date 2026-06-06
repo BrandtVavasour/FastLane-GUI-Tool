@@ -26,7 +26,7 @@ A Flutter… (now **.NET/Avalonia**, owner's choice) macOS app that:
 - Uses the project's **iOS/Android app icon** as the card icon.
 - Shows the **current store version** for each lane's destination.
 
-## Tech stack & standards ("Simon's standards" / Papyrine conventions)
+## Tech stack & standards (reference .NET OSS library conventions)
 
 - **.NET 10 / C# 14**, **Avalonia 11** MVVM (`CommunityToolkit.Mvvm`), macOS-first
   (Avalonia keeps Win/Linux open but they are not targeted).

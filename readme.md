@@ -58,4 +58,4 @@ This repo builds sub-project #1 first:
 
 ## License
 
-[MIT](license.txt) — © 2026 JABTech (Brandt Vavasour).
+[MIT](license.txt) — © 2026 JABTech.
