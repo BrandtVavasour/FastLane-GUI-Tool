@@ -256,6 +256,87 @@ public static class TestProjects
         return ProjectScanner.TryScanRoot(root)!;
     }
 
+    /// <summary>
+    /// Creates a temp Flutter project with a real iOS fastlane Matchfile (git-backed,
+    /// appstore) and an iOS Appfile declaring a literal bundle id, plus a sibling temp
+    /// "Provisioning Profiles" dir holding one fixture <c>.mobileprovision</c> for that
+    /// bundle id. Returns the scanned Project and the profiles-dir path so the Signing
+    /// tests/snapshot can surface real match config + a real parsed profile without
+    /// touching the user's ~/Library. The profile expires in the far future so it is
+    /// "Valid". When <paramref name="expiringSoon"/> is true a second profile expiring
+    /// in 11 days is added (a "warn" row).
+    /// </summary>
+    public static (Project Project, string ProfilesDir) MakeProjectWithIosSigning(
+        string name = "iossign", bool expiringSoon = false)
+    {
+        var baseDir = Path.Combine(Path.GetTempPath(), "lf-iossign-" + Guid.NewGuid().ToString("N"));
+        var root = Path.Combine(baseDir, name);
+        var iosFl = Path.Combine(root, "ios", "fastlane");
+        Directory.CreateDirectory(iosFl);
+        Directory.CreateDirectory(Path.Combine(root, "android", "fastlane"));
+        File.WriteAllText(Path.Combine(root, "pubspec.yaml"), "name: demo\nversion: 1.2.3+9\n");
+
+        File.WriteAllText(Path.Combine(iosFl, "Appfile"),
+            "app_identifier(\"com.jabtech.vmt\")\napple_id(ENV[\"APPLE_ID\"])\n");
+
+        File.WriteAllText(Path.Combine(iosFl, "Matchfile"),
+            """
+            git_url("git@github.com:jabtech/certificates.git")
+            storage_mode("git")
+            type("appstore")
+            app_identifier("com.jabtech.vmt")
+            git_branch("main")
+            readonly(true)
+            """);
+
+        var profilesDir = Path.Combine(baseDir, "Provisioning Profiles");
+        Directory.CreateDirectory(profilesDir);
+        File.WriteAllText(Path.Combine(profilesDir, "appstore.mobileprovision"),
+            MakeMobileProvision("match AppStore com.jabtech.vmt", "com.jabtech.vmt",
+                expiration: "2099-01-01T00:00:00Z", devices: 0));
+        if (expiringSoon)
+        {
+            var soon = DateTimeOffset.UtcNow.AddDays(11).ToString("yyyy-MM-ddTHH:mm:ssZ");
+            File.WriteAllText(Path.Combine(profilesDir, "adhoc.mobileprovision"),
+                MakeMobileProvision("match AdHoc com.jabtech.vmt", "com.jabtech.vmt",
+                    expiration: soon, devices: 24));
+        }
+
+        return (ProjectScanner.TryScanRoot(root)!, profilesDir);
+    }
+
+    /// <summary>A .mobileprovision-shaped fixture: CMS preamble + embedded XML plist.</summary>
+    static string MakeMobileProvision(
+        string profileName, string bundleId, string expiration, int devices)
+    {
+        var deviceXml = devices > 0
+            ? "<key>ProvisionedDevices</key><array>" +
+              string.Concat(Enumerable.Range(0, devices).Select(i => $"<string>UDID{i:D4}</string>")) +
+              "</array>"
+            : "";
+
+        var plist =
+            $"""
+            <?xml version="1.0" encoding="UTF-8"?>
+            <plist version="1.0">
+            <dict>
+                <key>AppIDName</key><string>Vending Tracker</string>
+                <key>Name</key><string>{profileName}</string>
+                <key>TeamName</key><string>JAB Technologies</string>
+                <key>Entitlements</key>
+                <dict>
+                    <key>application-identifier</key><string>ABCDE12345.{bundleId}</string>
+                </dict>
+                <key>ExpirationDate</key><date>{expiration}</date>
+                {deviceXml}
+                <key>ProvisionsAllDevices</key><false/>
+            </dict>
+            </plist>
+            """;
+
+        return "CMS-PREAMBLE\n" + plist + "\nTRAILING-BYTES";
+    }
+
     static void WriteFakePng(string path)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);

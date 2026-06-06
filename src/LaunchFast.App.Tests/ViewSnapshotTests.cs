@@ -111,8 +111,15 @@ public class ViewSnapshotTests
     {
         ForEachTheme("SigningSectionView", () =>
         {
-            var project = TestProjects.MakeFlutterProjectWithRealFastfiles();
-            var vm = new SigningSectionViewModel(project, hasSyncLane: () => true);
+            var (project, profilesDir) = TestProjects.MakeProjectWithIosSigning(expiringSoon: true);
+            var store = new FakeSecretStore();
+            store.Set(project.Path, "MATCH_PASSWORD", "x");
+            var reader = new LaunchFast.Core.Signing.IosSigningReader(() =>
+                "  1) A1B2C3D4E5F60718293A4B5C6D7E8F90A1B2C3D4 \"Apple Distribution: JAB Technologies (7F8G9H)\"\n" +
+                "  2) 0011223344556677889900AABBCCDDEEFF001122 \"Apple Development: Dev (ABCDEF)\"");
+            var vm = new SigningSectionViewModel(project, store, reader, profilesDir,
+                hasSyncLane: () => true,
+                readProcessEnv: name => name == "MATCH_GIT_URL" ? "git@x" : null);
             return new SigningSectionView { DataContext = vm };
         });
     }

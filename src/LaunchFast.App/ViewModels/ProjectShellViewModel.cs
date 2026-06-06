@@ -143,7 +143,9 @@ public partial class ProjectShellViewModel : ObservableObject
         new(_project, RunLane);
 
     SigningSectionViewModel BuildSigning() =>
-        new(_project, RunLane, () => Lanes.HasLane(Platform.Ios, "sync_certificates"));
+        new(_project, _secrets,
+            runLane: RunLane,
+            hasSyncLane: () => Lanes.HasLane(Platform.Ios, "sync_certificates"));
 
     TestFlightSectionViewModel BuildTestFlight() =>
         new(_project, RunLane, () => Lanes.HasLane(Platform.Ios, "beta"));

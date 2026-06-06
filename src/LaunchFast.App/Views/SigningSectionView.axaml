@@ -17,7 +17,8 @@
                 BorderThickness="0,0,0,1">
             <Grid ColumnDefinitions="*,Auto,Auto" Margin="16,11">
                 <Button Grid.Column="1" Classes="btn" Margin="0,0,8,0"
-                        Content="Refresh from Apple" />
+                        Content="Refresh from Apple"
+                        Command="{Binding RefreshCommand}" />
                 <Button Grid.Column="2" Classes="accent" Content="Run match"
                         IsEnabled="{Binding CanRunMatch}"
                         Command="{Binding RunMatchCommand}" />
@@ -31,7 +32,8 @@
                 <Border Grid.Column="1" Classes="chip" Margin="14,0,8,0">
                     <TextBlock Text="{Binding BundleId}" />
                 </Border>
-                <Border Grid.Column="2" Classes="pill accent">
+                <Border Grid.Column="2" Classes="pill accent"
+                        IsVisible="{Binding IsGitBacked}">
                     <TextBlock Text="match · git" />
                 </Border>
                 <StackPanel Grid.Column="4" Classes="synced" Orientation="Horizontal" Spacing="7">
@@ -53,11 +55,8 @@
 
                         <!-- Certificates block -->
                         <StackPanel Spacing="9">
-                            <Grid ColumnDefinitions="*,Auto">
-                                <TextBlock Grid.Column="0" Classes="blk-t" Text="CERTIFICATES" />
-                                <TextBlock Grid.Column="1" Classes="blk-x" Text="Illustrative" />
-                            </Grid>
-                            <Border Classes="listcard">
+                            <TextBlock Classes="blk-t" Text="CERTIFICATES" />
+                            <Border Classes="listcard" IsVisible="{Binding HasCertificates}">
                                 <ItemsControl ItemsSource="{Binding Certificates}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate x:DataType="vm:SigningCertRow">
@@ -77,23 +76,26 @@
                                                         <TextBlock Classes="lsub" Text="{Binding Sub}"
                                                                    TextWrapping="Wrap" />
                                                     </StackPanel>
-                                                    <StackPanel Grid.Column="3" Orientation="Horizontal"
-                                                                Spacing="10" VerticalAlignment="Center">
-                                                        <TextBlock Classes="lmeta" Text="{Binding ExpiresMeta}" />
-                                                        <Button Classes="btn small" Content="Revoke" />
-                                                    </StackPanel>
+                                                    <TextBlock Grid.Column="3" Classes="lmeta mono"
+                                                               FontFamily="{DynamicResource MonoFontFamily}"
+                                                               Text="{Binding ExpiresMeta}"
+                                                               VerticalAlignment="Center" />
                                                 </Grid>
                                             </Border>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
                             </Border>
+                            <Border Classes="panel" IsVisible="{Binding HasNoCertificates}">
+                                <TextBlock Classes="lsub" TextWrapping="Wrap"
+                                           Text="No codesigning identities installed. Run match or check Xcode &gt; Settings &gt; Accounts (security find-identity is only available on macOS)." />
+                            </Border>
                         </StackPanel>
 
                         <!-- Provisioning profiles block -->
                         <StackPanel Spacing="9">
                             <TextBlock Classes="blk-t" Text="PROVISIONING PROFILES" />
-                            <Border Classes="listcard">
+                            <Border Classes="listcard" IsVisible="{Binding HasProfiles}">
                                 <ItemsControl ItemsSource="{Binding Profiles}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate x:DataType="vm:SigningProfileRow">
@@ -129,6 +131,10 @@
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
                             </Border>
+                            <Border Classes="panel" IsVisible="{Binding HasNoProfiles}">
+                                <TextBlock Classes="lsub" TextWrapping="Wrap"
+                                           Text="No provisioning profiles found for this app. Run match (or open Xcode) to install them." />
+                            </Border>
                         </StackPanel>
 
                     </StackPanel>
@@ -143,7 +149,7 @@
                         <!-- match storage -->
                         <StackPanel Spacing="9">
                             <TextBlock Classes="blk-t" Text="MATCH STORAGE" />
-                            <Border Classes="panel">
+                            <Border Classes="panel" IsVisible="{Binding HasMatch}">
                                 <StackPanel>
                                     <Border Classes="dl-row">
                                         <Grid ColumnDefinitions="Auto,*">
@@ -165,31 +171,43 @@
                                     </Border>
                                     <Border Classes="dl-row last">
                                         <Grid ColumnDefinitions="Auto,*">
-                                            <TextBlock Grid.Column="0" Classes="k" Text="Last synced" />
-                                            <TextBlock Grid.Column="1" Classes="v" Text="{Binding MatchLastSynced}" />
+                                            <TextBlock Grid.Column="0" Classes="k" Text="Type" />
+                                            <TextBlock Grid.Column="1" Classes="v" Text="{Binding MatchType}" />
                                         </Grid>
                                     </Border>
                                 </StackPanel>
                             </Border>
+                            <Border Classes="panel" IsVisible="{Binding HasNoMatch}">
+                                <TextBlock Classes="lsub" TextWrapping="Wrap"
+                                           Text="No Matchfile found in ios/fastlane. Add one to manage certificates &amp; profiles with fastlane match." />
+                            </Border>
                         </StackPanel>
 
-                        <!-- Registered devices -->
+                        <!-- match credentials -->
                         <StackPanel Spacing="9">
-                            <TextBlock Classes="blk-t" Text="REGISTERED DEVICES" />
-                            <Border Classes="listcard">
-                                <ItemsControl ItemsSource="{Binding Devices}">
+                            <TextBlock Classes="blk-t" Text="MATCH CREDENTIALS" />
+                            <Border Classes="panel">
+                                <ItemsControl ItemsSource="{Binding Credentials}">
                                     <ItemsControl.ItemTemplate>
-                                        <DataTemplate x:DataType="vm:SigningDeviceRow">
-                                            <Border Classes="lrow">
-                                                <Grid ColumnDefinitions="Auto,12,*">
-                                                    <Border Grid.Column="0" Classes="lic neutral">
-                                                        <TextBlock Text="📱" FontSize="15" />
-                                                    </Border>
-                                                    <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="3">
-                                                        <TextBlock Classes="ltitle" Text="{Binding Name}" />
-                                                        <TextBlock Classes="lsub mono"
+                                        <DataTemplate x:DataType="vm:SigningCredentialRow">
+                                            <Border Classes="dl-row">
+                                                <Grid ColumnDefinitions="*,Auto">
+                                                    <StackPanel Grid.Column="0" Spacing="2">
+                                                        <TextBlock Classes="k mono"
                                                                    FontFamily="{DynamicResource MonoFontFamily}"
-                                                                   Text="{Binding Udid}" />
+                                                                   Text="{Binding Name}" />
+                                                        <TextBlock Classes="lsub" Text="{Binding Description}"
+                                                                   TextWrapping="Wrap" />
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="1" Orientation="Horizontal"
+                                                                Spacing="8" VerticalAlignment="Center">
+                                                        <TextBlock Classes="lmeta" Text="{Binding SourceText}"
+                                                                   VerticalAlignment="Center" />
+                                                        <Border Classes="pill"
+                                                                Classes.ok="{Binding IsSet}"
+                                                                Classes.bad="{Binding IsMissing}">
+                                                            <TextBlock Text="{Binding StatusText}" />
+                                                        </Border>
                                                     </StackPanel>
                                                 </Grid>
                                             </Border>
@@ -197,20 +215,36 @@
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
                             </Border>
-                            <Button Classes="btn small" HorizontalAlignment="Left"
-                                    Content="Register device…" />
                         </StackPanel>
 
-                        <!-- Danger zone -->
+                        <!-- Registered devices -->
+                        <StackPanel Spacing="9">
+                            <TextBlock Classes="blk-t" Text="REGISTERED DEVICES" />
+                            <Border Classes="panel">
+                                <Border Classes="dl-row last">
+                                    <Grid ColumnDefinitions="Auto,*">
+                                        <TextBlock Grid.Column="0" Classes="k" Text="From profiles" />
+                                        <TextBlock Grid.Column="1" Classes="v"
+                                                   Text="{Binding RegisteredDevicesText}" />
+                                    </Grid>
+                                </Border>
+                            </Border>
+                        </StackPanel>
+
+                        <!-- Danger zone (illustrative — intentionally inert) -->
                         <Border Classes="danger">
                             <StackPanel Spacing="8">
-                                <TextBlock FontSize="12.5" FontWeight="SemiBold"
-                                           Foreground="{DynamicResource BadgeBadTextBrush}"
-                                           Text="Danger zone · match nuke" />
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Grid.Column="0" FontSize="12.5" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource BadgeBadTextBrush}"
+                                               Text="Danger zone · match nuke" />
+                                    <TextBlock Grid.Column="1" Classes="blk-x" Text="Illustrative" />
+                                </Grid>
                                 <TextBlock FontSize="11.5" TextWrapping="Wrap"
                                            Foreground="{DynamicResource Text2Brush}"
                                            Text="Permanently revokes all certificates and provisioning profiles for this app and deletes them from the match repo. This cannot be undone — every machine and CI runner will need to re-run match." />
                                 <Button Classes="btn red" HorizontalAlignment="Left"
+                                        IsEnabled="False"
                                         Content="Nuke certs &amp; profiles…" />
                             </StackPanel>
                         </Border>
