@@ -72,10 +72,16 @@ Goal: cover most of fastlane via per-project section screens. Built as shells no
 - ✅ **Secrets & Credentials section — REAL.** Live secret status (process-env → `.env*` → Keychain →
   missing) with source chips, reveal, add/edit → Keychain. Shared `Core/Env/ProjectSecretScanner`
   (also used by the Lanes screen). Auth toggle (ASC key vs Apple ID) is informational for now.
-- ⬜ **Signing/match, TestFlight, Screenshots, Build & Test** — themed shells next (placeholder data +
-  real Run buttons wired to lanes); then each gets a real backend (cert/profile parsing, ASC testers/
-  builds, snapshot/frameit config, gym/scan config + test-result parsing) as its own slice.
-- Other design files in the bundle for later: `Store & Release`, `Lanes, History & Android Signing`.
+- ✅ **Signing · TestFlight · Screenshots · Build & Test — themed shells.** Faithful to the design with
+  honest placeholder data (`IsPlaceholder` + "Illustrative" hints) and primary Run buttons genuinely
+  wired to the matching lane (Run match→sync_certificates, Distribute→beta, Run snapshot→screenshots)
+  or disabled when absent. `ProjectDetailViewModel.TryRunLane`/`HasLane` + `ProjectShellViewModel.RunLane`.
+  → **"Signing, Beta & Build" design fully implemented.**
+- ⬜ Make each shell's data REAL (cert/profile parsing, ASC testers/builds, snapshot/frameit config,
+  gym/scan config + test-result parsing) — own slices, later.
+- ⬜ **UI snapshot tests** (explicitly requested) — set up Avalonia headless Skia rendering + frame
+  capture if the sandbox supports it, else robust render-smoke coverage of every view.
+- ⬜ Remaining design files: `Store & Release` (685 lines), `Lanes, History & Android Signing` (492).
 
 ## UI design
 - ✅ **macOS-native restyle** from a Claude Design handoff (`LaunchFast.html`): tokenised
