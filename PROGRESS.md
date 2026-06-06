@@ -60,7 +60,7 @@ store data. Next: sub-project #2 (lane scaffolding).
 - ✅ Verified no real secrets committed (fixtures use fake values).
 - ✅ `claude.md` + this `PROGRESS.md` for session continuity.
 - 🔨 Every phase committed with a useful message.
-- ⬜ UI snapshot tests (Avalonia headless frame capture) — Phase 10 if feasible.
+- ✅ UI snapshot tests (Avalonia headless Skia frame capture) — see the expansion section.
 - ✅ Final conventions cleanup pass (sealed/records/file-scoped/naming) + full review.
 
 ## Fastlane feature expansion (from Claude Design "Signing, Beta & Build")
@@ -79,8 +79,10 @@ Goal: cover most of fastlane via per-project section screens. Built as shells no
   → **"Signing, Beta & Build" design fully implemented.**
 - ⬜ Make each shell's data REAL (cert/profile parsing, ASC testers/builds, snapshot/frameit config,
   gym/scan config + test-result parsing) — own slices, later.
-- ⬜ **UI snapshot tests** (explicitly requested) — set up Avalonia headless Skia rendering + frame
-  capture if the sandbox supports it, else robust render-smoke coverage of every view.
+- ✅ **UI snapshot tests** — real Avalonia **headless Skia** frame capture works; 8 views × Light/Dark
+  rendered and asserted to draw real pixels (`SnapshotHarness`, `ViewSnapshotTests`, `RenderProbeTests`).
+  No committed `.verified.png` baselines (cross-machine AA/font instability) — PNGs emitted to gitignored
+  output for eyeballing; tests catch crashes/blank-render, not subtle pixel regressions.
 - ⬜ Remaining design files: `Store & Release` (685 lines), `Lanes, History & Android Signing` (492).
 
 ## UI design
