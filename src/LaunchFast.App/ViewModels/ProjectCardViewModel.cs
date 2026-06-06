@@ -11,4 +11,5 @@ public sealed class ProjectCardViewModel(Project project)
     public bool HasIos => project.IosFastlaneDir is not null;
     public bool HasAndroid => project.AndroidFastlaneDir is not null;
     public bool HasMatch => project.HasMatchfile;
+    public bool NeedsSetup => !project.HasFastlane;
 }

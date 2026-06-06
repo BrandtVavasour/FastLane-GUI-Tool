@@ -1,10 +1,20 @@
 using LaunchFast.App.ViewModels;
+using LaunchFast.Core.Models;
 using LaunchFast.Core.Scanning;
 
 namespace LaunchFast.App.Tests;
 
 public class LauncherViewModelTests
 {
+    [Test]
+    public void Card_without_fastlane_is_a_setup_candidate()
+    {
+        var project = new Project("New App", "/p", "1.0.0+1", null, null, false, null);
+        var vm = new ProjectCardViewModel(project);
+        Assert.That(vm.NeedsSetup, Is.True);
+        Assert.That(vm.HasIos, Is.False);
+    }
+
     [Test]
     public void Load_populates_cards_from_recents()
     {

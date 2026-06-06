@@ -83,8 +83,8 @@
                                             <Run Text="{Binding Project.Path}" />
                                         </TextBlock>
 
-                                        <!-- Badges -->
-                                        <WrapPanel Margin="0,11,0,0">
+                                        <!-- Badges (existing fastlane projects) -->
+                                        <WrapPanel Margin="0,11,0,0" IsVisible="{Binding !NeedsSetup}">
                                             <Border Classes="badge" IsVisible="{Binding HasIos}">
                                                 <TextBlock Text="iOS" />
                                             </Border>
@@ -95,6 +95,17 @@
                                                 <TextBlock Text="match ✓" />
                                             </Border>
                                         </WrapPanel>
+
+                                        <!-- Setup candidate (no fastlane yet) -->
+                                        <StackPanel Orientation="Horizontal" Margin="0,11,0,0"
+                                                    VerticalAlignment="Center"
+                                                    IsVisible="{Binding NeedsSetup}">
+                                            <TextBlock Text="No fastlane"
+                                                       VerticalAlignment="Center"
+                                                       Foreground="{DynamicResource Text2Brush}"
+                                                       FontSize="12" Margin="0,0,10,0" />
+                                            <Button Classes="btn accent" Content="Set up →" />
+                                        </StackPanel>
                                     </StackPanel>
                                 </Grid>
                             </Border>
