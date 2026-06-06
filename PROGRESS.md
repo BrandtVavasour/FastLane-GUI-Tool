@@ -63,6 +63,20 @@ store data. Next: sub-project #2 (lane scaffolding).
 - ⬜ UI snapshot tests (Avalonia headless frame capture) — Phase 10 if feasible.
 - ⬜ Final Simon-standard cleanup pass (sealed/records/file-scoped/naming) + full review.
 
+## Fastlane feature expansion (from Claude Design "Signing, Beta & Build")
+Goal: cover most of fastlane via per-project section screens. Built as shells now, made real incrementally.
+- ✅ **Component theme** — reusable styles/tokens (segmented control, toggle switch, pills ok/warn/bad,
+  list cards + colored icon chips, panels/def-rows, inputs/selects, danger zone, chips). Light/Dark.
+- ✅ **Per-project navigation shell** — sidebar with sections (Lanes · Signing · Secrets · TestFlight ·
+  Screenshots · Build & Test) + content host; Lanes = existing run screen; clean section→content→view seam.
+- ✅ **Secrets & Credentials section — REAL.** Live secret status (process-env → `.env*` → Keychain →
+  missing) with source chips, reveal, add/edit → Keychain. Shared `Core/Env/ProjectSecretScanner`
+  (also used by the Lanes screen). Auth toggle (ASC key vs Apple ID) is informational for now.
+- ⬜ **Signing/match, TestFlight, Screenshots, Build & Test** — themed shells next (placeholder data +
+  real Run buttons wired to lanes); then each gets a real backend (cert/profile parsing, ASC testers/
+  builds, snapshot/frameit config, gym/scan config + test-result parsing) as its own slice.
+- Other design files in the bundle for later: `Store & Release`, `Lanes, History & Android Signing`.
+
 ## UI design
 - ✅ **macOS-native restyle** from a Claude Design handoff (`LaunchFast.html`): tokenised
   Light/Dark theme (`Themes/Tokens.axaml`) + reusable control styles (`Themes/Controls.axaml`),
