@@ -39,9 +39,18 @@ public sealed class ProjectScaffoldService(ISecretStore secrets, IPtyFactory pty
     Task BundleInstall(string platformDir)
     {
         var tcs = new TaskCompletionSource();
-        var proc = pty.Start("bundle", ["install"], platformDir, new Dictionary<string, string>());
+        var baseEnv = Environment.GetEnvironmentVariables()
+            .Cast<System.Collections.DictionaryEntry>()
+            .Where(e => e.Key is string && e.Value is string)
+            .ToDictionary(e => (string)e.Key, e => (string)e.Value!, StringComparer.Ordinal);
+        var proc = pty.Start("bundle", ["install"], platformDir, baseEnv);
         proc.OutputReceived += s => Output?.Invoke(s);
-        proc.Exited += _ => tcs.TrySetResult();
+        proc.Exited += code =>
+        {
+            if (code != 0)
+                Output?.Invoke($"bundle install failed (exit {code}) in {platformDir}");
+            tcs.TrySetResult();
+        };
         return tcs.Task;
     }
 }

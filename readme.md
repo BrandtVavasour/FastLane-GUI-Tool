@@ -13,9 +13,10 @@ Built with Avalonia on .NET 10.
   and detects its iOS/Android fastlane setups (and launcher icons).
 - **Setup wizard** — surfaces Flutter projects with no fastlane (or a missing platform)
   and generates the complete file set (Fastfile, Appfile, Matchfile, Gemfile) from scratch,
-  or merges a new lane / platform block into an existing Fastfile. Eight-step guided flow
-  with diff preview and one-click apply (writes files + stores secrets in Keychain +
-  runs `bundle install`).
+  or merges a new lane / platform block into an existing Fastfile. Five-step guided flow
+  (Platforms · iOS · Android · Lanes · Review, with iOS/Android steps shown only for the
+  platforms you select) with diff preview and one-click apply (writes files + stores secrets
+  in Keychain + runs `bundle install`).
 - **Lane runner** — runs lanes with **live streaming output**, a preflight check
   (Gemfile/bundler) before launch, one-run-at-a-time gating, and stop. Uses a pipe-based
   process backend; interactive prompts (2FA, match passphrase) are not fully supported —

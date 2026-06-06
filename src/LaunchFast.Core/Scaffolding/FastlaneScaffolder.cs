@@ -11,6 +11,17 @@ namespace LaunchFast.Core.Scaffolding;
 /// </summary>
 public static class FastlaneScaffolder
 {
+    /// <summary>
+    /// The Ruby helper that resolves the Flutter project root from a
+    /// <c>platform/fastlane/</c> directory. Used in both the generated full
+    /// Fastfiles and any merged platform blocks so the definition is never
+    /// duplicated or allowed to drift.
+    /// </summary>
+    public const string FlutterRootHelper =
+        "# Flutter project root: platform/fastlane/ -> up two levels.\n" +
+        "def flutter_root\n" +
+        "  File.expand_path('../..', __dir__)\n" +
+        "end\n";
     public static ScaffoldPlan Render(WizardAnswers a, string root)
     {
         var files = new List<FileChange>();
@@ -50,10 +61,7 @@ public static class FastlaneScaffolder
         var sb = new StringBuilder();
         sb.Append("require 'dotenv'\n\n");
         sb.Append("default_platform(:ios)\n\n");
-        sb.Append("# Flutter project root: ios/fastlane/ -> up two levels.\n");
-        sb.Append("def flutter_root\n");
-        sb.Append("  File.expand_path('../..', __dir__)\n");
-        sb.Append("end\n\n");
+        sb.Append(FlutterRootHelper).Append('\n');
         sb.Append("platform :ios do\n");
         sb.Append("  before_all do\n");
         sb.Append("    setup_ci if ENV['CI']\n");
@@ -89,10 +97,7 @@ public static class FastlaneScaffolder
         var sb = new StringBuilder();
         sb.Append("require 'dotenv'\n\n");
         sb.Append("default_platform(:android)\n\n");
-        sb.Append("# Flutter project root: android/fastlane/ -> up two levels.\n");
-        sb.Append("def flutter_root\n");
-        sb.Append("  File.expand_path('../..', __dir__)\n");
-        sb.Append("end\n\n");
+        sb.Append(FlutterRootHelper).Append('\n');
         sb.Append("platform :android do\n");
         sb.Append("  before_all do\n");
         sb.Append("    env_file = ENV['FASTLANE_ENV'] || '.env.production'\n");

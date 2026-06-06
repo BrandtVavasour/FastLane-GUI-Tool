@@ -6,7 +6,7 @@ require 'dotenv'
 
 default_platform(:ios)
 
-# Flutter project root: ios/fastlane/ -> up two levels.
+# Flutter project root: platform/fastlane/ -> up two levels.
 def flutter_root
   File.expand_path('../..', __dir__)
 end

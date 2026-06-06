@@ -292,21 +292,33 @@ public sealed partial class SetupWizardViewModel : ObservableObject
         var fastfilePath = System.IO.Path.Combine(fastlaneDir, "Fastfile");
         if (!File.Exists(fastfilePath)) return;
 
-        var existing = File.ReadAllText(fastfilePath);
+        // Read once: reused for kind-detection, OldContent, and the initial merge base.
+        var originalText = File.ReadAllText(fastfilePath);
+        var hadPlatformBlock = FastfileMerger.HasPlatformBlock(originalText, platformKey);
+
+        var existing = originalText;
         foreach (var lane in chosenLanes)
         {
             var laneRuby = LaneTemplate.Render(platform, lane, answers);
-            var merged = FastfileMerger.HasPlatformBlock(existing, platformKey)
-                ? FastfileMerger.InsertLane(existing, laneRuby, platformKey)
-                : FastfileMerger.AddPlatformBlock(existing, $"platform :{platformKey} do\n{laneRuby}\nend\n");
-            existing = merged;
+            if (FastfileMerger.HasPlatformBlock(existing, platformKey))
+            {
+                existing = FastfileMerger.InsertLane(existing, laneRuby, platformKey);
+            }
+            else
+            {
+                // Adding a new platform block: if the existing file doesn't define
+                // flutter_root, prepend the helper so Android lanes that call
+                // Dir.chdir(flutter_root) don't raise NameError at runtime.
+                var needsHelper = !existing.Contains("def flutter_root", StringComparison.Ordinal)
+                                  && !existing.Contains("flutter_root =", StringComparison.Ordinal);
+                var prefix = needsHelper ? FastlaneScaffolder.FlutterRootHelper + "\n" : "";
+                existing = FastfileMerger.AddPlatformBlock(
+                    existing, $"{prefix}platform :{platformKey} do\n{laneRuby}\nend\n");
+            }
         }
 
-        var kind = FastfileMerger.HasPlatformBlock(File.ReadAllText(fastfilePath), platformKey)
-            ? FileChangeKind.InsertLane
-            : FileChangeKind.AddPlatformBlock;
-
-        files.Add(new FileChange(fastfilePath, OldContent: File.ReadAllText(fastfilePath), NewContent: existing, kind));
+        var kind = hadPlatformBlock ? FileChangeKind.InsertLane : FileChangeKind.AddPlatformBlock;
+        files.Add(new FileChange(fastfilePath, OldContent: originalText, NewContent: existing, kind));
     }
 
     // ---- apply / cancel -----------------------------------------------------

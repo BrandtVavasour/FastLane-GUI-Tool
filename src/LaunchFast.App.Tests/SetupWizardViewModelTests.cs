@@ -100,6 +100,81 @@ public class SetupWizardViewModelTests
         return ProjectScanner.TryScanRoot(root)!;
     }
 
+    // ---- Finding 2: flutter_root helper in AddPlatformBlock merge path --------
+
+    [Test]
+    public void AddToExisting_android_merge_prepends_flutter_root_when_missing()
+    {
+        // Existing Android Fastfile has the fastlane dir but NO platform :android block
+        // and NO flutter_root definition. The merged result must contain def flutter_root
+        // so that Android lanes (e.g. build) can call Dir.chdir(flutter_root).
+        var project = ProjectWithAndroidFastlaneNoBlock(out _);
+        var vm = SetupWizardViewModel.ForAddToExisting(project);
+        vm.Platforms.Android = true;
+        vm.Android.Package = "com.example.app";
+        vm.Lanes.SetAndroid(["build"]);
+        var plan = vm.BuildPlan();
+        var change = plan.Files.Single(f => f.Path.Replace('\\', '/').EndsWith("android/fastlane/Fastfile"));
+        Assert.That(change.Kind, Is.EqualTo(FileChangeKind.AddPlatformBlock));
+        Assert.That(change.NewContent, Does.Contain("def flutter_root"));
+        Assert.That(change.NewContent, Does.Contain("platform :android"));
+        Assert.That(change.NewContent, Does.Contain("lane :build"));
+    }
+
+    [Test]
+    public void AddToExisting_android_merge_does_not_duplicate_flutter_root_when_present()
+    {
+        // Existing Android Fastfile already defines flutter_root.
+        // The merged result must NOT contain a second flutter_root definition.
+        var project = ProjectWithAndroidFastlaneNoBlockButHasHelper(out _);
+        var vm = SetupWizardViewModel.ForAddToExisting(project);
+        vm.Platforms.Android = true;
+        vm.Android.Package = "com.example.app";
+        vm.Lanes.SetAndroid(["build"]);
+        var plan = vm.BuildPlan();
+        var change = plan.Files.Single(f => f.Path.Replace('\\', '/').EndsWith("android/fastlane/Fastfile"));
+        var content = change.NewContent;
+        // Exactly one occurrence.
+        var firstIndex = content.IndexOf("def flutter_root", StringComparison.Ordinal);
+        var lastIndex = content.LastIndexOf("def flutter_root", StringComparison.Ordinal);
+        Assert.That(firstIndex, Is.Not.EqualTo(-1), "flutter_root should be present");
+        Assert.That(firstIndex, Is.EqualTo(lastIndex), "flutter_root must not be duplicated");
+    }
+
+    /// <summary>
+    /// A temp project with an Android fastlane dir, a Fastfile that has NO platform
+    /// block and NO flutter_root definition — the merge path must prepend the helper.
+    /// </summary>
+    static Project ProjectWithAndroidFastlaneNoBlock(out string root)
+    {
+        root = Path.Combine(Path.GetTempPath(), "lf-wizard-android-" + Guid.NewGuid().ToString("N"), "demo");
+        var androidFl = Path.Combine(root, "android", "fastlane");
+        Directory.CreateDirectory(androidFl);
+        Directory.CreateDirectory(Path.Combine(root, "ios"));
+        File.WriteAllText(Path.Combine(root, "pubspec.yaml"), "name: demo\nversion: 1.0.0+1\n");
+        // Minimal Fastfile with no platform block and no flutter_root.
+        File.WriteAllText(Path.Combine(androidFl, "Fastfile"),
+            "default_platform(:android)\n\n# no platform block yet\n");
+        return ProjectScanner.TryScanRoot(root)!;
+    }
+
+    /// <summary>
+    /// Like <see cref="ProjectWithAndroidFastlaneNoBlock"/> but the Fastfile already
+    /// defines <c>flutter_root</c> — the merge must not duplicate it.
+    /// </summary>
+    static Project ProjectWithAndroidFastlaneNoBlockButHasHelper(out string root)
+    {
+        root = Path.Combine(Path.GetTempPath(), "lf-wizard-android2-" + Guid.NewGuid().ToString("N"), "demo");
+        var androidFl = Path.Combine(root, "android", "fastlane");
+        Directory.CreateDirectory(androidFl);
+        Directory.CreateDirectory(Path.Combine(root, "ios"));
+        File.WriteAllText(Path.Combine(root, "pubspec.yaml"), "name: demo\nversion: 1.0.0+1\n");
+        // Fastfile already has flutter_root but no platform block.
+        File.WriteAllText(Path.Combine(androidFl, "Fastfile"),
+            "default_platform(:android)\n\ndef flutter_root\n  File.expand_path('../..', __dir__)\nend\n\n# no platform block yet\n");
+        return ProjectScanner.TryScanRoot(root)!;
+    }
+
     /// <summary>
     /// A temp project with an iOS fastlane dir holding a minimal Fastfile (one
     /// <c>:beta</c> lane) and no Android fastlane. Used by add-to-existing tests.

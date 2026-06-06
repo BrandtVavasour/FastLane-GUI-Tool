@@ -70,9 +70,9 @@ src/
                   ScaffoldPlan           — list of FileChange + SecretToStore to apply
   LaunchFast.App          → Avalonia UI (MVVM) — continued
     ViewModels/  … (existing) + SetupWizard step VMs:
-                   SetupWizardViewModel, PlatformStepViewModel, IosBundleIdStepViewModel,
-                   TeamIdStepViewModel, LanesStepViewModel, DartDefinesStepViewModel,
-                   ReviewStepViewModel, ApplyStepViewModel
+                   SetupWizardViewModel, WizardPlatformsStepViewModel,
+                   WizardIosStepViewModel, WizardAndroidStepViewModel,
+                   WizardLanesStepViewModel, WizardReviewStepViewModel
     Views/       … (existing) + SetupWizardView
     Services/    … (existing) + ProjectScaffoldService
                    (writes files + Keychain secrets + runs bundle install)
@@ -124,7 +124,9 @@ dotnet test IntegrationTests/IntegrationTests.slnx   # real fastlane/Keychain sm
    Generates a complete fastlane file set (Fastfile, Appfile, Matchfile, Gemfile) for a
    fastlane-less Flutter project; merges a missing platform block or individual lane into an
    existing Fastfile (FastfileMerger, Ruby-aware); auto-detects bundle id / team id /
-   package name (ProjectFacts); 8-step wizard UI with diff preview + `bundle install` apply.
+   package name (ProjectFacts); five-step guided wizard (Platforms · iOS · Android · Lanes ·
+   Review, with iOS/Android steps shown only for the platforms you select) with diff
+   preview + `bundle install` apply.
    Also adds a missing platform block or individual lane to an existing fastlane setup.
    Spec: `docs/superpowers/specs/2026-06-06-fastlane-setup-wizard-design.md`
    Plan: `docs/superpowers/plans/2026-06-06-fastlane-setup-wizard.md`
@@ -140,11 +142,15 @@ Sub-project #2 (setup wizard): `ProjectScanner` surfaces fastlane-less Flutter p
 projects missing a platform). `FastlaneScaffolder` generates the complete fastlane file set.
 `FastfileMerger` performs Ruby-aware lane/platform-block insertion into existing Fastfiles.
 `ProjectFacts` auto-detects bundle id / team id / package name from existing project files.
-The 8-step wizard (SetupWizardViewModel + step VMs + SetupWizardView) guides the user from
-project selection to a diff preview and one-click apply (write files + Keychain secrets +
-`bundle install`) via `ProjectScaffoldService`. Entry points: launcher CTA for fastlane-less
-projects and a toolbar button in the Fastfile inspector. Interactive match init / first upload
-remain on the Lanes screen (not yet automated). 387 unit tests + 5 integration tests green.
+The five-step wizard (`SetupWizardViewModel` + step VMs `WizardPlatformsStepViewModel`,
+`WizardIosStepViewModel`, `WizardAndroidStepViewModel`, `WizardLanesStepViewModel`,
+`WizardReviewStepViewModel` + `SetupWizardView`) guides the user from project selection to a
+diff preview and one-click apply (write files + Keychain secrets + `bundle install`) via
+`ProjectScaffoldService`. The iOS and Android steps are shown only for the platforms you
+select; the Apply output is streamed into `SetupWizardViewModel.ApplyLog`. Entry points:
+launcher CTA for fastlane-less projects and a toolbar button in the Fastfile inspector.
+Interactive match init / first upload remain on the Lanes screen (not yet automated).
+387 unit tests + 5 integration tests green.
 
 **Sub-project #1 (the runner) plus a large fastlane-feature expansion are COMPLETE and reviewed
 (SHIP-READY) as of 2026-06-06.** The app is now a per-project shell with 12 section screens —

@@ -76,10 +76,11 @@ What landed:
   `TeamId` (same), and `AndroidPackage` (from `android/app/build.gradle`) so wizard fields
   pre-populate.
 - **`ScaffoldPlan`** / `WizardAnswers` / `SecretToStore` / `FileChange` — clean value objects.
-- **8-step wizard UI** (`SetupWizardViewModel` + per-step VMs: Platform, IosBundleId, TeamId,
-  Lanes, DartDefines, Review/diff, Apply): step rail with forward/back, inline validation, diff
-  preview (old vs new for merge, full content for create), apply panel showing `bundle install`
-  live output.
+- **Five-step wizard UI** (`SetupWizardViewModel` + per-step VMs: `WizardPlatformsStepViewModel`,
+  `WizardIosStepViewModel`, `WizardAndroidStepViewModel`, `WizardLanesStepViewModel`,
+  `WizardReviewStepViewModel`): step rail with forward/back, inline validation, diff preview
+  (old vs new for merge, full content for create), apply panel showing `bundle install` live
+  output. The iOS and Android steps are shown only for the platforms you select.
 - **`ProjectScaffoldService`** — applies the plan: writes files, stores Keychain secrets,
   runs `bundle install` in `ios/` and/or `android/`.
 - **Entry points** — launcher CTA ("Set up fastlane") on project cards with no fastlane;
