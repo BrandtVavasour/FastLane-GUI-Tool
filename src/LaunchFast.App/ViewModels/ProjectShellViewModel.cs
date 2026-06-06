@@ -59,6 +59,7 @@ public partial class ProjectShellViewModel : ObservableObject
             new(ProjectSection.WhatsNew, "What's New", "📝"),
             new(ProjectSection.Release, "Release", "📦"),
             new(ProjectSection.History, "History", "🕘"),
+            new(ProjectSection.AndroidSigning, "Android Signing", "🔏"),
         };
 
         SelectSection(ProjectSection.Lanes);
@@ -115,6 +116,7 @@ public partial class ProjectShellViewModel : ObservableObject
         ProjectSection.WhatsNew => BuildWhatsNew(),
         ProjectSection.Release => BuildRelease(),
         ProjectSection.History => BuildHistory(),
+        ProjectSection.AndroidSigning => BuildAndroidSigning(),
         _ => Placeholder(section.ToString()),
     };
 
@@ -168,6 +170,10 @@ public partial class ProjectShellViewModel : ObservableObject
 
     RunHistorySectionViewModel BuildHistory() =>
         new(_history, _project.Path, RunLane, () => DateTime.UtcNow);
+
+    AndroidSigningSectionViewModel BuildAndroidSigning() =>
+        new(_project, _secrets, RunLane,
+            hasBuildLane: () => Lanes.HasLane(Platform.Android, "build"));
 
     /// <summary>
     /// Runs a lane on behalf of a section screen: switches to the Lanes section so

@@ -567,6 +567,9 @@
         <Setter Property="HorizontalAlignment" Value="Right" />
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
+    <Style Selector="Border.dl-row TextBlock.v.good">
+        <Setter Property="Foreground" Value="{DynamicResource BadgeOkTextBrush}" />
+    </Style>
 
     <!-- ============================== Toggle switch ====================== -->
     <!-- .tgl — 38x22 pill track, 18px white thumb, green when on, no labels.

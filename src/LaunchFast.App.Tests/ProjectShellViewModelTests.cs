@@ -128,11 +128,25 @@ public class ProjectShellViewModelTests
         shell.SelectSectionCommand.Execute(ProjectSection.History);
         Assert.That(shell.CurrentContent, Is.InstanceOf<RunHistorySectionViewModel>());
 
+        shell.SelectSectionCommand.Execute(ProjectSection.AndroidSigning);
+        Assert.That(shell.CurrentContent, Is.InstanceOf<AndroidSigningSectionViewModel>());
+
         // All sidebar entries exist.
         Assert.That(shell.Sections.Any(s => s.Section == ProjectSection.StoreListing), Is.True);
         Assert.That(shell.Sections.Any(s => s.Section == ProjectSection.WhatsNew), Is.True);
         Assert.That(shell.Sections.Any(s => s.Section == ProjectSection.Release), Is.True);
         Assert.That(shell.Sections.Any(s => s.Section == ProjectSection.History), Is.True);
+        Assert.That(shell.Sections.Any(s => s.Section == ProjectSection.AndroidSigning), Is.True);
+
+        // Every ProjectSection enum value resolves to a non-null content VM
+        // (no section falls through to a placeholder).
+        foreach (var section in Enum.GetValues<ProjectSection>())
+        {
+            shell.SelectSectionCommand.Execute(section);
+            Assert.That(shell.CurrentContent, Is.Not.Null, $"{section} resolved to null content");
+            Assert.That(shell.CurrentContent, Is.Not.InstanceOf<SectionPlaceholderViewModel>(),
+                $"{section} fell through to a placeholder");
+        }
     }
 
     [Test]

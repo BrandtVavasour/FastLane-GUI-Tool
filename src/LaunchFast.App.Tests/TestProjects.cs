@@ -90,6 +90,56 @@ public static class TestProjects
         return ProjectScanner.TryScanRoot(root)!;
     }
 
+    /// <summary>
+    /// Creates a temp Flutter project with a real Android module on disk: an
+    /// <c>android/app/build.gradle</c> declaring a release signingConfig (applied to
+    /// the release buildType), a <c>key.properties</c>, and an Android Appfile with a
+    /// package_name. Used by the Android Signing tests so the gradle reader surfaces
+    /// real values. Adds an android `build` lane Fastfile when
+    /// <paramref name="withBuildLane"/> is true.
+    /// </summary>
+    public static Project MakeProjectWithAndroidSigning(
+        string name = "android", bool withBuildLane = true)
+    {
+        var root = Path.Combine(Path.GetTempPath(), "lf-androidsign-" + Guid.NewGuid().ToString("N"), name);
+        var androidFl = Path.Combine(root, "android", "fastlane");
+        var androidApp = Path.Combine(root, "android", "app");
+        Directory.CreateDirectory(androidFl);
+        Directory.CreateDirectory(androidApp);
+        File.WriteAllText(Path.Combine(root, "pubspec.yaml"), "name: demo\nversion: 1.2.3+9\n");
+
+        File.WriteAllText(Path.Combine(androidApp, "build.gradle"),
+            """
+            android {
+                signingConfigs {
+                    release {
+                        storeFile file(keystoreProperties['storeFile'])
+                        keyAlias keystoreProperties['keyAlias']
+                        storeType "PKCS12"
+                    }
+                }
+                buildTypes {
+                    release {
+                        signingConfig signingConfigs.release
+                    }
+                }
+            }
+            """);
+
+        File.WriteAllText(Path.Combine(root, "android", "key.properties"),
+            "storeFile=upload-keystore.jks\nstorePassword=x\nkeyAlias=upload\nkeyPassword=y\n");
+
+        File.WriteAllText(Path.Combine(androidFl, "Appfile"),
+            "package_name(\"com.jabtech.vmt\")\njson_key_file(ENV[\"PLAY_JSON_KEY\"])\n");
+
+        var fastfile = withBuildLane
+            ? "platform :android do\n  lane :build do\n    gradle(task: \"bundleRelease\")\n  end\nend\n"
+            : "platform :android do\n  lane :beta do\n  end\nend\n";
+        File.WriteAllText(Path.Combine(androidFl, "Fastfile"), fastfile);
+
+        return ProjectScanner.TryScanRoot(root)!;
+    }
+
     static void WriteFakePng(string path)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);

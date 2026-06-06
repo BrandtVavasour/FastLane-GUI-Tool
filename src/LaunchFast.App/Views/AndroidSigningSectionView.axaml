@@ -1,0 +1,250 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:LaunchFast.App.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="940" d:DesignHeight="660"
+             x:Class="LaunchFast.App.Views.AndroidSigningSectionView"
+             x:DataType="vm:AndroidSigningSectionViewModel"
+             x:CompileBindings="True"
+             Background="{DynamicResource Surface0Brush}">
+
+    <DockPanel>
+        <!-- Toolbar -->
+        <Border DockPanel.Dock="Top"
+                Background="{DynamicResource Surface1Brush}"
+                BorderBrush="{DynamicResource SeparatorBrush}"
+                BorderThickness="0,0,0,1">
+            <Grid ColumnDefinitions="*,Auto,Auto" Margin="16,11">
+                <Button Grid.Column="1" Classes="btn" Margin="0,0,8,0"
+                        Content="Verify keystore"
+                        ToolTip.Tip="Inert placeholder — running keytool is a future enhancement."
+                        IsEnabled="False" />
+                <Button Grid.Column="2" Classes="accent" Content="Build AAB (gradle)"
+                        IsEnabled="{Binding CanBuildAab}"
+                        Command="{Binding BuildAabCommand}" />
+            </Grid>
+        </Border>
+
+        <!-- Subbar -->
+        <Border DockPanel.Dock="Top" Classes="subbar">
+            <Grid ColumnDefinitions="Auto,Auto,Auto,*,Auto">
+                <TextBlock Grid.Column="0" Classes="h2" Text="Android Signing" />
+                <Border Grid.Column="1" Classes="chip" Margin="14,0,8,0">
+                    <TextBlock Text="{Binding PackageName}" />
+                </Border>
+                <Border Grid.Column="2" Classes="pill accent"
+                        ToolTip.Tip="Illustrative — Play App Signing enrolment needs the Play Developer API.">
+                    <TextBlock Text="Play App Signing" />
+                </Border>
+                <StackPanel Grid.Column="4" Classes="synced" Orientation="Horizontal" Spacing="7"
+                            ToolTip.Tip="Illustrative — enrolment status is not queried yet.">
+                    <Border Classes="synced-dot" />
+                    <TextBlock Text="{Binding EnrolledText}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Empty state when the project has no Android platform -->
+        <Border IsVisible="{Binding HasNoAndroid}"
+                Background="{DynamicResource Surface0Brush}">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+                <TextBlock Text="🤖" FontSize="34" HorizontalAlignment="Center" />
+                <TextBlock Classes="h2" HorizontalAlignment="Center"
+                           Text="No Android module" />
+                <TextBlock FontSize="12.5" HorizontalAlignment="Center"
+                           Foreground="{DynamicResource Text3Brush}"
+                           Text="This project has no android/ directory to sign." />
+            </StackPanel>
+        </Border>
+
+        <!-- Two-column content -->
+        <Grid ColumnDefinitions="*,360" IsVisible="{Binding HasAndroid}">
+
+            <!-- LEFT column -->
+            <Border Grid.Column="0"
+                    BorderBrush="{DynamicResource SeparatorBrush}"
+                    BorderThickness="0,0,1,0">
+                <ScrollViewer>
+                    <StackPanel Margin="20,16,20,20" Spacing="16">
+
+                        <!-- Signing keys (ILLUSTRATIVE) -->
+                        <StackPanel Spacing="9">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Grid.Column="0" Classes="blk-t" Text="SIGNING KEYS" />
+                                <TextBlock Grid.Column="1" Classes="blk-x" Text="Illustrative" />
+                            </Grid>
+                            <Border Classes="listcard">
+                                <ItemsControl ItemsSource="{Binding SigningKeys}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:SigningKeyRow">
+                                            <Border Classes="lrow">
+                                                <Grid ColumnDefinitions="Auto,12,*,Auto">
+                                                    <Border Grid.Column="0" Classes="lic"
+                                                            Classes.green="{Binding IsGreen}"
+                                                            Classes.blue="{Binding !IsGreen}">
+                                                        <TextBlock Text="🔑" FontSize="15" />
+                                                    </Border>
+                                                    <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="3">
+                                                        <StackPanel Orientation="Horizontal" Spacing="9">
+                                                            <TextBlock Classes="ltitle" Text="{Binding Title}"
+                                                                       VerticalAlignment="Center" />
+                                                            <Border Classes="pill ok">
+                                                                <TextBlock Text="{Binding StatusText}" />
+                                                            </Border>
+                                                        </StackPanel>
+                                                        <TextBlock Classes="lsub" Text="{Binding Sub}"
+                                                                   TextWrapping="Wrap" />
+                                                    </StackPanel>
+                                                    <TextBlock Grid.Column="3" Classes="lmeta"
+                                                               Text="{Binding Meta}"
+                                                               VerticalAlignment="Center" />
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Border>
+                            <TextBlock FontSize="11.5" TextWrapping="Wrap"
+                                       Foreground="{DynamicResource Text3Brush}"
+                                       Text="With Play App Signing you sign the bundle with your upload key; Google verifies it, strips it, and re-signs with the app signing key it stores. The app signing key can never be exported or changed." />
+                        </StackPanel>
+
+                        <!-- gradle signingConfig (REAL) -->
+                        <StackPanel Spacing="9">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Grid.Column="0" Classes="blk-t" Text="GRADLE SIGNINGCONFIG" />
+                                <Border Grid.Column="1" Classes="pill bad"
+                                        IsVisible="{Binding !HasGradleConfig}">
+                                    <TextBlock Text="NONE" />
+                                </Border>
+                            </Grid>
+                            <Border Classes="panel">
+                                <ItemsControl ItemsSource="{Binding GradleRows}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:GradleSigningRow">
+                                            <Border Classes="dl-row">
+                                                <Grid ColumnDefinitions="Auto,*">
+                                                    <TextBlock Grid.Column="0" Classes="k" Text="{Binding Key}" />
+                                                    <TextBlock Grid.Column="1" Classes="v"
+                                                               Classes.good="{Binding IsGood}"
+                                                               Text="{Binding Value}" />
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Border>
+                            <TextBlock FontSize="11.5" Classes="mono"
+                                       FontFamily="{DynamicResource MonoFontFamily}"
+                                       Foreground="{DynamicResource Text3Brush}"
+                                       Text="{Binding KeyPropertiesText}" TextWrapping="Wrap" />
+                        </StackPanel>
+
+                        <!-- Credentials (REAL) -->
+                        <StackPanel Spacing="9">
+                            <TextBlock Classes="blk-t" Text="CREDENTIALS" />
+                            <Border Classes="listcard">
+                                <ItemsControl ItemsSource="{Binding Credentials}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:AndroidCredentialRow">
+                                            <Border Classes="lrow">
+                                                <Grid ColumnDefinitions="*,Auto,Auto">
+                                                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Spacing="2">
+                                                        <TextBlock Classes="ltitle mono"
+                                                                   FontFamily="{DynamicResource MonoFontFamily}"
+                                                                   Text="{Binding Name}" />
+                                                        <TextBlock Classes="lsub" Text="{Binding Description}"
+                                                                   TextWrapping="Wrap" />
+                                                    </StackPanel>
+                                                    <Border Grid.Column="1" Classes="src" Margin="10,0"
+                                                            VerticalAlignment="Center"
+                                                            IsVisible="{Binding IsSet}">
+                                                        <TextBlock Text="{Binding SourceText}" />
+                                                    </Border>
+                                                    <Border Grid.Column="2" Classes="pill"
+                                                            Classes.ok="{Binding IsSet}"
+                                                            Classes.bad="{Binding IsMissing}"
+                                                            VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding StatusText}" />
+                                                    </Border>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Border>
+                            <TextBlock FontSize="11.5" TextWrapping="Wrap"
+                                       Foreground="{DynamicResource Text3Brush}"
+                                       Text="Resolved like the Secrets screen: process / CI env → .env files → macOS Keychain." />
+                        </StackPanel>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <!-- RIGHT column -->
+            <Border Grid.Column="1" Background="{DynamicResource Surface2Brush}">
+                <ScrollViewer>
+                    <StackPanel Margin="18,16,18,20" Spacing="16">
+
+                        <!-- Certificate fingerprints (ILLUSTRATIVE) -->
+                        <StackPanel Spacing="9">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Grid.Column="0" Classes="blk-t" Text="CERTIFICATE FINGERPRINTS" />
+                                <TextBlock Grid.Column="1" Classes="blk-x" Text="Illustrative" />
+                            </Grid>
+                            <Border Classes="panel">
+                                <ItemsControl ItemsSource="{Binding Fingerprints}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:FingerprintRow">
+                                            <StackPanel Margin="0,0,0,12" Spacing="5">
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <Border Classes="pill"
+                                                            Classes.accent="{Binding IsAccent}"
+                                                            Classes.ok="{Binding !IsAccent}">
+                                                        <TextBlock Text="{Binding Label}" />
+                                                    </Border>
+                                                    <TextBlock Classes="lsub" Text="{Binding Algorithm}"
+                                                               VerticalAlignment="Center" />
+                                                </StackPanel>
+                                                <TextBlock Classes="mono" FontSize="10.5"
+                                                           FontFamily="{DynamicResource MonoFontFamily}"
+                                                           Foreground="{DynamicResource Text2Brush}"
+                                                           Text="{Binding Value}" TextWrapping="Wrap" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Border>
+                            <TextBlock FontSize="11.5" TextWrapping="Wrap"
+                                       Foreground="{DynamicResource Text3Brush}"
+                                       Text="Add these SHA-256 fingerprints to Firebase, Google Sign-In and Maps — services validate against the app signing key, not the upload key." />
+                        </StackPanel>
+
+                        <!-- Danger zone (ILLUSTRATIVE / inert) -->
+                        <Border Classes="danger">
+                            <StackPanel Spacing="8">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Grid.Column="0" FontSize="12.5" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource BadgeBadTextBrush}"
+                                               Text="Lost your upload key?" />
+                                    <TextBlock Grid.Column="1" Classes="blk-x" Text="Illustrative" />
+                                </Grid>
+                                <TextBlock FontSize="11.5" TextWrapping="Wrap"
+                                           Foreground="{DynamicResource Text2Brush}"
+                                           Text="If the upload key is lost or compromised you can ask Google to reset it without affecting users — the app signing key, and your app's identity, stay intact." />
+                                <Button Classes="btn red" HorizontalAlignment="Left"
+                                        Content="Request upload key reset…"
+                                        IsEnabled="False"
+                                        ToolTip.Tip="Inert — needs the Play Developer Console / API." />
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+        </Grid>
+    </DockPanel>
+</UserControl>

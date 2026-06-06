@@ -239,6 +239,22 @@ public class ViewSnapshotTests
     }
 
     [AvaloniaTest]
+    public void AndroidSigningSectionView_snapshot()
+    {
+        ForEachTheme("AndroidSigningSectionView", () =>
+        {
+            var project = TestProjects.MakeProjectWithAndroidSigning();
+            var store = new FakeSecretStore();
+            store.Set(project.Path, "KEYSTORE_PASSWORD", "x");
+            var vm = new AndroidSigningSectionViewModel(
+                project, store, runLane: (_, _) => { },
+                hasBuildLane: () => true,
+                readProcessEnv: name => name == "PLAY_JSON_KEY" ? "/play.json" : null);
+            return new AndroidSigningSectionView { DataContext = vm };
+        });
+    }
+
+    [AvaloniaTest]
     public void SecretsDialog_snapshot()
     {
         // SecretsDialog is itself a Window, so it is rendered directly rather than

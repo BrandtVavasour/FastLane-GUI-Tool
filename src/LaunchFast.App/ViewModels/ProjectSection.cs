@@ -16,6 +16,7 @@ public enum ProjectSection
     WhatsNew,
     Release,
     History,
+    AndroidSigning,
 }
 
 /// <summary>
