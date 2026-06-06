@@ -209,6 +209,67 @@ public class StoreListingSectionViewModelTests
         Assert.That(vm.IsDirty, Is.False);
     }
 
+    // ---- guessed name not persisted to disk ----------------------------------
+
+    [Test]
+    public void Save_does_not_create_name_file_when_app_name_field_left_at_fallback()
+    {
+        // MakeProjectWithMixedDeviceScreenshots has no name.txt; fallback is "Example App".
+        var project = TestProjects.MakeProjectWithMixedDeviceScreenshots();
+        var vm = new StoreListingSectionViewModel(project);
+
+        var appName = vm.Fields.Single(f => f.Label == "App name");
+        Assert.That(appName.Value, Is.EqualTo("Example App"), "pre-condition: fallback is shown");
+        Assert.That(appName.IsDirty, Is.False, "pre-condition: not dirty");
+
+        // Edit a DIFFERENT field so Save can execute, but leave App name at the fallback.
+        vm.Fields.Single(f => f.Label == "Subtitle").Value = "Edited subtitle";
+        Assert.That(vm.IsDirty, Is.True);
+
+        vm.SaveCommand.Execute(null);
+        Assert.That(vm.SaveFailed, Is.False);
+
+        // name.txt must NOT have been created.
+        var onDisk = StoreMetadataReader.ReadListing(project, Platform.Ios, "en-US");
+        Assert.That(onDisk.Name, Is.Null,
+            "name.txt should NOT be created when app-name field was left at the computed fallback");
+    }
+
+    [Test]
+    public void Save_creates_name_file_when_app_name_field_edited_away_from_fallback()
+    {
+        // MakeProjectWithMixedDeviceScreenshots has no name.txt; fallback is "Example App".
+        var project = TestProjects.MakeProjectWithMixedDeviceScreenshots();
+        var vm = new StoreListingSectionViewModel(project);
+
+        // User explicitly types a new app name.
+        vm.Fields.Single(f => f.Label == "App name").Value = "My New App";
+        vm.SaveCommand.Execute(null);
+        Assert.That(vm.SaveFailed, Is.False);
+
+        // name.txt IS created because the user authored a real value.
+        var onDisk = StoreMetadataReader.ReadListing(project, Platform.Ios, "en-US");
+        Assert.That(onDisk.Name, Is.EqualTo("My New App"),
+            "name.txt should be written when the user edited the app-name field");
+    }
+
+    [Test]
+    public void BuildListing_name_is_null_when_field_at_fallback_and_no_name_on_disk()
+    {
+        // Confirms the ViewModel-level contract without touching disk.
+        var project = TestProjects.MakeProjectWithMixedDeviceScreenshots();
+        var vm = new StoreListingSectionViewModel(project);
+
+        // Don't edit the name field; the fallback is the displayed value.
+        // Trigger dirty via another field so we can inspect BuildListing indirectly
+        // by doing a Save and reading back from disk.
+        vm.Fields.Single(f => f.Label == "Subtitle").Value = "Changed";
+        vm.SaveCommand.Execute(null);
+
+        var onDisk = StoreMetadataReader.ReadListing(project, Platform.Ios, "en-US");
+        Assert.That(onDisk.Name, Is.Null);
+    }
+
     // ---- device filtering -----------------------------------------------------
 
     [Test]

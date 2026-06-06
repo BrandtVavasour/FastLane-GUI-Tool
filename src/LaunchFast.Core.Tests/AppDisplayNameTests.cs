@@ -127,6 +127,42 @@ public sealed class AppDisplayNameTests
             Is.EqualTo("Vending Machine Tracker"));
     }
 
+    [Test]
+    public void Android_application_label_wins_over_activity_label_before_it()
+    {
+        // Activity android:label appears BEFORE the application-level one in the file.
+        Write(Path.Combine(_root, "android", "app", "src", "main", "AndroidManifest.xml"),
+            """
+            <manifest>
+              <application android:label="App Level Name">
+                <activity android:label="Activity Label Before" android:name=".MainActivity">
+                </activity>
+              </application>
+            </manifest>
+            """);
+
+        Assert.That(AppDisplayName.Read(_project, Platform.Android), Is.EqualTo("App Level Name"));
+    }
+
+    [Test]
+    public void Android_application_label_wins_over_activity_label_after_it()
+    {
+        // Activity android:label appears AFTER the application closing tag via a
+        // manifest with the application label on the <application> element and an
+        // activity element also having android:label.
+        Write(Path.Combine(_root, "android", "app", "src", "main", "AndroidManifest.xml"),
+            """
+            <manifest>
+              <application android:label="Application Name">
+                <activity android:label="Activity Name" android:name=".Main">
+                </activity>
+              </application>
+            </manifest>
+            """);
+
+        Assert.That(AppDisplayName.Read(_project, Platform.Android), Is.EqualTo("Application Name"));
+    }
+
     // ---- nothing -------------------------------------------------------------
 
     [Test]

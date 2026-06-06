@@ -227,6 +227,14 @@ public partial class StoreListingSectionViewModel : ObservableObject
         SelectedDevice = Devices.FirstOrDefault();
     }
 
+    /// <summary>
+    /// When the Name/Title field was seeded from the native fallback (no name.txt /
+    /// title.txt on disk), stores that fallback so <see cref="BuildListing"/> can
+    /// suppress creating the file when the user hasn't touched the field.
+    /// Null when no fallback was used (i.e. the file existed on disk).
+    /// </summary>
+    string? _nameFallback;
+
     /// <summary>Re-reads the listing for the current platform/locale and rebuilds fields.</summary>
     void Reload()
     {
@@ -238,6 +246,7 @@ public partial class StoreListingSectionViewModel : ObservableObject
         Fields.Clear();
         Screenshots.Clear();
         _allShots.Clear();
+        _nameFallback = null;
 
         var locale = SelectedLocale;
         if (locale is null)
@@ -334,10 +343,25 @@ public partial class StoreListingSectionViewModel : ObservableObject
         string? Field(string label) =>
             Fields.FirstOrDefault(f => f.Label == label)?.Value ?? string.Empty;
 
+        // When the on-disk name was absent (_nameFallback is non-null), only write the
+        // name if the user has actually changed it away from the computed fallback.
+        // If the field still shows the fallback value, pass null so the writer does NOT
+        // create a name.txt / title.txt the user never authored.
+        string? NameField(string label)
+        {
+            var value = Field(label);
+            if (_nameFallback is not null &&
+                string.Equals(value, _nameFallback, StringComparison.Ordinal))
+            {
+                return null;
+            }
+            return value;
+        }
+
         return Platform == Platform.Ios
             ? new StoreListing(
                 Platform.Ios, locale,
-                Name: Field("App name"),
+                Name: NameField("App name"),
                 Subtitle: Field("Subtitle"),
                 ShortDescription: null,
                 PromotionalText: Field("Promotional text"),
@@ -351,7 +375,7 @@ public partial class StoreListingSectionViewModel : ObservableObject
                 ScreenshotPaths: Array.Empty<string>())
             : new StoreListing(
                 Platform.Android, locale,
-                Name: Field("Title"),
+                Name: NameField("Title"),
                 Subtitle: null,
                 ShortDescription: Field("Short description"),
                 PromotionalText: null,
@@ -379,11 +403,17 @@ public partial class StoreListingSectionViewModel : ObservableObject
         // Play Console), so fall back to the native/pubspec app name for display so the
         // field isn't blank on load. The fallback becomes the field's baseline too, so
         // it does NOT mark the field dirty.
-        var nameFallback = l.Name ?? AppDisplayName.Read(_project, l.Platform);
+        //
+        // When the on-disk name was absent (l.Name is null), remember the fallback
+        // in _nameFallback so BuildListing can suppress creating the file when the user
+        // hasn't actually changed the field.
+        string? nameOnDisk = l.Name;
+        var nameValue = nameOnDisk ?? AppDisplayName.Read(_project, l.Platform);
+        _nameFallback = nameOnDisk is null ? nameValue : null;
 
         if (l.Platform == Platform.Ios)
         {
-            yield return new StoreFieldViewModel("App name", null, nameFallback, StoreFieldLimits.AppStoreName);
+            yield return new StoreFieldViewModel("App name", null, nameValue, StoreFieldLimits.AppStoreName);
             yield return new StoreFieldViewModel("Subtitle", "iOS", l.Subtitle, StoreFieldLimits.AppStoreSubtitle);
             yield return new StoreFieldViewModel("Promotional text", "iOS", l.PromotionalText, StoreFieldLimits.AppStorePromotionalText, multiline: true);
             yield return new StoreFieldViewModel("Keywords", "iOS", l.Keywords, StoreFieldLimits.AppStoreKeywords, multiline: true);
@@ -394,7 +424,7 @@ public partial class StoreListingSectionViewModel : ObservableObject
         }
         else
         {
-            yield return new StoreFieldViewModel("Title", null, nameFallback, StoreFieldLimits.PlayTitle);
+            yield return new StoreFieldViewModel("Title", null, nameValue, StoreFieldLimits.PlayTitle);
             yield return new StoreFieldViewModel("Short description", "Android", l.ShortDescription, StoreFieldLimits.PlayShortDescription, multiline: true);
             yield return new StoreFieldViewModel("Full description", null, l.FullDescription, StoreFieldLimits.PlayFullDescription, multiline: true);
             yield return new StoreFieldViewModel("Promo video URL", "Android", l.VideoUrl, counted: false);

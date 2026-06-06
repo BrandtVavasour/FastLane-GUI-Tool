@@ -88,7 +88,29 @@ public static partial class AppDisplayName
         string? label;
         try
         {
-            var m = AndroidLabelRegex().Match(manifest);
+            // Prefer the android:label on the <application> element: find the
+            // <application tag first, then look for the next android:label="..." within
+            // that element's opening tag. This avoids picking up activity-level labels
+            // that may appear anywhere else in the manifest. Fall back to the first
+            // match anywhere only when no application-level label is found.
+            var appTagMatch = ApplicationTagRegex().Match(manifest);
+            Match m;
+            if (appTagMatch.Success)
+            {
+                // Search for android:label within the application opening tag text.
+                m = AndroidLabelRegex().Match(appTagMatch.Value);
+                if (!m.Success)
+                {
+                    // Application element found but no label attribute on it; fall back
+                    // to first match in full manifest (activity-level).
+                    m = AndroidLabelRegex().Match(manifest);
+                }
+            }
+            else
+            {
+                m = AndroidLabelRegex().Match(manifest);
+            }
+
             label = m.Success ? m.Groups["v"].Value : null;
         }
         catch (RegexMatchTimeoutException)
@@ -136,6 +158,13 @@ public static partial class AppDisplayName
 
     [GeneratedRegex("android:label\\s*=\\s*\"(?<v>[^\"]*)\"")]
     private static partial Regex AndroidLabelRegex();
+
+    /// <summary>
+    /// Matches the opening tag of the &lt;application&gt; element (up to the first &gt;
+    /// that closes it), so we can look for android:label within that tag only.
+    /// </summary>
+    [GeneratedRegex("<application\\b[^>]*>", RegexOptions.Singleline)]
+    private static partial Regex ApplicationTagRegex();
 
     // ---- pubspec fallback ----------------------------------------------------
 
