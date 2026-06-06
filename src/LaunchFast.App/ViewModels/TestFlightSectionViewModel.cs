@@ -30,8 +30,8 @@ public partial class TestFlightSectionViewModel : ObservableObject
 
         Testers = new ObservableCollection<TesterRow>
         {
-            new("Brandt Vavasour", "brandt@jabtech.io", "Internal", "Active", TesterState.Ok, "12", "2h ago"),
-            new("Priya Nair", "priya@jabtech.io", "Internal", "Active", TesterState.Ok, "8", "Yesterday"),
+            new("Maya Chen", "maya@example.io", "Internal", "Active", TesterState.Ok, "12", "2h ago"),
+            new("Priya Nair", "priya@example.io", "Internal", "Active", TesterState.Ok, "8", "Yesterday"),
             new("Marco Reyes", "marco@example.com", "Beta Crew", "Active", TesterState.Ok, "3", "3d ago"),
             new("Lena Fischer", "lena@example.com", "Beta Crew", "Invited", TesterState.Warn, "0", "—"),
             new("Sam Okoye", "sam@example.com", "External", "Pending", TesterState.Neutral, "0", "—"),

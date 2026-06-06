@@ -54,7 +54,7 @@ public partial class SigningSectionViewModel : ObservableObject
 
         Devices = new ObservableCollection<SigningDeviceRow>
         {
-            new("iPhone 15 Pro — Brandt", "00008130-001A2B3C0E84001E"),
+            new("iPhone 15 Pro — Dev", "00008130-001A2B3C0E84001E"),
             new("iPad Air (M2) — QA", "00008112-000C4D5E1A23002A"),
         };
     }
