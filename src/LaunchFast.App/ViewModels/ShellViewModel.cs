@@ -35,8 +35,9 @@ public partial class ShellViewModel : ObservableObject
     {
         var env = ProjectDetailViewModel.ResolveProjectEnv(project.Path);
         var (provider, ids) = StoreStatusFactory.Create(project, env);
+        var asc = StoreStatusFactory.CreateAscClient(env);
 
-        var shell = new ProjectShellViewModel(project, _secrets, _ptyFactory, provider, ids)
+        var shell = new ProjectShellViewModel(project, _secrets, _ptyFactory, provider, ids, asc: asc)
         {
             GoBack = GoHome,
         };

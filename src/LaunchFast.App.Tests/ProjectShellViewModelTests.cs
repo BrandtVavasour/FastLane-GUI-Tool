@@ -100,7 +100,8 @@ public class ProjectShellViewModelTests
 
         shell.SelectSectionCommand.Execute(ProjectSection.TestFlight);
         Assert.That(shell.CurrentContent, Is.InstanceOf<TestFlightSectionViewModel>());
-        Assert.That(((TestFlightSectionViewModel)shell.CurrentContent!).Testers, Is.Not.Empty);
+        // No ASC key wired in this shell → honest unavailable state (no fabricated testers).
+        Assert.That(((TestFlightSectionViewModel)shell.CurrentContent!).IsUnavailable, Is.True);
 
         shell.SelectSectionCommand.Execute(ProjectSection.Screenshots);
         Assert.That(shell.CurrentContent, Is.InstanceOf<ScreenshotsSectionViewModel>());

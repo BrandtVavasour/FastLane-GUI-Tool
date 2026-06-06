@@ -56,6 +56,15 @@ public static class StoreStatusFactory
         }
     }
 
+    /// <summary>
+    /// Resolves a raw <see cref="IAppStoreConnectClient"/> for the project from the
+    /// resolved env's <c>APP_STORE_CONNECT_API_KEY_PATH</c>, reusing the same
+    /// discovery as store status. Returns null (never throws) when no usable key is
+    /// configured — callers should treat null as an honest "unavailable" state.
+    /// </summary>
+    public static IAppStoreConnectClient? CreateAscClient(IReadOnlyDictionary<string, string> resolvedEnv) =>
+        BuildAsc(resolvedEnv);
+
     private static IAppStoreConnectClient? BuildAsc(IReadOnlyDictionary<string, string> env)
     {
         if (!env.TryGetValue("APP_STORE_CONNECT_API_KEY_PATH", out var path) ||

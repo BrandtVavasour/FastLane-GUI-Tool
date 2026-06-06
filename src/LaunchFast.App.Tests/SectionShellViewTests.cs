@@ -23,15 +23,23 @@ public class SectionShellViewTests
     }
 
     [AvaloniaTest]
-    public void TestFlightSectionView_renders_with_placeholder_vm_without_throwing()
+    public void TestFlightSectionView_renders_available_vm_without_throwing()
     {
-        var project = TestProjects.MakeFlutterProjectWithRealFastfiles();
-        var vm = new TestFlightSectionViewModel(project, hasBetaLane: () => true);
+        var (project, _) = TestProjects.MakeProjectWithIosSigning();
+        var asc = new FakeAscClient(
+            new Core.Models.StoreStatus(Core.Models.Destination.TestFlight, true, null, null),
+            new Core.Stores.TestFlightInfo(
+                new Core.Stores.BuildInfo("1.4.2", "18", "VALID", false, "expires in 90 days", "Test the onboarding."),
+                [new Core.Stores.BetaGroup("Beta Crew", false, 1)],
+                [new Core.Stores.BetaTester("Ada", "Lovelace", "ada@example.com", "Installed", "Beta Crew")]));
+        var vm = new TestFlightSectionViewModel(project, asc, hasBetaLane: () => true);
+        vm.LoadAsync().GetAwaiter().GetResult();
 
         var window = new Window { Content = new TestFlightSectionView { DataContext = vm } };
         window.Show();
 
         Assert.That(window.IsVisible, Is.True);
+        Assert.That(vm.IsAvailable, Is.True);
         Assert.That(vm.Testers, Is.Not.Empty);
 
         window.Close();

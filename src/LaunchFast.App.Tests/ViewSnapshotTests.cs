@@ -3,7 +3,9 @@ using Avalonia.Headless.NUnit;
 using Avalonia.Styling;
 using LaunchFast.App.ViewModels;
 using LaunchFast.App.Views;
+using LaunchFast.Core.Models;
 using LaunchFast.Core.Scanning;
+using LaunchFast.Core.Stores;
 
 namespace LaunchFast.App.Tests;
 
@@ -129,8 +131,23 @@ public class ViewSnapshotTests
     {
         ForEachTheme("TestFlightSectionView", () =>
         {
-            var project = TestProjects.MakeFlutterProjectWithRealFastfiles();
-            var vm = new TestFlightSectionViewModel(project, hasBetaLane: () => true);
+            var (project, _) = TestProjects.MakeProjectWithIosSigning();
+            var asc = new FakeAscClient(
+                new StoreStatus(Destination.TestFlight, true, null, null),
+                new TestFlightInfo(
+                    new BuildInfo("1.4.2", "18", "VALID", false, "expires in 90 days",
+                        "Focus testing on the new onboarding flow."),
+                    [
+                        new BetaGroup("App Store Connect Users", true, 2),
+                        new BetaGroup("Beta Crew", false, 3),
+                    ],
+                    [
+                        new BetaTester("Ada", "Lovelace", "ada@example.com", "Installed", "App Store Connect Users"),
+                        new BetaTester("Grace", "Hopper", "grace@example.com", "Accepted", "Beta Crew"),
+                        new BetaTester("Alan", "Turing", "alan@example.com", "Invited", "Beta Crew"),
+                    ]));
+            var vm = new TestFlightSectionViewModel(project, asc, hasBetaLane: () => true);
+            vm.LoadAsync().GetAwaiter().GetResult();
             return new TestFlightSectionView { DataContext = vm };
         });
     }

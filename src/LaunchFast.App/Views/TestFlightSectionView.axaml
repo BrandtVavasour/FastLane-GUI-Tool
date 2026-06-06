@@ -28,10 +28,11 @@
         <Border DockPanel.Dock="Top" Classes="subbar">
             <Grid ColumnDefinitions="Auto,Auto,Auto,*,Auto">
                 <TextBlock Grid.Column="0" Classes="h2" Text="TestFlight" />
-                <Border Grid.Column="1" Classes="chip" Margin="14,0,8,0">
+                <Border Grid.Column="1" Classes="chip" Margin="14,0,8,0"
+                        IsVisible="{Binding IsAvailable}">
                     <TextBlock Text="{Binding VersionBuild}" />
                 </Border>
-                <Border Grid.Column="2" Classes="pill ok">
+                <Border Grid.Column="2" Classes="pill ok" IsVisible="{Binding IsAvailable}">
                     <TextBlock Text="Ready to test" />
                 </Border>
                 <StackPanel Grid.Column="4" Classes="synced" Orientation="Horizontal" Spacing="7">
@@ -45,8 +46,18 @@
         <ScrollViewer>
             <StackPanel Margin="20,16,20,20" Spacing="16">
 
+                <!-- Unavailable empty state -->
+                <Border Classes="panel" IsVisible="{Binding IsUnavailable}">
+                    <StackPanel Spacing="8" Margin="6">
+                        <TextBlock Classes="blk-t" Text="TESTFLIGHT UNAVAILABLE" />
+                        <TextBlock TextWrapping="Wrap"
+                                   Foreground="{DynamicResource Text2Brush}"
+                                   Text="{Binding UnavailableMessage}" />
+                    </StackPanel>
+                </Border>
+
                 <!-- Build status + What to test -->
-                <Grid ColumnDefinitions="*,16,*">
+                <Grid ColumnDefinitions="*,16,*" IsVisible="{Binding IsAvailable}">
 
                     <!-- Build status -->
                     <StackPanel Grid.Column="0" Spacing="9">
@@ -94,20 +105,47 @@
 
                 </Grid>
 
+                <!-- Beta groups -->
+                <StackPanel Spacing="9" IsVisible="{Binding IsAvailable}">
+                    <TextBlock Classes="blk-t" Text="BETA GROUPS" />
+                    <Border Classes="listcard">
+                        <ItemsControl ItemsSource="{Binding Groups}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:GroupRow">
+                                    <Border Classes="lrow">
+                                        <Grid ColumnDefinitions="*,120,110">
+                                            <TextBlock Grid.Column="0" Classes="ltitle" Text="{Binding Name}"
+                                                       VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="1" Classes="lsub" Text="{Binding ScopeText}"
+                                                       VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="2" Classes="lsub" Text="{Binding CountText}"
+                                                       VerticalAlignment="Center" />
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Border>
+                </StackPanel>
+
                 <!-- Testers -->
-                <StackPanel Spacing="9">
+                <StackPanel Spacing="9" IsVisible="{Binding IsAvailable}">
                     <Grid ColumnDefinitions="Auto,*">
                         <TextBlock Grid.Column="0" Classes="blk-t" Text="TESTERS"
                                    VerticalAlignment="Center" />
                         <Border Grid.Column="1" Classes="seg sm" HorizontalAlignment="Right">
                             <StackPanel Orientation="Horizontal">
-                                <RadioButton Classes="seg-item" GroupName="tf-filter" Content="All"
+                                <RadioButton Classes="seg-item" GroupName="tf-filter"
+                                             Content="{Binding CountAll, StringFormat='All ({0})'}"
                                              IsChecked="{Binding FilterAll, Mode=TwoWay}" />
-                                <RadioButton Classes="seg-item" GroupName="tf-filter" Content="Internal"
+                                <RadioButton Classes="seg-item" GroupName="tf-filter"
+                                             Content="{Binding CountInternal, StringFormat='Internal ({0})'}"
                                              IsChecked="{Binding FilterInternal, Mode=TwoWay}" />
-                                <RadioButton Classes="seg-item" GroupName="tf-filter" Content="External"
+                                <RadioButton Classes="seg-item" GroupName="tf-filter"
+                                             Content="{Binding CountExternal, StringFormat='External ({0})'}"
                                              IsChecked="{Binding FilterExternal, Mode=TwoWay}" />
-                                <RadioButton Classes="seg-item" GroupName="tf-filter" Content="Pending"
+                                <RadioButton Classes="seg-item" GroupName="tf-filter"
+                                             Content="{Binding CountPending, StringFormat='Pending ({0})'}"
                                              IsChecked="{Binding FilterPending, Mode=TwoWay}" />
                             </StackPanel>
                         </Border>
@@ -119,12 +157,10 @@
                             <Border Background="{DynamicResource Surface1Brush}"
                                     BorderBrush="{DynamicResource SeparatorBrush}"
                                     BorderThickness="0,0,0,1" Padding="15,10">
-                                <Grid ColumnDefinitions="*,140,110,80,120">
+                                <Grid ColumnDefinitions="*,160,120">
                                     <TextBlock Grid.Column="0" Classes="blk-t" Text="TESTER" />
                                     <TextBlock Grid.Column="1" Classes="blk-t" Text="GROUP" />
                                     <TextBlock Grid.Column="2" Classes="blk-t" Text="STATUS" />
-                                    <TextBlock Grid.Column="3" Classes="blk-t" Text="SESSIONS" />
-                                    <TextBlock Grid.Column="4" Classes="blk-t" Text="LAST SESSION" />
                                 </Grid>
                             </Border>
 
@@ -133,7 +169,7 @@
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate x:DataType="vm:TesterRow">
                                         <Border Classes="lrow">
-                                            <Grid ColumnDefinitions="*,140,110,80,120">
+                                            <Grid ColumnDefinitions="*,160,120">
                                                 <!-- Tester -->
                                                 <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10"
                                                             VerticalAlignment="Center">
@@ -159,10 +195,6 @@
                                                         Classes.neutral="{Binding IsNeutral}">
                                                     <TextBlock Text="{Binding StatusText}" />
                                                 </Border>
-                                                <TextBlock Grid.Column="3" Classes="lsub" Text="{Binding Sessions}"
-                                                           VerticalAlignment="Center" />
-                                                <TextBlock Grid.Column="4" Classes="lsub" Text="{Binding LastSession}"
-                                                           VerticalAlignment="Center" />
                                             </Grid>
                                         </Border>
                                     </DataTemplate>
@@ -170,9 +202,6 @@
                             </ItemsControl>
                         </StackPanel>
                     </Border>
-
-                    <TextBlock FontSize="11" Foreground="{DynamicResource Text3Brush}"
-                               Text="Illustrative tester data — TestFlight backend not wired yet." />
                 </StackPanel>
 
             </StackPanel>

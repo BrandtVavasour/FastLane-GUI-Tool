@@ -28,6 +28,7 @@ public partial class ProjectShellViewModel : ObservableObject
     readonly StoreStatusProvider _storeStatus;
     readonly StoreIdentifiers _identifiers;
     readonly RunHistoryStore _history;
+    readonly IAppStoreConnectClient? _asc;
 
     readonly Dictionary<ProjectSection, object> _contentCache = new();
 
@@ -37,7 +38,8 @@ public partial class ProjectShellViewModel : ObservableObject
         IPtyFactory ptyFactory,
         StoreStatusProvider storeStatus,
         StoreIdentifiers identifiers,
-        RunHistoryStore? history = null)
+        RunHistoryStore? history = null,
+        IAppStoreConnectClient? asc = null)
     {
         _project = project;
         _secrets = secrets;
@@ -45,6 +47,7 @@ public partial class ProjectShellViewModel : ObservableObject
         _storeStatus = storeStatus;
         _identifiers = identifiers;
         _history = history ?? new RunHistoryStore();
+        _asc = asc;
 
         Sections = new ObservableCollection<ProjectSectionViewModel>
         {
@@ -148,7 +151,7 @@ public partial class ProjectShellViewModel : ObservableObject
             hasSyncLane: () => Lanes.HasLane(Platform.Ios, "sync_certificates"));
 
     TestFlightSectionViewModel BuildTestFlight() =>
-        new(_project, RunLane, () => Lanes.HasLane(Platform.Ios, "beta"));
+        new(_project, _asc, RunLane, () => Lanes.HasLane(Platform.Ios, "beta"));
 
     SecretsSectionViewModel BuildSecrets() =>
         new(_project, _secrets);
