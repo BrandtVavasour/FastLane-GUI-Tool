@@ -36,4 +36,35 @@ public class SectionShellViewTests
 
         window.Close();
     }
+
+    [AvaloniaTest]
+    public void ScreenshotsSectionView_renders_with_placeholder_vm_without_throwing()
+    {
+        var project = TestProjects.MakeFlutterProjectWithRealFastfiles();
+        var vm = new ScreenshotsSectionViewModel(project, hasScreenshotsLane: () => true);
+
+        var window = new Window { Content = new ScreenshotsSectionView { DataContext = vm } };
+        window.Show();
+
+        Assert.That(window.IsVisible, Is.True);
+        Assert.That(vm.Devices, Is.Not.Empty);
+
+        window.Close();
+    }
+
+    [AvaloniaTest]
+    public void BuildTestSectionView_renders_with_placeholder_vm_without_throwing()
+    {
+        var project = TestProjects.MakeFlutterProjectWithRealFastfiles();
+        var vm = new BuildTestSectionViewModel(project,
+            hasTestLane: () => false, hasBuildLane: () => false);
+
+        var window = new Window { Content = new BuildTestSectionView { DataContext = vm } };
+        window.Show();
+
+        Assert.That(window.IsVisible, Is.True);
+        Assert.That(vm.Results, Is.Not.Empty);
+
+        window.Close();
+    }
 }

@@ -1,0 +1,265 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:LaunchFast.App.ViewModels"
+             xmlns:conv="using:LaunchFast.App.Converters"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="640"
+             x:Class="LaunchFast.App.Views.ScreenshotsSectionView"
+             x:DataType="vm:ScreenshotsSectionViewModel"
+             x:CompileBindings="True"
+             Background="{DynamicResource Surface0Brush}">
+
+    <UserControl.Resources>
+        <conv:HexToBrushConverter x:Key="HexToBrush" />
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <!-- Selected background swatch gets an accent ring -->
+        <Style Selector="Border.ring">
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+        </Style>
+    </UserControl.Styles>
+
+    <DockPanel>
+        <!-- Toolbar -->
+        <Border DockPanel.Dock="Top"
+                Background="{DynamicResource Surface1Brush}"
+                BorderBrush="{DynamicResource SeparatorBrush}"
+                BorderThickness="0,0,0,1">
+            <Grid ColumnDefinitions="*,Auto,Auto" Margin="16,11">
+                <Button Grid.Column="1" Classes="btn" Margin="0,0,8,0"
+                        Content="Preview all" />
+                <Button Grid.Column="2" Classes="accent" Content="Run snapshot"
+                        IsEnabled="{Binding CanRunSnapshot}"
+                        Command="{Binding RunSnapshotCommand}" />
+            </Grid>
+        </Border>
+
+        <!-- Subbar -->
+        <Border DockPanel.Dock="Top" Classes="subbar">
+            <Grid ColumnDefinitions="Auto,Auto,*,Auto">
+                <TextBlock Grid.Column="0" Classes="h2" Text="Screenshots" />
+                <Border Grid.Column="1" Classes="chip" Margin="14,0,8,0">
+                    <TextBlock Text="{Binding ChipText}" />
+                </Border>
+                <StackPanel Grid.Column="3" Classes="synced" Orientation="Horizontal" Spacing="7">
+                    <TextBlock Text="{Binding SyncedText}"
+                               Foreground="{DynamicResource Text3Brush}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Two-column content -->
+        <Grid ColumnDefinitions="*,360">
+
+            <!-- LEFT column -->
+            <Border Grid.Column="0"
+                    BorderBrush="{DynamicResource SeparatorBrush}"
+                    BorderThickness="0,0,1,0">
+                <ScrollViewer>
+                    <StackPanel Margin="20,16,20,20" Spacing="16">
+
+                        <!-- Devices block -->
+                        <StackPanel Spacing="9">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Grid.Column="0" Classes="blk-t" Text="DEVICES" />
+                                <TextBlock Grid.Column="1" Classes="blk-x"
+                                           Text="{Binding DevicesSelectedText}" />
+                            </Grid>
+                            <Border Classes="listcard">
+                                <ItemsControl ItemsSource="{Binding Devices}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:SnapshotDeviceRow">
+                                            <Border Classes="lrow">
+                                                <Grid ColumnDefinitions="*,Auto">
+                                                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Spacing="3">
+                                                        <TextBlock Classes="ltitle" Text="{Binding Name}" />
+                                                        <TextBlock Classes="lsub" Text="{Binding Sub}" />
+                                                    </StackPanel>
+                                                    <ToggleSwitch Grid.Column="1" Classes="tgl"
+                                                                  VerticalAlignment="Center"
+                                                                  IsChecked="{Binding On, Mode=TwoWay}" />
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Border>
+                        </StackPanel>
+
+                        <!-- Languages block -->
+                        <StackPanel Spacing="9">
+                            <TextBlock Classes="blk-t" Text="LANGUAGES" />
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <ItemsControl ItemsSource="{Binding Languages}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal" Spacing="8" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:LanguageChip">
+                                            <Border Classes="chip">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <TextBlock Text="{Binding Code}" VerticalAlignment="Center" />
+                                                    <TextBlock Text="×" VerticalAlignment="Center"
+                                                               Foreground="{DynamicResource Text3Brush}" />
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <Button Classes="btn ghost small" Content="+ Add language"
+                                        VerticalAlignment="Center" />
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- Capture block -->
+                        <StackPanel Spacing="9">
+                            <TextBlock Classes="blk-t" Text="CAPTURE" />
+                            <StackPanel Spacing="6">
+                                <TextBlock Classes="fldlabel" Text="UI test scheme" />
+                                <ComboBox Classes="sel" HorizontalAlignment="Stretch"
+                                          ItemsSource="{Binding Schemes}"
+                                          SelectedItem="{Binding SelectedScheme, Mode=TwoWay}" />
+                            </StackPanel>
+                            <StackPanel Spacing="6">
+                                <TextBlock Classes="fldlabel" Text="Launch arguments" />
+                                <TextBox Classes="inp mono-inp"
+                                         Text="{Binding LaunchArguments, Mode=OneWay}" />
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- frameit block -->
+                        <StackPanel Spacing="9">
+                            <TextBlock Classes="blk-t" Text="FRAMEIT" />
+                            <Border Classes="panel">
+                                <StackPanel>
+                                    <!-- Frame screenshots toggle -->
+                                    <Border Classes="dl-row">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <StackPanel Grid.Column="0" VerticalAlignment="Center" Spacing="3">
+                                                <TextBlock Classes="ltitle" Text="Frame screenshots" />
+                                                <TextBlock Classes="lsub"
+                                                           Text="Wrap each shot in a device frame with a title" />
+                                            </StackPanel>
+                                            <ToggleSwitch Grid.Column="1" Classes="tgl"
+                                                          VerticalAlignment="Center"
+                                                          IsChecked="{Binding FrameScreenshots, Mode=TwoWay}" />
+                                        </Grid>
+                                    </Border>
+                                    <!-- Background swatches -->
+                                    <Border Classes="dl-row">
+                                        <StackPanel Spacing="9">
+                                            <TextBlock Classes="ltitle" Text="Background" />
+                                            <ItemsControl ItemsSource="{Binding Backgrounds}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <StackPanel Orientation="Horizontal" Spacing="10" />
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate x:DataType="vm:SwatchOption">
+                                                        <Button Padding="0" Background="Transparent"
+                                                                BorderThickness="0" Cursor="Hand"
+                                                                Command="{Binding $parent[ItemsControl].((vm:ScreenshotsSectionViewModel)DataContext).SelectBackgroundCommand}"
+                                                                CommandParameter="{Binding}">
+                                                            <!-- accent ring shows when selected -->
+                                                            <Border Width="34" Height="34" CornerRadius="9"
+                                                                    BorderThickness="2"
+                                                                    IsVisible="True"
+                                                                    BorderBrush="Transparent"
+                                                                    Classes.ring="{Binding Selected}">
+                                                                <Border Width="24" Height="24" CornerRadius="6"
+                                                                        BorderThickness="1"
+                                                                        BorderBrush="{DynamicResource CardBorderBrush}"
+                                                                        Background="{Binding Hex, Converter={StaticResource HexToBrush}}" />
+                                                            </Border>
+                                                        </Button>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </Border>
+                                    <!-- Title input -->
+                                    <Border Classes="dl-row last">
+                                        <StackPanel Spacing="9">
+                                            <TextBlock Classes="ltitle" Text="Title (en-US)" />
+                                            <TextBox Classes="inp" Text="{Binding FrameTitle, Mode=OneWay}" />
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <TextBlock FontSize="11" Foreground="{DynamicResource Text3Brush}"
+                                   Text="Illustrative capture config — snapshot/frameit backend not wired yet." />
+
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <!-- RIGHT column -->
+            <Border Grid.Column="1" Background="{DynamicResource Surface2Brush}">
+                <ScrollViewer>
+                    <StackPanel Margin="18,16,18,20" Spacing="16">
+
+                        <!-- Big-number card -->
+                        <Border Background="{DynamicResource CardBgBrush}"
+                                BorderBrush="{DynamicResource CardBorderBrush}"
+                                BorderThickness="1" CornerRadius="11" Padding="18,16">
+                            <StackPanel Spacing="4" HorizontalAlignment="Center">
+                                <TextBlock Text="{Binding QueuedCount}" FontSize="32"
+                                           FontWeight="Bold" HorizontalAlignment="Center"
+                                           Foreground="{DynamicResource Text1Brush}" />
+                                <TextBlock Text="{Binding QueuedCaption}" FontSize="11.5"
+                                           TextAlignment="Center"
+                                           Foreground="{DynamicResource Text2Brush}" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Framed device preview composition -->
+                        <Border CornerRadius="14" Padding="20,22"
+                                Background="{Binding SelectedBackground, Converter={StaticResource HexToBrush}}">
+                            <StackPanel Spacing="14" HorizontalAlignment="Center">
+                                <TextBlock Text="Track every machine in real time"
+                                           FontSize="15" FontWeight="SemiBold"
+                                           TextAlignment="Center" TextWrapping="Wrap"
+                                           Foreground="White" MaxWidth="200" />
+                                <!-- White phone mock -->
+                                <Border Width="150" Height="220" CornerRadius="20"
+                                        Background="White" Padding="10"
+                                        BoxShadow="0 6 18 0 #40000000">
+                                    <StackPanel Spacing="8">
+                                        <Grid ColumnDefinitions="Auto,*,Auto">
+                                            <TextBlock Grid.Column="0" Text="9:41" FontSize="9"
+                                                       FontWeight="SemiBold" Foreground="#333" />
+                                            <Border Grid.Column="2" Width="14" Height="6" CornerRadius="2"
+                                                    Background="#CCC" VerticalAlignment="Center" />
+                                        </Grid>
+                                        <Border Height="70" CornerRadius="9" Background="#E8F4EE" />
+                                        <StackPanel Spacing="6">
+                                            <Border Height="9" CornerRadius="4" Background="#EEE" />
+                                            <Border Height="9" CornerRadius="4" Background="#EEE"
+                                                    Width="90" HorizontalAlignment="Left" />
+                                            <Border Height="9" CornerRadius="4" Background="#EEE" />
+                                            <Border Height="9" CornerRadius="4" Background="#EEE"
+                                                    Width="90" HorizontalAlignment="Left" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+
+                        <TextBlock Text="{Binding PreviewNote}" FontSize="11"
+                                   TextAlignment="Center"
+                                   Foreground="{DynamicResource Text3Brush}" />
+
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+        </Grid>
+    </DockPanel>
+</UserControl>

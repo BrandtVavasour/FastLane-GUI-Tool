@@ -66,6 +66,31 @@ public class ProjectShellViewModelTests
         shell.SelectSectionCommand.Execute(ProjectSection.TestFlight);
         Assert.That(shell.CurrentContent, Is.InstanceOf<TestFlightSectionViewModel>());
         Assert.That(((TestFlightSectionViewModel)shell.CurrentContent!).Testers, Is.Not.Empty);
+
+        shell.SelectSectionCommand.Execute(ProjectSection.Screenshots);
+        Assert.That(shell.CurrentContent, Is.InstanceOf<ScreenshotsSectionViewModel>());
+        Assert.That(((ScreenshotsSectionViewModel)shell.CurrentContent!).Devices, Is.Not.Empty);
+
+        shell.SelectSectionCommand.Execute(ProjectSection.BuildTest);
+        Assert.That(shell.CurrentContent, Is.InstanceOf<BuildTestSectionViewModel>());
+        Assert.That(((BuildTestSectionViewModel)shell.CurrentContent!).Results, Is.Not.Empty);
+    }
+
+    [Test]
+    public void Screenshots_and_BuildTest_run_actions_reflect_lane_presence_for_real_fastfiles()
+    {
+        var shell = MakeShell(out _);
+
+        // The fixture iOS Fastfile defines a `screenshots` lane → Run snapshot enabled.
+        shell.SelectSectionCommand.Execute(ProjectSection.Screenshots);
+        var shots = (ScreenshotsSectionViewModel)shell.CurrentContent!;
+        Assert.That(shots.CanRunSnapshot, Is.True);
+
+        // The fixture has no `test`/`build` iOS lanes → both Build & Test actions disabled.
+        shell.SelectSectionCommand.Execute(ProjectSection.BuildTest);
+        var bt = (BuildTestSectionViewModel)shell.CurrentContent!;
+        Assert.That(bt.CanRunTests, Is.False);
+        Assert.That(bt.CanBuild, Is.False);
     }
 
     [Test]

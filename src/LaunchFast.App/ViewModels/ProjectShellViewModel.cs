@@ -99,8 +99,8 @@ public partial class ProjectShellViewModel : ObservableObject
         ProjectSection.Signing => BuildSigning(),
         ProjectSection.Secrets => BuildSecrets(),
         ProjectSection.TestFlight => BuildTestFlight(),
-        ProjectSection.Screenshots => Placeholder("Screenshots"),
-        ProjectSection.BuildTest => Placeholder("Build & Test"),
+        ProjectSection.Screenshots => BuildScreenshots(),
+        ProjectSection.BuildTest => BuildBuildTest(),
         _ => Placeholder(section.ToString()),
     };
 
@@ -130,6 +130,14 @@ public partial class ProjectShellViewModel : ObservableObject
 
     SecretsSectionViewModel BuildSecrets() =>
         new(_project, _secrets);
+
+    ScreenshotsSectionViewModel BuildScreenshots() =>
+        new(_project, RunLane, () => Lanes.HasLane(Platform.Ios, "screenshots"));
+
+    BuildTestSectionViewModel BuildBuildTest() =>
+        new(_project, RunLane,
+            hasTestLane: () => Lanes.HasLane(Platform.Ios, "test"),
+            hasBuildLane: () => Lanes.HasLane(Platform.Ios, "build"));
 
     /// <summary>
     /// Runs a lane on behalf of a section screen: switches to the Lanes section so

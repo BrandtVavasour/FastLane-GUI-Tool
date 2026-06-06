@@ -56,9 +56,16 @@ public class ProjectDetailViewTests
         Assert.That(projectShell.SelectedSection, Is.EqualTo(ProjectSection.Signing));
         Assert.That(projectShell.CurrentContent, Is.InstanceOf<SigningSectionViewModel>());
 
-        // A still-placeholder section (Screenshots) keeps the placeholder content.
+        // The Screenshots section swaps to its real section view-model and renders
+        // in the shell host without throwing.
         projectShell.SelectSectionCommand.Execute(ProjectSection.Screenshots);
-        Assert.That(projectShell.CurrentContent, Is.InstanceOf<SectionPlaceholderViewModel>());
+        Assert.That(projectShell.CurrentContent, Is.InstanceOf<ScreenshotsSectionViewModel>());
+        Assert.That(window.IsVisible, Is.True);
+
+        // The Build & Test section likewise resolves to its real section view-model.
+        projectShell.SelectSectionCommand.Execute(ProjectSection.BuildTest);
+        Assert.That(projectShell.CurrentContent, Is.InstanceOf<BuildTestSectionViewModel>());
+        Assert.That(window.IsVisible, Is.True);
 
         // The Secrets section has a real screen (SecretsSectionView) that renders
         // in the shell host without throwing.
