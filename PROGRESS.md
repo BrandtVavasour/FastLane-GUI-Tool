@@ -100,7 +100,9 @@ Goal: cover most of fastlane via per-project section screens. Built as shells no
   Framefile + captured screenshots from disk; only the framed-preview mock stays illustrative).
   ✅ **Build & Test — REAL** (`BuildTestConfigReader`: Gymfile/Scanfile + Fastfile build_app/run_tests
   args + JUnit test-results parse; honest empty state; nothing illustrative remains).
-  ⬜ Signing iOS (Matchfile + provisioning profiles + `security` certs) · ⬜ TestFlight (ASC builds/testers) — next.
+  ✅ **Signing iOS — REAL** (`IosSigningReader`: Matchfile + provisioning profiles parsed from disk +
+  codesigning certs via `security`; only the destructive match-nuke button stays inert).
+  ⬜ TestFlight (ASC builds/testers via AppStoreConnectClient — last shell) — next.
 
 ## UI design
 - ✅ **macOS-native restyle** from a Claude Design handoff (`LaunchFast.html`): tokenised
