@@ -1,0 +1,129 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ========================================================================
+         LaunchFast · macOS-native design tokens.
+         Theme-independent values live at the root; the light/dark palettes live
+         in ThemeDictionaries and swap with the OS theme. Every key referenced by
+         {DynamicResource} MUST exist in BOTH Light and Dark below.
+         ======================================================================== -->
+
+    <!-- Fonts -->
+    <FontFamily x:Key="MonoFontFamily">Menlo, SF Mono, ui-monospace, Consolas, monospace</FontFamily>
+
+    <!-- Radii -->
+    <CornerRadius x:Key="WindowRadius">11</CornerRadius>
+    <CornerRadius x:Key="CardRadius">12</CornerRadius>
+    <CornerRadius x:Key="ControlRadius">6</CornerRadius>
+    <CornerRadius x:Key="PillRadius">999</CornerRadius>
+    <CornerRadius x:Key="IconRadiusLg">12</CornerRadius>
+    <CornerRadius x:Key="IconRadiusXl">14</CornerRadius>
+
+    <!-- Theme-independent accent + semantic colors -->
+    <Color x:Key="AccentColor">#0A84FF</Color>
+    <Color x:Key="AccentPressColor">#0060DF</Color>
+    <Color x:Key="GreenColor">#34C759</Color>
+    <Color x:Key="AmberColor">#FF9F0A</Color>
+    <Color x:Key="RedColor">#FF453A</Color>
+
+    <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}" />
+    <SolidColorBrush x:Key="AccentPressBrush" Color="{StaticResource AccentPressColor}" />
+    <SolidColorBrush x:Key="GreenBrush" Color="{StaticResource GreenColor}" />
+    <SolidColorBrush x:Key="AmberBrush" Color="{StaticResource AmberColor}" />
+    <SolidColorBrush x:Key="RedBrush" Color="{StaticResource RedColor}" />
+
+    <!-- Terminal palette (theme-independent) -->
+    <SolidColorBrush x:Key="TermBgBrush" Color="#17181C" />
+    <SolidColorBrush x:Key="TermBarBrush" Color="#08FFFFFF" />
+    <SolidColorBrush x:Key="TermBorderBrush" Color="#10FFFFFF" />
+    <SolidColorBrush x:Key="TermTextBrush" Color="#D5D8DE" />
+    <SolidColorBrush x:Key="TermDimBrush" Color="#6E7681" />
+    <SolidColorBrush x:Key="TermLabelBrush" Color="#9CA3AF" />
+    <SolidColorBrush x:Key="TermGreenBrush" Color="#3FB950" />
+    <SolidColorBrush x:Key="TermCyanBrush" Color="#58A6FF" />
+    <SolidColorBrush x:Key="TermPromptBrush" Color="#79C0FF" />
+    <SolidColorBrush x:Key="TermAmberBrush" Color="#E3B341" />
+    <SolidColorBrush x:Key="StopTextBrush" Color="#FF6B63" />
+    <SolidColorBrush x:Key="StopBgBrush" Color="#1FFF453A" />
+    <SolidColorBrush x:Key="StopBorderBrush" Color="#4DFF453A" />
+
+    <ResourceDictionary.ThemeDictionaries>
+
+        <!-- ============================== LIGHT ============================== -->
+        <ResourceDictionary x:Key="Light">
+            <SolidColorBrush x:Key="Surface0Brush" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="Surface1Brush" Color="#F4F4F6" />
+            <SolidColorBrush x:Key="Surface2Brush" Color="#FBFBFD" />
+
+            <SolidColorBrush x:Key="Text1Brush" Color="#1D1D1F" />
+            <SolidColorBrush x:Key="Text2Brush" Color="#993C3C43" />
+            <SolidColorBrush x:Key="Text3Brush" Color="#573C3C43" />
+
+            <SolidColorBrush x:Key="SeparatorBrush" Color="#17000000" />
+            <SolidColorBrush x:Key="HairlineBrush" Color="#12000000" />
+            <SolidColorBrush x:Key="HoverFillBrush" Color="#0A000000" />
+
+            <SolidColorBrush x:Key="ControlBgBrush" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="ControlBgHoverBrush" Color="#F7F7F8" />
+            <SolidColorBrush x:Key="ControlBorderBrush" Color="#21000000" />
+
+            <SolidColorBrush x:Key="CardBgBrush" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="CardBorderBrush" Color="#12000000" />
+            <SolidColorBrush x:Key="CardHoverBrush" Color="#FBFCFF" />
+
+            <SolidColorBrush x:Key="BadgeBgBrush" Color="#123C3C43" />
+            <SolidColorBrush x:Key="BadgeTextBrush" Color="#B83C3C43" />
+
+            <SolidColorBrush x:Key="WarnBgBrush" Color="#FFF4E0" />
+            <SolidColorBrush x:Key="WarnBorderBrush" Color="#38B47800" />
+            <SolidColorBrush x:Key="WarnTextBrush" Color="#8A5A00" />
+            <SolidColorBrush x:Key="WarnCodeBgBrush" Color="#1F8A5A00" />
+
+            <SolidColorBrush x:Key="ToolbarBrush" Color="#EDEDEF" />
+            <SolidColorBrush x:Key="WindowBorderBrush" Color="#29000000" />
+
+            <SolidColorBrush x:Key="TintBlueBrush" Color="#1A0A84FF" />
+            <SolidColorBrush x:Key="TintGreenBrush" Color="#1F28AA5A" />
+            <SolidColorBrush x:Key="BadgeOkTextBrush" Color="#34C759" />
+        </ResourceDictionary>
+
+        <!-- ============================== DARK ============================== -->
+        <ResourceDictionary x:Key="Dark">
+            <SolidColorBrush x:Key="Surface0Brush" Color="#1E1E1E" />
+            <SolidColorBrush x:Key="Surface1Brush" Color="#2A2A2C" />
+            <SolidColorBrush x:Key="Surface2Brush" Color="#2C2C2E" />
+
+            <SolidColorBrush x:Key="Text1Brush" Color="#EBFFFFFF" />
+            <SolidColorBrush x:Key="Text2Brush" Color="#99EBEBF5" />
+            <SolidColorBrush x:Key="Text3Brush" Color="#52EBEBF5" />
+
+            <SolidColorBrush x:Key="SeparatorBrush" Color="#1AFFFFFF" />
+            <SolidColorBrush x:Key="HairlineBrush" Color="#12FFFFFF" />
+            <SolidColorBrush x:Key="HoverFillBrush" Color="#0FFFFFFF" />
+
+            <SolidColorBrush x:Key="ControlBgBrush" Color="#525257" />
+            <SolidColorBrush x:Key="ControlBgHoverBrush" Color="#5C5C61" />
+            <SolidColorBrush x:Key="ControlBorderBrush" Color="#1AFFFFFF" />
+
+            <SolidColorBrush x:Key="CardBgBrush" Color="#2C2C2E" />
+            <SolidColorBrush x:Key="CardBorderBrush" Color="#14FFFFFF" />
+            <SolidColorBrush x:Key="CardHoverBrush" Color="#333335" />
+
+            <SolidColorBrush x:Key="BadgeBgBrush" Color="#1FEBEBF5" />
+            <SolidColorBrush x:Key="BadgeTextBrush" Color="#C7EBEBF5" />
+
+            <SolidColorBrush x:Key="WarnBgBrush" Color="#3A2C10" />
+            <SolidColorBrush x:Key="WarnBorderBrush" Color="#38FFB43C" />
+            <SolidColorBrush x:Key="WarnTextBrush" Color="#FFD487" />
+            <SolidColorBrush x:Key="WarnCodeBgBrush" Color="#24FFD487" />
+
+            <SolidColorBrush x:Key="ToolbarBrush" Color="#323234" />
+            <SolidColorBrush x:Key="WindowBorderBrush" Color="#8C000000" />
+
+            <SolidColorBrush x:Key="TintBlueBrush" Color="#330A84FF" />
+            <SolidColorBrush x:Key="TintGreenBrush" Color="#2E34C759" />
+            <SolidColorBrush x:Key="BadgeOkTextBrush" Color="#5BE07B" />
+        </ResourceDictionary>
+
+    </ResourceDictionary.ThemeDictionaries>
+</ResourceDictionary>

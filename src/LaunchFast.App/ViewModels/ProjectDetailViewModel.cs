@@ -77,6 +77,13 @@ public partial class ProjectDetailViewModel : ObservableObject
 
     public RunViewModel Run { get; } = new();
 
+    /// <summary>
+    /// Mono label shown in the terminal bar (e.g. "fastlane ios beta"). Reflects the
+    /// most recently launched lane; falls back to a generic "fastlane" before any run.
+    /// </summary>
+    [ObservableProperty]
+    private string _runningLaneLabel = "fastlane";
+
     /// <summary>True while a lane is running; buttons bind IsEnabled to its inverse.</summary>
     public bool IsRunning => Run.IsRunning;
 
@@ -257,6 +264,8 @@ public partial class ProjectDetailViewModel : ObservableObject
         }
 
         var env = _resolver.BuildEnv(ProjectId, _required, _fromFiles);
+
+        RunningLaneLabel = $"fastlane {lane.Platform.ToString().ToLowerInvariant()} {lane.Name}";
 
         Run.Lines.Clear();
         Run.CurrentAction = null;

@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using LaunchFast.Core.Models;
+using LaunchFast.Core.Stores;
 
 namespace LaunchFast.App.ViewModels;
 
@@ -33,10 +34,26 @@ public sealed partial class LaneViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(StoreSecondary))]
     [NotifyPropertyChangedFor(nameof(HasStore))]
     [NotifyPropertyChangedFor(nameof(StoreUnavailable))]
+    [NotifyPropertyChangedFor(nameof(StoreAmber))]
     private StoreStatus? _store;
 
     public string? StoreLine => Store?.Line;
     public string? StoreSecondary => Store?.Secondary;
+
+    /// <summary>
+    /// True for a production/release lane (App Store / Play production), used to
+    /// surface the small RELEASE tag in the lane row. Derived from the lane name
+    /// and its store destination — no extra state required.
+    /// </summary>
+    public bool IsRelease =>
+        _lane.Name is "release" or "production"
+        || LaneDestination.For(_lane) is Destination.AppStore or Destination.PlayProduction;
+
+    /// <summary>
+    /// True when the store reports a secondary state (e.g. "In Review"). Drives the
+    /// amber status dot; otherwise the dot is green when a status is available.
+    /// </summary>
+    public bool StoreAmber => HasStore && !string.IsNullOrEmpty(Store?.Secondary);
 
     /// <summary>True when a store status is available and meaningful.</summary>
     public bool HasStore => Store is { Available: true };

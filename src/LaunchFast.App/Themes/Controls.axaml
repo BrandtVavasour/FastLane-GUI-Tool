@@ -1,0 +1,260 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ========================================================================
+         LaunchFast · control themes / style classes mapping the design tokens.
+         ======================================================================== -->
+
+    <!-- Buttons -->
+    <!-- Base toolbar/secondary button (.btn) -->
+    <Style Selector="Button.btn">
+        <Setter Property="FontSize" Value="12.5" />
+        <Setter Property="FontWeight" Value="Medium" />
+        <Setter Property="Foreground" Value="{DynamicResource Text1Brush}" />
+        <Setter Property="Background" Value="{DynamicResource ControlBgBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{DynamicResource ControlRadius}" />
+        <Setter Property="Padding" Value="11,5" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.btn:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource ControlBgHoverBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
+    </Style>
+    <Style Selector="Button.btn:disabled">
+        <Setter Property="Opacity" Value="0.45" />
+    </Style>
+
+    <!-- Accent (primary) button (.btn.accent) -->
+    <Style Selector="Button.accent">
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{DynamicResource ControlRadius}" />
+        <Setter Property="FontSize" Value="12.5" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Padding" Value="13,5" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.accent:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource AccentPressBrush}" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+    <Style Selector="Button.accent:disabled">
+        <Setter Property="Opacity" Value="0.4" />
+    </Style>
+
+    <!-- Outline button — used for the banner "Add secrets…" (.btn.outline) -->
+    <Style Selector="Button.outline">
+        <Setter Property="Foreground" Value="{DynamicResource WarnTextBrush}" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="{DynamicResource WarnBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{DynamicResource ControlRadius}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Padding" Value="10,4" />
+    </Style>
+    <Style Selector="Button.outline:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource WarnCodeBgBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource WarnBorderBrush}" />
+    </Style>
+
+    <!-- Terminal Stop button (.stop) -->
+    <Style Selector="Button.stop">
+        <Setter Property="Foreground" Value="{DynamicResource StopTextBrush}" />
+        <Setter Property="Background" Value="{DynamicResource StopBgBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource StopBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{DynamicResource ControlRadius}" />
+        <Setter Property="FontSize" Value="11.5" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Padding" Value="11,4" />
+    </Style>
+    <Style Selector="Button.stop:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="#33FF453A" />
+        <Setter Property="BorderBrush" Value="{DynamicResource StopBorderBrush}" />
+    </Style>
+    <Style Selector="Button.stop:disabled">
+        <Setter Property="Opacity" Value="0.4" />
+    </Style>
+
+    <!-- Borderless card button wrapper (.card) -->
+    <Style Selector="Button.card">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Stretch" />
+        <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="Button.card /template/ ContentPresenter">
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="Button.card:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <!-- Inner card surface (.card-surface) -->
+    <Style Selector="Border.card-surface">
+        <Setter Property="Background" Value="{DynamicResource CardBgBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{DynamicResource CardRadius}" />
+        <Setter Property="Padding" Value="16" />
+        <Setter Property="BoxShadow" Value="0 1 2 0 #0D000000" />
+    </Style>
+    <Style Selector="Button.card:pointerover Border.card-surface">
+        <Setter Property="Background" Value="{DynamicResource CardHoverBrush}" />
+        <Setter Property="BorderBrush" Value="#660A84FF" />
+    </Style>
+
+    <!-- Badges -->
+    <Style Selector="Border.badge">
+        <Setter Property="Background" Value="{DynamicResource BadgeBgBrush}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource PillRadius}" />
+        <Setter Property="Padding" Value="8,4" />
+        <Setter Property="Margin" Value="0,0,6,0" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Border.badge > TextBlock">
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="FontWeight" Value="Medium" />
+        <Setter Property="LineHeight" Value="11" />
+        <Setter Property="Foreground" Value="{DynamicResource BadgeTextBrush}" />
+    </Style>
+    <Style Selector="Border.badge.ok">
+        <Setter Property="Background" Value="{DynamicResource TintGreenBrush}" />
+    </Style>
+    <Style Selector="Border.badge.ok > TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource BadgeOkTextBrush}" />
+    </Style>
+
+    <!-- Lanes -->
+    <Style Selector="Border.lane-list">
+        <Setter Property="Background" Value="{DynamicResource CardBgBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{DynamicResource CardRadius}" />
+        <Setter Property="ClipToBounds" Value="True" />
+    </Style>
+    <Style Selector="Border.lane">
+        <Setter Property="Padding" Value="14,12" />
+        <Setter Property="BorderBrush" Value="{DynamicResource SeparatorBrush}" />
+        <Setter Property="BorderThickness" Value="0,0,0,1" />
+    </Style>
+    <Style Selector="Border.lane:pointerover">
+        <Setter Property="Background" Value="{DynamicResource HoverFillBrush}" />
+    </Style>
+    <Style Selector="TextBlock.lane-name">
+        <Setter Property="FontFamily" Value="{DynamicResource MonoFontFamily}" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{DynamicResource Text1Brush}" />
+    </Style>
+    <Style Selector="Border.lane-tag">
+        <Setter Property="Background" Value="{DynamicResource TintBlueBrush}" />
+        <Setter Property="CornerRadius" Value="5" />
+        <Setter Property="Padding" Value="6,2" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Border.lane-tag > TextBlock">
+        <Setter Property="FontSize" Value="10" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+    </Style>
+
+    <!-- Banner -->
+    <Style Selector="Border.banner">
+        <Setter Property="Background" Value="{DynamicResource WarnBgBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource WarnBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="9" />
+        <Setter Property="Padding" Value="13,11" />
+    </Style>
+    <Style Selector="Border.code-chip">
+        <Setter Property="Background" Value="{DynamicResource WarnCodeBgBrush}" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="Padding" Value="5,1" />
+        <Setter Property="Margin" Value="0,0,6,4" />
+    </Style>
+    <Style Selector="Border.code-chip > TextBlock">
+        <Setter Property="FontFamily" Value="{DynamicResource MonoFontFamily}" />
+        <Setter Property="FontSize" Value="11.5" />
+        <Setter Property="Foreground" Value="{DynamicResource WarnTextBrush}" />
+    </Style>
+
+    <!-- Section title -->
+    <Style Selector="TextBlock.group-title">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{DynamicResource Text2Brush}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <!-- Count pill -->
+    <Style Selector="TextBlock.count-pill">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Foreground" Value="{DynamicResource Text2Brush}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <!-- Terminal -->
+    <Style Selector="TextBlock.term-line">
+        <Setter Property="FontFamily" Value="{DynamicResource MonoFontFamily}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="LineHeight" Value="19" />
+        <Setter Property="Foreground" Value="{DynamicResource TermTextBrush}" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
+    <!-- Run-pulse dot animation (theme-independent) -->
+    <Style Selector="Border.run-pulse">
+        <Setter Property="Width" Value="7" />
+        <Setter Property="Height" Value="7" />
+        <Setter Property="CornerRadius" Value="3.5" />
+        <Setter Property="Background" Value="{DynamicResource TermGreenBrush}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Border.run-pulse">
+        <Style.Animations>
+            <Animation Duration="0:0:1.6" IterationCount="INFINITE">
+                <KeyFrame Cue="0%">
+                    <Setter Property="Opacity" Value="1" />
+                </KeyFrame>
+                <KeyFrame Cue="60%">
+                    <Setter Property="Opacity" Value="0.35" />
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="Opacity" Value="1" />
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
+    <!-- Footer spinner animation -->
+    <Style Selector="Border.spinner">
+        <Setter Property="Width" Value="12" />
+        <Setter Property="Height" Value="12" />
+        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="BorderThickness" Value="1.6" />
+        <Setter Property="BorderBrush" Value="{DynamicResource TermCyanBrush}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="RenderTransform" Value="rotate(0deg)" />
+    </Style>
+    <Style Selector="Border.spinner">
+        <Style.Animations>
+            <Animation Duration="0:0:0.8" IterationCount="INFINITE">
+                <KeyFrame Cue="0%">
+                    <Setter Property="RotateTransform.Angle" Value="0" />
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="RotateTransform.Angle" Value="360" />
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
+</Styles>
