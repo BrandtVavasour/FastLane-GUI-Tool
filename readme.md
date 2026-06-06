@@ -11,6 +11,11 @@ Built with Avalonia on .NET 10.
 
 - **Launcher grid** — Android-Studio-style projects/recents grid; opens any Flutter root
   and detects its iOS/Android fastlane setups (and launcher icons).
+- **Setup wizard** — surfaces Flutter projects with no fastlane (or a missing platform)
+  and generates the complete file set (Fastfile, Appfile, Matchfile, Gemfile) from scratch,
+  or merges a new lane / platform block into an existing Fastfile. Eight-step guided flow
+  with diff preview and one-click apply (writes files + stores secrets in Keychain +
+  runs `bundle install`).
 - **Lane runner** — runs lanes with **live streaming output**, a preflight check
   (Gemfile/bundler) before launch, one-run-at-a-time gating, and stop. Uses a pipe-based
   process backend; interactive prompts (2FA, match passphrase) are not fully supported —
@@ -43,10 +48,8 @@ The SDK version is pinned via `global.json`; packages use Central Package Manage
 
 ## Roadmap
 
-This repo builds sub-project #1 first:
-
-1. **Launcher + detect + run existing lanes** ← current.
-2. Lane scaffolding for projects with no fastlane (generate Fastfiles / Matchfile / env).
+1. **Launcher + detect + run existing lanes** — done.
+2. **Set up fastlane from scratch / add a lane** — done (the setup wizard).
 3. Deeper match / code-signing management.
 4. Release-to-prod checklist.
 5. Richer multi-project organisation.

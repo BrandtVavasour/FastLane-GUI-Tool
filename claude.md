@@ -63,9 +63,24 @@ src/
                  Controls.axaml (button/card/badge/lane/banner/terminal styles)
     Converters/  PathToBitmapConverter
     Services/    AppServices (composition root)
+    Scaffolding/  FastlaneScaffolder     — renders full fastlane file set from WizardAnswers
+                  FastfileMerger         — Ruby-aware lane insertion into existing Fastfiles
+                  ProjectFacts           — auto-detect bundle id / team id / package name
+                  WizardAnswers          — record of all user choices (ios/android/lanes/defines)
+                  ScaffoldPlan           — list of FileChange + SecretToStore to apply
+  LaunchFast.App          → Avalonia UI (MVVM) — continued
+    ViewModels/  … (existing) + SetupWizard step VMs:
+                   SetupWizardViewModel, PlatformStepViewModel, IosBundleIdStepViewModel,
+                   TeamIdStepViewModel, LanesStepViewModel, DartDefinesStepViewModel,
+                   ReviewStepViewModel, ApplyStepViewModel
+    Views/       … (existing) + SetupWizardView
+    Services/    … (existing) + ProjectScaffoldService
+                   (writes files + Keychain secrets + runs bundle install)
   LaunchFast.Core.Tests   → Verify + NUnit unit/snapshot tests (+ fixtures/)
   LaunchFast.App.Tests    → Avalonia.Headless VM + view tests
-IntegrationTests/         → (Phase 10) separate .slnx; real fastlane/Keychain/PTY smoke
+IntegrationTests/         → separate .slnx; real fastlane/Keychain/PTY/scaffold smoke tests
+                             FastlaneSmokeTests, PtyIntegrationTests, KeychainIntegrationTests,
+                             ScaffoldIntegrationTests (bundle install + ruby -c)
 ```
 
 **Boundary rule:** `LaunchFast.Core` must never reference Avalonia. UI consumes Core via
@@ -100,19 +115,36 @@ dotnet run --project src/LaunchFast.App      # launch the GUI (manual verificati
 dotnet test IntegrationTests/IntegrationTests.slnx   # real fastlane/Keychain smoke
 ```
 
-## Sub-project roadmap (this repo builds #1 first)
+## Sub-project roadmap
 
-1. **Launcher + detect + run existing lanes** ← current build (see PROGRESS.md).
-2. Lane scaffolding for projects with no fastlane (generate Fastfiles/Matchfile/env).
+1. **Launcher + detect + run existing lanes** — DONE (see PROGRESS.md, phases 0-10).
+   Spec: `docs/superpowers/specs/2026-06-05-fastlane-gui-runner-mvp-design.md`
+   Plan: `docs/superpowers/plans/2026-06-05-launchfast-runner-mvp.md`
+2. **Setup wizard — generate fastlane from scratch / add a lane** — DONE.
+   Generates a complete fastlane file set (Fastfile, Appfile, Matchfile, Gemfile) for a
+   fastlane-less Flutter project; merges a missing platform block or individual lane into an
+   existing Fastfile (FastfileMerger, Ruby-aware); auto-detects bundle id / team id /
+   package name (ProjectFacts); 8-step wizard UI with diff preview + `bundle install` apply.
+   Also adds a missing platform block or individual lane to an existing fastlane setup.
+   Spec: `docs/superpowers/specs/2026-06-06-fastlane-setup-wizard-design.md`
+   Plan: `docs/superpowers/plans/2026-06-06-fastlane-setup-wizard.md`
 3. Deeper match / code-signing management.
 4. Release-to-prod checklist.
 5. Richer multi-project organisation.
 
-Source spec & plan (in the sibling VendingMachine repo's docs):
-`docs/superpowers/specs/2026-06-05-fastlane-gui-runner-mvp-design.md` and
-`docs/superpowers/plans/2026-06-05-launchfast-runner-mvp.md`.
-
 ## Current status
+
+**Sub-projects #1 and #2 are both COMPLETE and SHIP-READY as of 2026-06-06.**
+
+Sub-project #2 (setup wizard): `ProjectScanner` surfaces fastlane-less Flutter projects (and
+projects missing a platform). `FastlaneScaffolder` generates the complete fastlane file set.
+`FastfileMerger` performs Ruby-aware lane/platform-block insertion into existing Fastfiles.
+`ProjectFacts` auto-detects bundle id / team id / package name from existing project files.
+The 8-step wizard (SetupWizardViewModel + step VMs + SetupWizardView) guides the user from
+project selection to a diff preview and one-click apply (write files + Keychain secrets +
+`bundle install`) via `ProjectScaffoldService`. Entry points: launcher CTA for fastlane-less
+projects and a toolbar button in the Fastfile inspector. Interactive match init / first upload
+remain on the Lanes screen (not yet automated). 387 unit tests + 5 integration tests green.
 
 **Sub-project #1 (the runner) plus a large fastlane-feature expansion are COMPLETE and reviewed
 (SHIP-READY) as of 2026-06-06.** The app is now a per-project shell with 12 section screens —

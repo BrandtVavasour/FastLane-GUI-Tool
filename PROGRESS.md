@@ -52,7 +52,44 @@ All planned scope delivered: launcher grid + icons, lane detection, run with liv
 preflight + stop + one-run gating, env files + Keychain secrets + secret-only gating, per-lane
 store version (iOS + Android) with graceful unavailable. Remaining verification needs the owner's
 Mac (visible window + a real deploy) and real ASC `.p8` / Play service-account JSON for live
-store data. Next: sub-project #2 (lane scaffolding).
+store data.
+
+---
+
+## Sub-project #2 — fastlane Setup Wizard
+
+**COMPLETE — reviewed (2026-06-06)**
+
+What landed:
+
+- **`ProjectScanner` extended** to surface fastlane-less Flutter projects (and those missing a
+  platform), not just those with an existing fastlane setup. `ProjectScanner.FindFastlaneLessProjects`
+  walks workspace roots and returns candidates for the wizard.
+- **`FastlaneScaffolder`** renders the complete fastlane file set (Fastfile, Appfile, Matchfile,
+  Gemfile, `.env.example`) from a `WizardAnswers` record, modelled on the proven VendingMachine
+  fastlane. Lane templates for iOS (`sync_certificates`, `beta`, `release`, `screenshots`) and
+  Android (`build`, `internal`, `beta`, `production`) with dart-define interpolation.
+- **`FastfileMerger`** performs Ruby-aware insertion: can add a missing platform block or graft
+  individual lanes into an existing `platform :ios` / `platform :android` block. Handles
+  `before_all` preservation, indentation, and avoids duplicates.
+- **`ProjectFacts`** auto-detects `IosBundleId` (from `ios/*.xcodeproj/project.pbxproj`),
+  `TeamId` (same), and `AndroidPackage` (from `android/app/build.gradle`) so wizard fields
+  pre-populate.
+- **`ScaffoldPlan`** / `WizardAnswers` / `SecretToStore` / `FileChange` — clean value objects.
+- **8-step wizard UI** (`SetupWizardViewModel` + per-step VMs: Platform, IosBundleId, TeamId,
+  Lanes, DartDefines, Review/diff, Apply): step rail with forward/back, inline validation, diff
+  preview (old vs new for merge, full content for create), apply panel showing `bundle install`
+  live output.
+- **`ProjectScaffoldService`** — applies the plan: writes files, stores Keychain secrets,
+  runs `bundle install` in `ios/` and/or `android/`.
+- **Entry points** — launcher CTA ("Set up fastlane") on project cards with no fastlane;
+  toolbar button in the Fastfile inspector view.
+- **Interactive match init / first upload** remain on the Lanes screen (run `sync_certificates` /
+  `beta` manually the first time).
+- **Test count:** 387 unit tests (Core + App) + 5 integration tests (fastlane smoke, PTY ×3,
+  Keychain, scaffold `ruby -c` + `bundle install`) — all green. Build 0/0 both solutions.
+- Spec: `docs/superpowers/specs/2026-06-06-fastlane-setup-wizard-design.md`
+- Plan: `docs/superpowers/plans/2026-06-06-fastlane-setup-wizard.md`
 
 ## Cross-cutting (loop requirements)
 
@@ -134,7 +171,7 @@ Goal: cover most of fastlane via per-project section screens. Built as shells no
   (Avalonia `BoxShadow` is Border-only).
 
 ## Test count (keep current)
-- Current: **244** passing (Core 112 + App 132) + **3** integration tests (real fastlane/PTY/Keychain),
+- Current: **387** passing (Core 200 + App 187) + **5** integration tests (real fastlane/PTY/Keychain/scaffold),
   build 0 warnings (both solutions). (Was 85 at the end of sub-project #1, before the fastlane expansion.)
 
 ## Verification still needing the human
