@@ -45,6 +45,7 @@ public partial class ProjectShellViewModel : ObservableObject
         Sections = new ObservableCollection<ProjectSectionViewModel>
         {
             new(ProjectSection.Lanes, "Lanes", "🚀"),
+            new(ProjectSection.Fastfile, "Fastfile", "🧩"),
             new(ProjectSection.Signing, "Signing", "🔐"),
             new(ProjectSection.Secrets, "Secrets", "🔑"),
             new(ProjectSection.TestFlight, "TestFlight", "✈"),
@@ -99,6 +100,7 @@ public partial class ProjectShellViewModel : ObservableObject
     object Build(ProjectSection section) => section switch
     {
         ProjectSection.Lanes => Lanes,
+        ProjectSection.Fastfile => BuildFastfile(),
         ProjectSection.Signing => BuildSigning(),
         ProjectSection.Secrets => BuildSecrets(),
         ProjectSection.TestFlight => BuildTestFlight(),
@@ -127,6 +129,9 @@ public partial class ProjectShellViewModel : ObservableObject
             return _lanes;
         }
     }
+
+    FastfileSectionViewModel BuildFastfile() =>
+        new(_project, RunLane);
 
     SigningSectionViewModel BuildSigning() =>
         new(_project, RunLane, () => Lanes.HasLane(Platform.Ios, "sync_certificates"));

@@ -40,6 +40,41 @@ public class ProjectShellViewModelTests
     }
 
     [Test]
+    public void SelectSection_Fastfile_swaps_to_fastfile_section_with_real_lanes()
+    {
+        var shell = MakeShell(out _);
+
+        shell.SelectSectionCommand.Execute(ProjectSection.Fastfile);
+
+        Assert.That(shell.SelectedSection, Is.EqualTo(ProjectSection.Fastfile));
+        Assert.That(shell.CurrentContent, Is.InstanceOf<FastfileSectionViewModel>());
+
+        var ff = (FastfileSectionViewModel)shell.CurrentContent!;
+        Assert.That(ff.IosLanes, Is.Not.Empty);
+        Assert.That(ff.AndroidLanes, Is.Not.Empty);
+        Assert.That(ff.SelectedLane, Is.Not.Null);
+
+        // Fastfile nav item exists and is selected.
+        Assert.That(shell.Sections.Any(s => s.Section == ProjectSection.Fastfile), Is.True);
+        Assert.That(shell.Sections.Single(s => s.Section == ProjectSection.Fastfile).IsSelected, Is.True);
+    }
+
+    [Test]
+    public void Fastfile_section_run_switches_to_Lanes_for_the_live_run_panel()
+    {
+        var shell = MakeShell(out _);
+        shell.SelectSectionCommand.Execute(ProjectSection.Fastfile);
+        var ff = (FastfileSectionViewModel)shell.CurrentContent!;
+
+        var beta = ff.IosLanes.Single(l => l.Name == "beta");
+        ff.SelectLaneCommand.Execute(beta);
+        ff.RunSelectedLaneCommand.Execute(null);
+
+        Assert.That(shell.SelectedSection, Is.EqualTo(ProjectSection.Lanes));
+        Assert.That(shell.CurrentContent, Is.InstanceOf<ProjectDetailViewModel>());
+    }
+
+    [Test]
     public void SelectSection_Secrets_swaps_to_secrets_section()
     {
         var shell = MakeShell(out _);

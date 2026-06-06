@@ -6,6 +6,7 @@ namespace LaunchFast.App.ViewModels;
 public enum ProjectSection
 {
     Lanes,
+    Fastfile,
     Signing,
     Secrets,
     TestFlight,

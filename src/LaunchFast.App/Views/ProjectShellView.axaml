@@ -19,6 +19,9 @@
         <DataTemplate DataType="vm:ProjectDetailViewModel">
             <views:ProjectDetailView />
         </DataTemplate>
+        <DataTemplate DataType="vm:FastfileSectionViewModel">
+            <views:FastfileSectionView />
+        </DataTemplate>
         <DataTemplate DataType="vm:SecretsSectionViewModel">
             <views:SecretsSectionView />
         </DataTemplate>

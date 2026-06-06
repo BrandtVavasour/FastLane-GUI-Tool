@@ -1,0 +1,298 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:LaunchFast.App.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="980" d:DesignHeight="640"
+             x:Class="LaunchFast.App.Views.FastfileSectionView"
+             x:DataType="vm:FastfileSectionViewModel"
+             x:CompileBindings="True"
+             Background="{DynamicResource Surface0Brush}">
+
+    <UserControl.Styles>
+        <!-- rail group header (iOS / Android) -->
+        <Style Selector="TextBlock.railhead">
+            <Setter Property="FontSize" Value="10.5" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{DynamicResource Text3Brush}" />
+            <Setter Property="Margin" Value="4,0,0,0" />
+        </Style>
+        <!-- a lane button in the rail -->
+        <Style Selector="Button.lanebtn">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="10,8" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Button.lanebtn:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource Surface2Brush}" />
+        </Style>
+        <Style Selector="Button.lanebtn.selected">
+            <Setter Property="Background" Value="{DynamicResource TintBlueBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+        </Style>
+        <Style Selector="Button.lanebtn.selected /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource TintBlueBrush}" />
+        </Style>
+        <Style Selector="TextBlock.lanename">
+            <Setter Property="FontFamily" Value="{DynamicResource MonoFontFamily}" />
+            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource Text1Brush}" />
+        </Style>
+        <Style Selector="TextBlock.lanedesc">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Foreground" Value="{DynamicResource Text3Brush}" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+        <!-- detail headings -->
+        <Style Selector="TextBlock.lanetitle">
+            <Setter Property="FontFamily" Value="{DynamicResource MonoFontFamily}" />
+            <Setter Property="FontSize" Value="17" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource Text1Brush}" />
+        </Style>
+        <Style Selector="TextBlock.invocation">
+            <Setter Property="FontFamily" Value="{DynamicResource MonoFontFamily}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{DynamicResource Text3Brush}" />
+        </Style>
+        <!-- step index circle -->
+        <Style Selector="Border.stepidx">
+            <Setter Property="Width" Value="22" />
+            <Setter Property="Height" Value="22" />
+            <Setter Property="CornerRadius" Value="11" />
+            <Setter Property="Background" Value="{DynamicResource BadgeBgBrush}" />
+            <Setter Property="VerticalAlignment" Value="Top" />
+        </Style>
+        <Style Selector="Border.stepidx > TextBlock">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{DynamicResource Text2Brush}" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="TextBlock.stepaction">
+            <Setter Property="FontFamily" Value="{DynamicResource MonoFontFamily}" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource Text1Brush}" />
+        </Style>
+        <Style Selector="TextBlock.stepparams">
+            <Setter Property="FontFamily" Value="{DynamicResource MonoFontFamily}" />
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="Foreground" Value="{DynamicResource Text3Brush}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <!-- tool badge -->
+        <Style Selector="Border.toolbadge">
+            <Setter Property="Background" Value="{DynamicResource TintBlueBrush}" />
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="Padding" Value="6,1" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Border.toolbadge > TextBlock">
+            <Setter Property="FontFamily" Value="{DynamicResource MonoFontFamily}" />
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+        </Style>
+        <!-- dark code block -->
+        <Style Selector="TextBox.codeblock">
+            <Setter Property="FontFamily" Value="{DynamicResource MonoFontFamily}" />
+            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="Foreground" Value="{DynamicResource TermTextBrush}" />
+            <Setter Property="Background" Value="{DynamicResource TermBgBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="16" />
+            <Setter Property="IsReadOnly" Value="True" />
+            <Setter Property="AcceptsReturn" Value="True" />
+            <Setter Property="TextWrapping" Value="NoWrap" />
+        </Style>
+    </UserControl.Styles>
+
+    <DockPanel>
+        <!-- Toolbar -->
+        <Border DockPanel.Dock="Top"
+                Background="{DynamicResource Surface1Brush}"
+                BorderBrush="{DynamicResource SeparatorBrush}"
+                BorderThickness="0,0,0,1">
+            <Grid ColumnDefinitions="*,Auto,Auto" Margin="16,11">
+                <Button Grid.Column="1" Classes="btn" Margin="0,0,8,0"
+                        Content="Open in editor" IsEnabled="False" />
+                <Button Grid.Column="2" Classes="accent" Content="Run lane"
+                        IsEnabled="{Binding CanRunSelected}"
+                        Command="{Binding RunSelectedLaneCommand}" />
+            </Grid>
+        </Border>
+
+        <!-- Subbar -->
+        <Border DockPanel.Dock="Top" Classes="subbar">
+            <Grid ColumnDefinitions="Auto,Auto,Auto,*">
+                <TextBlock Grid.Column="0" Classes="h2" Text="Fastfile" />
+                <Border Grid.Column="1" Classes="chip" Margin="14,0,8,0">
+                    <TextBlock Text="fastlane/Fastfile" />
+                </Border>
+                <TextBlock Grid.Column="2" Classes="lbl"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource Text3Brush}"
+                           Text="{Binding LaneCountText}" />
+            </Grid>
+        </Border>
+
+        <!-- Empty state -->
+        <Border IsVisible="{Binding IsEmpty}">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
+                        Spacing="10" MaxWidth="420">
+                <TextBlock Text="🧩" FontSize="34" HorizontalAlignment="Center" />
+                <TextBlock Text="No Fastfile" FontSize="16" FontWeight="SemiBold"
+                           HorizontalAlignment="Center"
+                           Foreground="{DynamicResource Text1Brush}" />
+                <TextBlock Text="{Binding EmptyStateText}" FontSize="12.5"
+                           TextWrapping="Wrap" TextAlignment="Center"
+                           Foreground="{DynamicResource Text3Brush}" />
+            </StackPanel>
+        </Border>
+
+        <!-- Two-column body -->
+        <Grid ColumnDefinitions="260,*" IsVisible="{Binding !IsEmpty}">
+
+            <!-- LEFT: lane rail -->
+            <Border Grid.Column="0"
+                    Background="{DynamicResource Surface1Brush}"
+                    BorderBrush="{DynamicResource SeparatorBrush}"
+                    BorderThickness="0,0,1,0">
+                <ScrollViewer>
+                    <StackPanel Margin="12,14" Spacing="14">
+
+                        <!-- iOS group -->
+                        <StackPanel Spacing="6" IsVisible="{Binding HasIos}">
+                            <TextBlock Classes="railhead" Text="IOS" />
+                            <ItemsControl ItemsSource="{Binding IosLanes}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:LaneRowViewModel">
+                                        <Button Classes="lanebtn"
+                                                Classes.selected="{Binding IsSelected}"
+                                                Command="{Binding $parent[ItemsControl].((vm:FastfileSectionViewModel)DataContext).SelectLaneCommand}"
+                                                CommandParameter="{Binding}">
+                                            <StackPanel Spacing="3">
+                                                <TextBlock Classes="lanename" Text="{Binding Name}" />
+                                                <TextBlock Classes="lanedesc"
+                                                           IsVisible="{Binding HasDescription}"
+                                                           Text="{Binding Description}" />
+                                            </StackPanel>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+
+                        <!-- Android group -->
+                        <StackPanel Spacing="6" IsVisible="{Binding HasAndroid}">
+                            <TextBlock Classes="railhead" Text="ANDROID" />
+                            <ItemsControl ItemsSource="{Binding AndroidLanes}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:LaneRowViewModel">
+                                        <Button Classes="lanebtn"
+                                                Classes.selected="{Binding IsSelected}"
+                                                Command="{Binding $parent[ItemsControl].((vm:FastfileSectionViewModel)DataContext).SelectLaneCommand}"
+                                                CommandParameter="{Binding}">
+                                            <StackPanel Spacing="3">
+                                                <TextBlock Classes="lanename" Text="{Binding Name}" />
+                                                <TextBlock Classes="lanedesc"
+                                                           IsVisible="{Binding HasDescription}"
+                                                           Text="{Binding Description}" />
+                                            </StackPanel>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <!-- RIGHT: lane detail -->
+            <DockPanel Grid.Column="1" IsVisible="{Binding HasSelection}">
+
+                <!-- detail header -->
+                <Border DockPanel.Dock="Top"
+                        BorderBrush="{DynamicResource SeparatorBrush}"
+                        BorderThickness="0,0,0,1">
+                    <StackPanel Margin="22,18,22,16" Spacing="10">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Classes="lanetitle" Text="{Binding SelectedTitle}"
+                                       VerticalAlignment="Center" />
+                            <Border Classes="pill accent">
+                                <TextBlock Text="{Binding SelectedPlatformLabel}" />
+                            </Border>
+                        </StackPanel>
+                        <TextBlock Classes="invocation" Text="{Binding SelectedInvocation}" />
+
+                        <!-- Steps / Source toggle -->
+                        <Border Classes="seg sm" HorizontalAlignment="Left">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Classes="seg-item" GroupName="ffview"
+                                             Content="Steps"
+                                             IsChecked="{Binding IsStepsView, Mode=TwoWay}" />
+                                <RadioButton Classes="seg-item" GroupName="ffview"
+                                             Content="Source"
+                                             IsChecked="{Binding IsSourceView, Mode=TwoWay}" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!-- STEPS view -->
+                <ScrollViewer IsVisible="{Binding IsStepsView}">
+                    <StackPanel Margin="22,18">
+                        <ItemsControl ItemsSource="{Binding SelectedSteps}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:LaneStepViewModel">
+                                    <Grid ColumnDefinitions="Auto,*" Margin="0,0,0,14">
+                                        <Border Grid.Column="0" Classes="stepidx" Margin="0,0,12,0">
+                                            <TextBlock Text="{Binding Index}" />
+                                        </Border>
+                                        <StackPanel Grid.Column="1" Spacing="4">
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <TextBlock Classes="stepaction" Text="{Binding Action}"
+                                                           VerticalAlignment="Center" />
+                                                <Border Classes="toolbadge" IsVisible="{Binding HasTool}">
+                                                    <TextBlock Text="{Binding Tool}" />
+                                                </Border>
+                                            </StackPanel>
+                                            <TextBlock Classes="stepparams"
+                                                       IsVisible="{Binding HasParams}"
+                                                       Text="{Binding Params}" />
+                                        </StackPanel>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <TextBlock IsVisible="{Binding !SelectedHasSteps}"
+                                   FontSize="12.5"
+                                   Foreground="{DynamicResource Text3Brush}"
+                                   Text="This lane has no top-level action steps." />
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- SOURCE view -->
+                <Border IsVisible="{Binding IsSourceView}"
+                        Background="{DynamicResource TermBgBrush}"
+                        Margin="22,18" CornerRadius="10" ClipToBounds="True">
+                    <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                                  VerticalScrollBarVisibility="Auto">
+                        <TextBox Classes="codeblock" Text="{Binding SelectedSource, Mode=OneWay}" />
+                    </ScrollViewer>
+                </Border>
+
+            </DockPanel>
+        </Grid>
+    </DockPanel>
+</UserControl>

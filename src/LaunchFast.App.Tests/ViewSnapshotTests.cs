@@ -71,6 +71,31 @@ public class ViewSnapshotTests
     }
 
     [AvaloniaTest]
+    public void FastfileSectionView_snapshot()
+    {
+        ForEachTheme("FastfileSectionView", () =>
+        {
+            var project = TestProjects.MakeFlutterProjectWithRealFastfiles();
+            var vm = new FastfileSectionViewModel(project, runLane: (_, _) => { });
+            return new FastfileSectionView { DataContext = vm };
+        });
+    }
+
+    [AvaloniaTest]
+    public void FastfileSectionView_source_view_snapshot()
+    {
+        ForEachTheme("FastfileSectionViewSource", () =>
+        {
+            var project = TestProjects.MakeFlutterProjectWithRealFastfiles();
+            var vm = new FastfileSectionViewModel(project, runLane: (_, _) => { })
+            {
+                View = FastfileView.Source,
+            };
+            return new FastfileSectionView { DataContext = vm };
+        });
+    }
+
+    [AvaloniaTest]
     public void SecretsSectionView_snapshot()
     {
         ForEachTheme("SecretsSectionView", () =>
