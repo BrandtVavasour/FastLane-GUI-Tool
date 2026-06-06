@@ -114,15 +114,23 @@ Source spec & plan (in the sibling VendingMachine repo's docs):
 
 ## Current status
 
-**Sub-project #1 is COMPLETE and reviewed (SHIP-READY) as of 2026-06-06.** All planned scope
-is delivered: launcher grid + icons, lane detection, run with live output + **preflight** + stop
-+ one-run gating, env files + Keychain secrets + secret-only gating, per-lane store version
-(iOS + Android) with graceful unavailable, separate IntegrationTests solution + CI + docs.
-**85 unit tests + 3 real integration tests** pass; build is 0/0 (Debug + Release, both solutions).
-See **`PROGRESS.md`** for the phase-by-phase log. Next up is sub-project #2 (lane scaffolding).
+**Sub-project #1 (the runner) plus a large fastlane-feature expansion are COMPLETE and reviewed
+(SHIP-READY) as of 2026-06-06.** The app is now a per-project shell with 12 section screens —
+Lanes, Fastfile inspector, History, Signing (iOS), Secrets, TestFlight, Screenshots, Build & Test,
+Store Listing, What's New, Release, Android Signing — built from the three Claude Design files.
+Real features: lane running (live output + preflight + gating + store status), Fastfile inspector
+(`ParseDetailed`), run history (`RunHistoryStore`), Secrets (Keychain/.env), Store Listing +
+What's New (`StoreMetadataReader`), Release pre-flight checks, Android Signing (`AndroidSigningReader`).
+The iOS Signing/TestFlight/Screenshots/Build & Test screens are themed shells with clearly-flagged
+illustrative data + wired Run buttons (their real backends — cert parsing, ASC testers/builds,
+snapshot/frameit config, gym/scan results — are the next make-real slices).
+**244 unit tests + 3 real integration tests** pass; build 0/0 (both solutions); real headless Skia
+UI snapshot coverage for every view. See **`PROGRESS.md`** for the full log.
 
-Still needs the owner's Mac for manual verification: the visible window appearance and an actual
+Still needs the owner's Mac for manual verification: visible window appearance and an actual
 `fastlane` run; and real ASC `.p8` + Play service-account JSON for live store-version data.
+Noted follow-ups: metadata/release-notes editing+save (currently read-only), keytool fingerprints,
+and the real backends for the four iOS shell screens.
 
 ### Known limitations / conventions to keep in mind
 - **Preflight** (Gemfile/bundler) now runs before a lane launches; failures show in the output

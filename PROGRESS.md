@@ -106,8 +106,8 @@ Goal: cover most of fastlane via per-project section screens. Built as shells no
   (Avalonia `BoxShadow` is Border-only).
 
 ## Test count (keep current)
-- Final: **85** passing (Core 70 + App 15) + **3** integration tests (real fastlane/PTY/Keychain),
-  build 0 warnings (Debug + Release, both solutions).
+- Current: **244** passing (Core 112 + App 132) + **3** integration tests (real fastlane/PTY/Keychain),
+  build 0 warnings (both solutions). (Was 85 at the end of sub-project #1, before the fastlane expansion.)
 
 ## Verification still needing the human
 - Visible window appearance + a real `bundle exec fastlane` run on the owner's Mac.
