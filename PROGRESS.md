@@ -94,7 +94,12 @@ Goal: cover most of fastlane via per-project section screens. Built as shells no
 - 🎉 **ALL THREE design files fully implemented.** Per-project sidebar: Lanes · Fastfile · History ·
   Signing · Secrets · TestFlight · Screenshots · Build & Test · Store Listing · What's New · Release ·
   Android Signing.
-- 🔨 Closing: full end-to-end review, docs refresh, confirm no author names + conventions.
+- ✅ Closing review: SHIP-READY (244→ growing tests, build 0/0, no author names, conventions OK).
+- 🔨 **Make-real passes for the 4 iOS shells** (turn illustrative data into real disk/API reads):
+  ✅ **Screenshots — REAL** (`SnapshotConfigReader`: Snapfile devices/languages/scheme/launch-args +
+  Framefile + captured screenshots from disk; only the framed-preview mock stays illustrative).
+  ⬜ Build & Test (gym/scan config + test results) · ⬜ Signing iOS (provisioning profiles + certs) ·
+  ⬜ TestFlight (ASC builds/testers) — next.
 
 ## UI design
 - ✅ **macOS-native restyle** from a Claude Design handoff (`LaunchFast.html`): tokenised
