@@ -22,7 +22,7 @@ public static class AppServices
     {
         var launcher = CreateLauncher();
         var secrets = new KeychainSecretStore();
-        var ptyFactory = new ProcessPtyFactory();
+        var ptyFactory = new DefaultPtyFactory();
         return new ShellViewModel(launcher, secrets, ptyFactory);
     }
 }
