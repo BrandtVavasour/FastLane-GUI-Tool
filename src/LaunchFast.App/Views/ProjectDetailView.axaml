@@ -3,92 +3,76 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:LaunchFast.App.ViewModels"
+             xmlns:conv="using:LaunchFast.App.Converters"
              mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
              x:Class="LaunchFast.App.Views.ProjectDetailView"
              x:DataType="vm:ProjectDetailViewModel"
-             x:CompileBindings="True">
+             x:CompileBindings="True"
+             Background="{DynamicResource Surface0Brush}">
 
-    <UserControl.Styles>
-        <Style Selector="TextBlock.section">
-            <Setter Property="FontSize" Value="13" />
-            <Setter Property="FontWeight" Value="Bold" />
-            <Setter Property="Opacity" Value="0.6" />
-            <Setter Property="Margin" Value="0,8,0,4" />
-        </Style>
-        <Style Selector="Border.lane">
-            <Setter Property="Padding" Value="12" />
-            <Setter Property="Margin" Value="0,0,0,8" />
-            <Setter Property="CornerRadius" Value="8" />
-            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
-        </Style>
-    </UserControl.Styles>
+    <UserControl.Resources>
+        <conv:PathToBitmapConverter x:Key="PathToBitmap" />
+    </UserControl.Resources>
 
     <DockPanel>
-        <!-- Header -->
-        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal"
-                    Spacing="12" Margin="16,16,16,8" VerticalAlignment="Center">
-            <Button Content="‹ Back" Command="{Binding BackCommand}" />
-            <TextBlock Text="{Binding Name}" FontSize="20" FontWeight="SemiBold"
-                       VerticalAlignment="Center" />
-            <TextBlock Text="{Binding Version}" Opacity="0.6"
-                       VerticalAlignment="Center" />
-        </StackPanel>
-
-        <!-- Secrets banner -->
-        <Border DockPanel.Dock="Top" Margin="16,0,16,8" Padding="12"
-                CornerRadius="8" Background="#33FF9500" BorderBrush="#FF9500"
-                BorderThickness="1"
-                IsVisible="{Binding HasMissingSecrets}">
-            <StackPanel Spacing="6">
-                <TextBlock Text="Missing secrets" FontWeight="SemiBold" />
-                <ItemsControl ItemsSource="{Binding MissingSecrets}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <WrapPanel Orientation="Horizontal" />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="x:String">
-                            <Border Background="#55000000" CornerRadius="6"
-                                    Padding="6,2" Margin="0,0,6,4">
-                                <TextBlock Text="{Binding}" FontFamily="monospace" FontSize="11" />
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-                <Button Content="Add secrets…" Click="OnAddSecrets"
-                        HorizontalAlignment="Left" Margin="0,4,0,0" />
-            </StackPanel>
+        <!-- Toolbar -->
+        <Border DockPanel.Dock="Top"
+                Background="{DynamicResource Surface1Brush}"
+                BorderBrush="{DynamicResource SeparatorBrush}"
+                BorderThickness="0,0,0,1">
+            <Grid ColumnDefinitions="Auto,*,Auto" Margin="16,11">
+                <Button Grid.Column="0" Classes="btn" Content="‹ Projects"
+                        Command="{Binding BackCommand}" />
+                <Button Grid.Column="2" Classes="btn" Content="Refresh store status"
+                        Command="{Binding RefreshStoreStatusCommand}" />
+            </Grid>
         </Border>
 
-        <!-- Run panel (dark) at the bottom -->
-        <Border DockPanel.Dock="Bottom" Background="#1E1E1E" Height="220"
-                Margin="16,8,16,16" CornerRadius="8">
-            <DockPanel Margin="12">
-                <!-- Footer: elapsed + current action + Stop -->
-                <Grid DockPanel.Dock="Bottom" ColumnDefinitions="Auto,*,Auto"
-                      Margin="0,8,0,0">
-                    <TextBlock Grid.Column="0" Text="{Binding Run.Elapsed}"
-                               Foreground="#9CDCFE" FontFamily="monospace"
-                               VerticalAlignment="Center" />
-                    <TextBlock Grid.Column="1" Text="{Binding Run.CurrentAction}"
-                               Foreground="#CCCCCC" Margin="12,0"
-                               TextTrimming="CharacterEllipsis"
-                               VerticalAlignment="Center" />
-                    <Button Grid.Column="2" Content="Stop"
-                            Command="{Binding StopCommand}"
-                            IsEnabled="{Binding IsRunning}" />
-                </Grid>
+        <!-- Terminal panel (bottom) -->
+        <Border DockPanel.Dock="Bottom" Margin="20,14,20,20"
+                Background="{DynamicResource TermBgBrush}" CornerRadius="10"
+                ClipToBounds="True" BoxShadow="0 4 14 0 #47000000">
+            <DockPanel>
+                <!-- Top bar -->
+                <Border DockPanel.Dock="Top" Background="{DynamicResource TermBarBrush}"
+                        BorderBrush="{DynamicResource TermBorderBrush}"
+                        BorderThickness="0,0,0,1" Padding="12,9">
+                    <Grid ColumnDefinitions="Auto,Auto,*,Auto">
+                        <Border Grid.Column="0" Classes="run-pulse" Margin="0,0,7,0"
+                                IsVisible="{Binding Run.IsRunning}" />
+                        <TextBlock Grid.Column="1" Text="{Binding RunningLaneLabel}"
+                                   FontFamily="{DynamicResource MonoFontFamily}"
+                                   FontSize="11.5" Foreground="{DynamicResource TermLabelBrush}"
+                                   VerticalAlignment="Center" />
+                        <Button Grid.Column="3" Classes="stop" Content="◼ Stop"
+                                Command="{Binding StopCommand}"
+                                IsEnabled="{Binding IsRunning}" />
+                    </Grid>
+                </Border>
 
-                <ScrollViewer>
+                <!-- Footer -->
+                <Border DockPanel.Dock="Bottom" Background="{DynamicResource TermBarBrush}"
+                        BorderBrush="{DynamicResource TermBorderBrush}"
+                        BorderThickness="0,1,0,0" Padding="14,9">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Border Classes="spinner" IsVisible="{Binding Run.IsRunning}" />
+                        <TextBlock FontFamily="{DynamicResource MonoFontFamily}" FontSize="11.5"
+                                   Foreground="{DynamicResource TermLabelBrush}"
+                                   VerticalAlignment="Center">
+                            <Run Text="elapsed " />
+                            <Run Text="{Binding Run.Elapsed}" Foreground="{DynamicResource TermTextBrush}" />
+                            <Run Text=" · " />
+                            <Run Text="{Binding Run.CurrentAction}" />
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+
+                <!-- Body: streamed output -->
+                <ScrollViewer Height="208" Padding="14,13">
                     <ItemsControl ItemsSource="{Binding Run.Lines}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="x:String">
-                                <TextBlock Text="{Binding}" FontFamily="monospace"
-                                           FontSize="12" Foreground="#D4D4D4"
-                                           TextWrapping="Wrap" />
+                                <TextBlock Classes="term-line" Text="{Binding}" />
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
@@ -96,83 +80,212 @@
             </DockPanel>
         </Border>
 
-        <!-- Lane sections -->
-        <ScrollViewer Margin="16,0">
+        <!-- Header + banner + lanes -->
+        <ScrollViewer>
             <StackPanel>
-                <Grid ColumnDefinitions="*,Auto" Margin="0,8,0,0">
-                    <TextBlock Grid.Column="0" Text="iOS" Classes="section"
-                               IsVisible="{Binding IosLanes.Count}" />
-                    <Button Grid.Column="1" Content="Refresh store status"
-                            Command="{Binding RefreshStoreStatusCommand}"
-                            VerticalAlignment="Center" />
+                <!-- Detail header -->
+                <Grid ColumnDefinitions="Auto,16,*" Margin="20,20,20,18">
+                    <Border Grid.Column="0" Width="64" Height="64"
+                            CornerRadius="{DynamicResource IconRadiusXl}"
+                            ClipToBounds="True" VerticalAlignment="Center"
+                            BoxShadow="0 2 5 0 #2E000000">
+                        <Panel>
+                            <Panel IsVisible="{Binding Project.IconPath, Converter={x:Static ObjectConverters.IsNull}}">
+                                <Panel.Background>
+                                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                                        <GradientStop Offset="0" Color="#3DBE8B" />
+                                        <GradientStop Offset="1" Color="#1E8E64" />
+                                    </LinearGradientBrush>
+                                </Panel.Background>
+                                <TextBlock Text="📱" FontSize="30"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Panel>
+                            <Image Stretch="UniformToFill"
+                                   Source="{Binding Project.IconPath, Converter={StaticResource PathToBitmap}}" />
+                        </Panel>
+                    </Border>
+                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Name}" FontSize="20" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource Text1Brush}" />
+                        <TextBlock FontSize="12.5" Margin="0,3,0,0"
+                                   Foreground="{DynamicResource Text2Brush}">
+                            <Run Text="{Binding Version}" />
+                            <Run Text="  ·  " />
+                            <Run Text="{Binding Project.Path}" Foreground="{DynamicResource Text3Brush}" />
+                        </TextBlock>
+                    </StackPanel>
                 </Grid>
-                <ItemsControl ItemsSource="{Binding IosLanes}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="vm:LaneViewModel">
-                            <Border Classes="lane">
-                                <Grid ColumnDefinitions="*,Auto">
-                                    <StackPanel Grid.Column="0" Spacing="2">
-                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
-                                        <TextBlock Text="{Binding Description}" Opacity="0.7"
-                                                   FontSize="12" TextWrapping="Wrap" />
-                                        <StackPanel Orientation="Horizontal" Spacing="8"
-                                                    IsVisible="{Binding HasStore}">
-                                            <TextBlock Text="{Binding StoreLine}" FontSize="12"
-                                                       Foreground="#4EC9B0" FontWeight="SemiBold" />
-                                            <TextBlock Text="{Binding StoreSecondary}" FontSize="12"
-                                                       Opacity="0.7"
-                                                       IsVisible="{Binding StoreSecondary,
-                                                           Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
-                                        </StackPanel>
-                                        <TextBlock Text="store status unavailable" FontSize="11"
-                                                   Opacity="0.45" FontStyle="Italic"
-                                                   IsVisible="{Binding StoreUnavailable}" />
-                                    </StackPanel>
-                                    <Button Grid.Column="1" Content="Run"
-                                            VerticalAlignment="Center"
-                                            Command="{Binding $parent[ItemsControl].((vm:ProjectDetailViewModel)DataContext).RunLaneCommand}"
-                                            CommandParameter="{Binding}"
-                                            IsEnabled="{Binding $parent[ItemsControl].((vm:ProjectDetailViewModel)DataContext).CanRunIos}" />
-                                </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
 
-                <TextBlock Text="Android" Classes="section"
-                           IsVisible="{Binding AndroidLanes.Count}" />
-                <ItemsControl ItemsSource="{Binding AndroidLanes}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="vm:LaneViewModel">
-                            <Border Classes="lane">
-                                <Grid ColumnDefinitions="*,Auto">
-                                    <StackPanel Grid.Column="0" Spacing="2">
-                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
-                                        <TextBlock Text="{Binding Description}" Opacity="0.7"
-                                                   FontSize="12" TextWrapping="Wrap" />
-                                        <StackPanel Orientation="Horizontal" Spacing="8"
-                                                    IsVisible="{Binding HasStore}">
-                                            <TextBlock Text="{Binding StoreLine}" FontSize="12"
-                                                       Foreground="#4EC9B0" FontWeight="SemiBold" />
-                                            <TextBlock Text="{Binding StoreSecondary}" FontSize="12"
-                                                       Opacity="0.7"
-                                                       IsVisible="{Binding StoreSecondary,
-                                                           Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
-                                        </StackPanel>
-                                        <TextBlock Text="store status unavailable" FontSize="11"
-                                                   Opacity="0.45" FontStyle="Italic"
-                                                   IsVisible="{Binding StoreUnavailable}" />
-                                    </StackPanel>
-                                    <Button Grid.Column="1" Content="Run"
-                                            VerticalAlignment="Center"
-                                            Command="{Binding $parent[ItemsControl].((vm:ProjectDetailViewModel)DataContext).RunLaneCommand}"
-                                            CommandParameter="{Binding}"
-                                            IsEnabled="{Binding $parent[ItemsControl].((vm:ProjectDetailViewModel)DataContext).CanRunAndroid}" />
-                                </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                <!-- Warning banner -->
+                <Border Classes="banner" Margin="20,0,20,0"
+                        IsVisible="{Binding HasMissingSecrets}">
+                    <Grid ColumnDefinitions="Auto,11,*,Auto">
+                        <TextBlock Grid.Column="0" Text="⚠" FontSize="16"
+                                   Foreground="{DynamicResource WarnTextBrush}"
+                                   VerticalAlignment="Center" />
+                        <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                            <TextBlock FontSize="12.5" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource WarnTextBrush}">
+                                <Run Text="{Binding MissingSecrets.Count}" />
+                                <Run Text=" secret(s) needed before iOS lanes can run:" />
+                            </TextBlock>
+                            <ItemsControl ItemsSource="{Binding MissingSecrets}" Margin="0,6,0,0">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="x:String">
+                                        <Border Classes="code-chip">
+                                            <TextBlock Text="{Binding}" />
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                        <Button Grid.Column="3" Classes="outline" Content="Add secrets…"
+                                Click="OnAddSecrets" VerticalAlignment="Center" Margin="11,0,0,0" />
+                    </Grid>
+                </Border>
+
+                <!-- Lane groups -->
+                <StackPanel Margin="20,18,20,4">
+                    <!-- iOS -->
+                    <StackPanel Margin="0,0,0,18" IsVisible="{Binding IosLanes.Count}">
+                        <Grid ColumnDefinitions="Auto,8,Auto,*,Auto" Margin="4,0,4,9">
+                            <Border Grid.Column="0" Width="9" Height="9" CornerRadius="2"
+                                    Background="{DynamicResource Text2Brush}" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="2" Classes="group-title" Text="iOS" />
+                            <TextBlock Grid.Column="4" Text="{Binding IosLanes.Count, StringFormat='{}{0} lanes'}"
+                                       FontSize="11" Foreground="{DynamicResource Text3Brush}"
+                                       VerticalAlignment="Center" />
+                        </Grid>
+                        <Border Classes="lane-list">
+                            <ItemsControl ItemsSource="{Binding IosLanes}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:LaneViewModel">
+                                        <Border Classes="lane">
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <StackPanel Grid.Column="0">
+                                                    <StackPanel Orientation="Horizontal" Spacing="9">
+                                                        <TextBlock Classes="lane-name" Text="{Binding Name}"
+                                                                   VerticalAlignment="Center" />
+                                                        <Border Classes="lane-tag" IsVisible="{Binding IsRelease}">
+                                                            <TextBlock Text="RELEASE" />
+                                                        </Border>
+                                                    </StackPanel>
+                                                    <TextBlock Text="{Binding Description}" FontSize="12"
+                                                               Foreground="{DynamicResource Text2Brush}"
+                                                               TextWrapping="Wrap" Margin="0,3,0,0" />
+                                                    <!-- Store status line -->
+                                                    <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,6,0,0"
+                                                                IsVisible="{Binding HasStore}">
+                                                        <Border Width="6" Height="6" CornerRadius="3"
+                                                                VerticalAlignment="Center"
+                                                                Background="{DynamicResource GreenBrush}"
+                                                                IsVisible="{Binding !StoreAmber}" />
+                                                        <Border Width="6" Height="6" CornerRadius="3"
+                                                                VerticalAlignment="Center"
+                                                                Background="{DynamicResource AmberBrush}"
+                                                                IsVisible="{Binding StoreAmber}" />
+                                                        <TextBlock Text="store" FontSize="11.5"
+                                                                   Foreground="{DynamicResource Text3Brush}"
+                                                                   VerticalAlignment="Center" />
+                                                        <TextBlock Text="{Binding StoreLine}" FontSize="11.5"
+                                                                   Foreground="{DynamicResource Text2Brush}"
+                                                                   VerticalAlignment="Center" />
+                                                        <TextBlock Text="{Binding StoreSecondary}" FontSize="11.5"
+                                                                   Foreground="{DynamicResource Text3Brush}"
+                                                                   VerticalAlignment="Center"
+                                                                   IsVisible="{Binding StoreSecondary,
+                                                                       Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                                    </StackPanel>
+                                                    <TextBlock Text="store status unavailable" FontSize="11"
+                                                               Foreground="{DynamicResource Text3Brush}"
+                                                               FontStyle="Italic" Margin="0,6,0,0"
+                                                               IsVisible="{Binding StoreUnavailable}" />
+                                                </StackPanel>
+                                                <Button Grid.Column="1" Classes="accent" Content="▶ Run"
+                                                        VerticalAlignment="Center" Margin="14,0,0,0"
+                                                        Command="{Binding $parent[ItemsControl].((vm:ProjectDetailViewModel)DataContext).RunLaneCommand}"
+                                                        CommandParameter="{Binding}"
+                                                        IsEnabled="{Binding $parent[ItemsControl].((vm:ProjectDetailViewModel)DataContext).CanRunIos}" />
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- Android -->
+                    <StackPanel Margin="0,0,0,18" IsVisible="{Binding AndroidLanes.Count}">
+                        <Grid ColumnDefinitions="Auto,8,Auto,*,Auto" Margin="4,0,4,9">
+                            <Border Grid.Column="0" Width="9" Height="9" CornerRadius="2"
+                                    Background="{DynamicResource GreenBrush}" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="2" Classes="group-title" Text="Android" />
+                            <TextBlock Grid.Column="4" Text="{Binding AndroidLanes.Count, StringFormat='{}{0} lanes'}"
+                                       FontSize="11" Foreground="{DynamicResource Text3Brush}"
+                                       VerticalAlignment="Center" />
+                        </Grid>
+                        <Border Classes="lane-list">
+                            <ItemsControl ItemsSource="{Binding AndroidLanes}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:LaneViewModel">
+                                        <Border Classes="lane">
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <StackPanel Grid.Column="0">
+                                                    <StackPanel Orientation="Horizontal" Spacing="9">
+                                                        <TextBlock Classes="lane-name" Text="{Binding Name}"
+                                                                   VerticalAlignment="Center" />
+                                                        <Border Classes="lane-tag" IsVisible="{Binding IsRelease}">
+                                                            <TextBlock Text="RELEASE" />
+                                                        </Border>
+                                                    </StackPanel>
+                                                    <TextBlock Text="{Binding Description}" FontSize="12"
+                                                               Foreground="{DynamicResource Text2Brush}"
+                                                               TextWrapping="Wrap" Margin="0,3,0,0" />
+                                                    <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,6,0,0"
+                                                                IsVisible="{Binding HasStore}">
+                                                        <Border Width="6" Height="6" CornerRadius="3"
+                                                                VerticalAlignment="Center"
+                                                                Background="{DynamicResource GreenBrush}"
+                                                                IsVisible="{Binding !StoreAmber}" />
+                                                        <Border Width="6" Height="6" CornerRadius="3"
+                                                                VerticalAlignment="Center"
+                                                                Background="{DynamicResource AmberBrush}"
+                                                                IsVisible="{Binding StoreAmber}" />
+                                                        <TextBlock Text="store" FontSize="11.5"
+                                                                   Foreground="{DynamicResource Text3Brush}"
+                                                                   VerticalAlignment="Center" />
+                                                        <TextBlock Text="{Binding StoreLine}" FontSize="11.5"
+                                                                   Foreground="{DynamicResource Text2Brush}"
+                                                                   VerticalAlignment="Center" />
+                                                        <TextBlock Text="{Binding StoreSecondary}" FontSize="11.5"
+                                                                   Foreground="{DynamicResource Text3Brush}"
+                                                                   VerticalAlignment="Center"
+                                                                   IsVisible="{Binding StoreSecondary,
+                                                                       Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                                    </StackPanel>
+                                                    <TextBlock Text="store status unavailable" FontSize="11"
+                                                               Foreground="{DynamicResource Text3Brush}"
+                                                               FontStyle="Italic" Margin="0,6,0,0"
+                                                               IsVisible="{Binding StoreUnavailable}" />
+                                                </StackPanel>
+                                                <Button Grid.Column="1" Classes="accent" Content="▶ Run"
+                                                        VerticalAlignment="Center" Margin="14,0,0,0"
+                                                        Command="{Binding $parent[ItemsControl].((vm:ProjectDetailViewModel)DataContext).RunLaneCommand}"
+                                                        CommandParameter="{Binding}"
+                                                        IsEnabled="{Binding $parent[ItemsControl].((vm:ProjectDetailViewModel)DataContext).CanRunAndroid}" />
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Border>
+                    </StackPanel>
+                </StackPanel>
             </StackPanel>
         </ScrollViewer>
     </DockPanel>

@@ -7,109 +7,96 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="500"
              x:Class="LaunchFast.App.Views.LauncherView"
              x:DataType="vm:LauncherViewModel"
-             x:CompileBindings="True">
+             x:CompileBindings="True"
+             Background="{DynamicResource Surface0Brush}">
 
     <UserControl.Resources>
         <conv:PathToBitmapConverter x:Key="PathToBitmap" />
     </UserControl.Resources>
 
-    <UserControl.Styles>
-        <!-- Badge pill -->
-        <Style Selector="Border.badge">
-            <Setter Property="CornerRadius" Value="8" />
-            <Setter Property="Padding" Value="8,2" />
-            <Setter Property="Margin" Value="0,0,6,0" />
-            <Setter Property="VerticalAlignment" Value="Center" />
-        </Style>
-        <Style Selector="Border.badge > TextBlock">
-            <Setter Property="FontSize" Value="11" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Foreground" Value="White" />
-        </Style>
-        <Style Selector="Border.ios">
-            <Setter Property="Background" Value="#0A84FF" />
-        </Style>
-        <Style Selector="Border.android">
-            <Setter Property="Background" Value="#3DDC84" />
-        </Style>
-        <Style Selector="Border.match">
-            <Setter Property="Background" Value="#8E8E93" />
-        </Style>
-        <Style Selector="Button.card">
-            <Setter Property="Width" Value="200" />
-            <Setter Property="Margin" Value="10" />
-            <Setter Property="Padding" Value="16" />
-            <Setter Property="CornerRadius" Value="12" />
-            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource SystemControlForegroundBaseLowBrush}" />
-            <Setter Property="BorderThickness" Value="1" />
-        </Style>
-    </UserControl.Styles>
-
     <DockPanel>
         <!-- Toolbar -->
-        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal"
-                    Spacing="8" Margin="16,16,16,8">
-            <Button Content="Open project…" Click="OnOpenProject" />
-            <Button Content="Register workspace…" Click="OnRegisterWorkspace" />
-        </StackPanel>
+        <Border DockPanel.Dock="Top"
+                Background="{DynamicResource Surface1Brush}"
+                BorderBrush="{DynamicResource SeparatorBrush}"
+                BorderThickness="0,0,0,1">
+            <Grid ColumnDefinitions="Auto,Auto,*,Auto" Margin="16,11">
+                <Button Grid.Column="0" Classes="btn" Content="Open project…"
+                        Click="OnOpenProject" Margin="0,0,10,0" />
+                <Button Grid.Column="1" Classes="btn" Content="Register workspace…"
+                        Click="OnRegisterWorkspace" />
+                <TextBlock Grid.Column="3" Classes="count-pill"
+                           Text="{Binding Cards.Count, StringFormat='{}{0} projects'}" />
+            </Grid>
+        </Border>
 
+        <!-- Card grid -->
         <ScrollViewer>
-            <ItemsControl ItemsSource="{Binding Cards}" Margin="6">
+            <ItemsControl ItemsSource="{Binding Cards}" Margin="20,20,20,24">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <WrapPanel Orientation="Horizontal" />
+                        <UniformGrid Columns="2" />
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="vm:ProjectCardViewModel">
-                        <Button Classes="card"
+                        <Button Classes="card" Margin="7"
                                 Command="{Binding $parent[ItemsControl].((vm:LauncherViewModel)DataContext).OpenDetailCommand}"
                                 CommandParameter="{Binding}">
-                            <StackPanel Spacing="8">
-                                <!-- Icon tile -->
-                                <Border Width="72" Height="72"
-                                        CornerRadius="16"
-                                        HorizontalAlignment="Center"
-                                        Background="{DynamicResource SystemControlBackgroundBaseLowBrush}">
-                                    <Panel>
-                                        <!-- Fallback glyph shown when no icon -->
-                                        <TextBlock Text="📱" FontSize="32"
-                                                   HorizontalAlignment="Center"
-                                                   VerticalAlignment="Center"
-                                                   IsVisible="{Binding IconPath, Converter={x:Static ObjectConverters.IsNull}}" />
-                                        <Image Width="64" Height="64"
-                                               Stretch="UniformToFill"
-                                               Source="{Binding IconPath, Converter={StaticResource PathToBitmap}}" />
-                                    </Panel>
-                                </Border>
-
-                                <TextBlock Text="{Binding Name}"
-                                           FontWeight="SemiBold" FontSize="15"
-                                           TextAlignment="Center"
-                                           TextTrimming="CharacterEllipsis"
-                                           HorizontalAlignment="Center" />
-
-                                <TextBlock Text="{Binding Version}"
-                                           Opacity="0.7" FontSize="12"
-                                           TextAlignment="Center"
-                                           HorizontalAlignment="Center"
-                                           IsVisible="{Binding Version, Converter={x:Static ObjectConverters.IsNotNull}}" />
-
-                                <!-- Badge pills -->
-                                <WrapPanel HorizontalAlignment="Center">
-                                    <Border Classes="badge ios" IsVisible="{Binding HasIos}">
-                                        <TextBlock Text="iOS" />
+                            <Border Classes="card-surface">
+                                <Grid ColumnDefinitions="Auto,14,*">
+                                    <!-- Squircle app icon (56px) -->
+                                    <Border Grid.Column="0" Width="56" Height="56"
+                                            CornerRadius="{DynamicResource IconRadiusLg}"
+                                            ClipToBounds="True" VerticalAlignment="Top"
+                                            BoxShadow="0 2 5 0 #2E000000">
+                                        <Panel>
+                                            <!-- Gradient squircle fallback -->
+                                            <Panel IsVisible="{Binding IconPath, Converter={x:Static ObjectConverters.IsNull}}">
+                                                <Panel.Background>
+                                                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                                                        <GradientStop Offset="0" Color="#3DBE8B" />
+                                                        <GradientStop Offset="1" Color="#1E8E64" />
+                                                    </LinearGradientBrush>
+                                                </Panel.Background>
+                                                <TextBlock Text="📱" FontSize="26"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center" />
+                                            </Panel>
+                                            <Image Stretch="UniformToFill"
+                                                   Source="{Binding IconPath, Converter={StaticResource PathToBitmap}}" />
+                                        </Panel>
                                     </Border>
-                                    <Border Classes="badge android" IsVisible="{Binding HasAndroid}">
-                                        <TextBlock Text="Android" />
-                                    </Border>
-                                    <Border Classes="badge match" IsVisible="{Binding HasMatch}">
-                                        <TextBlock Text="match" />
-                                    </Border>
-                                </WrapPanel>
-                            </StackPanel>
+
+                                    <!-- Body -->
+                                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Name}"
+                                                   FontSize="15" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource Text1Brush}"
+                                                   TextTrimming="CharacterEllipsis" />
+                                        <TextBlock FontSize="12" Margin="0,3,0,0"
+                                                   Foreground="{DynamicResource Text2Brush}"
+                                                   TextTrimming="CharacterEllipsis">
+                                            <Run Text="{Binding Version}" />
+                                            <Run Text=" · " />
+                                            <Run Text="{Binding Project.Path}" />
+                                        </TextBlock>
+
+                                        <!-- Badges -->
+                                        <WrapPanel Margin="0,11,0,0">
+                                            <Border Classes="badge" IsVisible="{Binding HasIos}">
+                                                <TextBlock Text="iOS" />
+                                            </Border>
+                                            <Border Classes="badge" IsVisible="{Binding HasAndroid}">
+                                                <TextBlock Text="Android" />
+                                            </Border>
+                                            <Border Classes="badge ok" IsVisible="{Binding HasMatch}">
+                                                <TextBlock Text="match ✓" />
+                                            </Border>
+                                        </WrapPanel>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
                         </Button>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
