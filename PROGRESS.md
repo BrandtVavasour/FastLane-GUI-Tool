@@ -98,8 +98,9 @@ Goal: cover most of fastlane via per-project section screens. Built as shells no
 - 🔨 **Make-real passes for the 4 iOS shells** (turn illustrative data into real disk/API reads):
   ✅ **Screenshots — REAL** (`SnapshotConfigReader`: Snapfile devices/languages/scheme/launch-args +
   Framefile + captured screenshots from disk; only the framed-preview mock stays illustrative).
-  ⬜ Build & Test (gym/scan config + test results) · ⬜ Signing iOS (provisioning profiles + certs) ·
-  ⬜ TestFlight (ASC builds/testers) — next.
+  ✅ **Build & Test — REAL** (`BuildTestConfigReader`: Gymfile/Scanfile + Fastfile build_app/run_tests
+  args + JUnit test-results parse; honest empty state; nothing illustrative remains).
+  ⬜ Signing iOS (Matchfile + provisioning profiles + `security` certs) · ⬜ TestFlight (ASC builds/testers) — next.
 
 ## UI design
 - ✅ **macOS-native restyle** from a Claude Design handoff (`LaunchFast.html`): tokenised
