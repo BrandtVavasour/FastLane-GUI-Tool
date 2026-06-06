@@ -22,3 +22,6 @@ deploy-env.sh
 *.pem
 *-key.json
 secrets/
+
+# brainstorming visual companion mockups
+.superpowers/
