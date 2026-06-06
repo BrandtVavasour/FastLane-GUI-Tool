@@ -46,6 +46,27 @@ public class ProjectScannerTests
     }
 
     [Test]
+    public void Flutter_project_without_fastlane_is_a_setup_candidate()
+    {
+        var root = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(Path.Combine(root, "ios"));
+        Directory.CreateDirectory(Path.Combine(root, "android"));
+        File.WriteAllText(Path.Combine(root, "pubspec.yaml"), "name: demo\nversion: 1.0.0+1\n");
+        var p = ProjectScanner.TryScanRoot(root);
+        Assert.That(p, Is.Not.Null);
+        Assert.That(p!.HasFastlane, Is.False);
+        Assert.That(p.Version, Is.EqualTo("1.0.0+1"));
+    }
+
+    [Test]
+    public void Non_flutter_non_fastlane_dir_is_null()
+    {
+        var root = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        Assert.That(ProjectScanner.TryScanRoot(root), Is.Null);
+    }
+
+    [Test]
     public void ScanWorkspace_returns_only_flutter_projects()
     {
         var workspace = Path.Combine(Path.GetTempPath(), "lf-ws-" + Guid.NewGuid().ToString("N"));

@@ -11,7 +11,12 @@ public static class ProjectScanner
         var androidFl = Path.Combine(root, "android", "fastlane");
         bool hasIos = Directory.Exists(iosFl);
         bool hasAndroid = Directory.Exists(androidFl);
-        if (!hasIos && !hasAndroid) return null;
+
+        bool isFlutterCandidate =
+            File.Exists(Path.Combine(root, "pubspec.yaml")) &&
+            (Directory.Exists(Path.Combine(root, "ios")) || Directory.Exists(Path.Combine(root, "android")));
+
+        if (!hasIos && !hasAndroid && !isFlutterCandidate) return null;
 
         var version = ReadPubspecVersion(Path.Combine(root, "pubspec.yaml"));
         bool match = File.Exists(Path.Combine(iosFl, "Matchfile"));
