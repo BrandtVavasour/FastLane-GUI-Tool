@@ -47,6 +47,9 @@ public partial class RunHistorySectionViewModel : ObservableObject
 
     public ObservableCollection<RunHistoryRowViewModel> Rows { get; }
 
+    /// <summary>The project identifier used to scope history records.</summary>
+    public string ProjectId => _projectId;
+
     // ---- stats ---------------------------------------------------------------
 
     [ObservableProperty] private string _runsLast30Days = "0";
@@ -78,6 +81,13 @@ public partial class RunHistorySectionViewModel : ObservableObject
 
     /// <summary>Result of the last Export logs action (or null when not yet run).</summary>
     [ObservableProperty] private string? _exportStatus;
+
+    /// <summary>
+    /// Optional callback set by the view so it can open a native save-as dialog and then
+    /// call <see cref="WriteExport"/> with the chosen path.  When null the command falls
+    /// back to writing straight to a temp file (useful in tests / headless contexts).
+    /// </summary>
+    public Action? RequestExport { get; set; }
 
     // ---- loading -------------------------------------------------------------
 
@@ -155,40 +165,76 @@ public partial class RunHistorySectionViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Writes the output tails of the currently-visible rows to a text file under a
-    /// temp exports directory and records the resulting path in <see cref="ExportStatus"/>.
-    /// Best-effort — a failure surfaces a message rather than throwing.
+    /// Produces the export text for the currently-visible rows: a header block per row
+    /// with lane / status / when / duration followed by the output tail.
+    /// Returns a header-only string when there are no rows.
+    /// Pure — no I/O, safe to call in tests.
     /// </summary>
-    [RelayCommand]
-    void ExportLogs()
+    public string BuildExportContent()
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("LaunchFast Run History Export");
+        sb.AppendLine($"Generated: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC");
+        sb.AppendLine();
+
+        if (Rows.Count == 0)
+        {
+            sb.AppendLine("(no runs match the current filter)");
+            return sb.ToString();
+        }
+
+        foreach (var row in Rows)
+        {
+            sb.AppendLine($"=== {row.LaneLabel} · {row.StatusText} · {row.WhenText} · {row.DurationText} ===");
+            sb.AppendLine(row.OutputTail);
+            sb.AppendLine();
+        }
+
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// Writes <see cref="BuildExportContent"/> to <paramref name="path"/> and updates
+    /// <see cref="ExportStatus"/> with a success or failure message.
+    /// </summary>
+    public void WriteExport(string path)
     {
         try
         {
-            if (Rows.Count == 0)
-            {
-                ExportStatus = "Nothing to export.";
-                return;
-            }
-
-            var dir = Path.Combine(Path.GetTempPath(), "launchfast-exports");
-            Directory.CreateDirectory(dir);
-            var path = Path.Combine(dir, $"run-logs-{DateTime.UtcNow:yyyyMMdd-HHmmss}.txt");
-
-            var sb = new StringBuilder();
-            foreach (var row in Rows)
-            {
-                sb.AppendLine($"=== {row.LaneLabel} · {row.StatusText} · {row.WhenText} ===");
-                sb.AppendLine(row.OutputTail);
-                sb.AppendLine();
-            }
-
-            File.WriteAllText(path, sb.ToString());
+            File.WriteAllText(path, BuildExportContent());
             ExportStatus = $"Exported {Rows.Count} run(s) → {path}";
         }
         catch (Exception ex)
         {
             ExportStatus = $"Export failed: {ex.Message}";
         }
+    }
+
+    /// <summary>
+    /// Invokes <see cref="RequestExport"/> so the view can open a native save-as dialog
+    /// and subsequently call <see cref="WriteExport"/>.  If no callback is registered
+    /// (headless / tests) the export is written directly to a temp file.
+    /// </summary>
+    [RelayCommand]
+    void ExportLogs()
+    {
+        if (RequestExport is not null)
+        {
+            RequestExport();
+            return;
+        }
+
+        // Fallback for headless contexts: write to temp dir.
+        if (Rows.Count == 0)
+        {
+            ExportStatus = "Nothing to export.";
+            return;
+        }
+
+        var dir = Path.Combine(Path.GetTempPath(), "launchfast-exports");
+        Directory.CreateDirectory(dir);
+        var path = Path.Combine(dir, $"run-logs-{DateTime.UtcNow:yyyyMMdd-HHmmss}.txt");
+        WriteExport(path);
     }
 }
 

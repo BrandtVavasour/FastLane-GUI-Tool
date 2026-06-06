@@ -161,8 +161,124 @@ public class RunHistorySectionViewModelTests
             tail: "built ipa"));
 
         var vm = new RunHistorySectionViewModel(store, proj, nowUtc: () => now);
+        // No RequestExport registered → falls back to temp-dir write.
         vm.ExportLogsCommand.Execute(null);
 
         Assert.That(vm.ExportStatus, Does.StartWith("Exported"));
     }
+
+    // ---- BuildExportContent ---------------------------------------------------
+
+    [Test]
+    public void BuildExportContent_returns_header_only_when_no_rows()
+    {
+        var store = new RunHistoryStore(TempDir());
+        var vm = new RunHistorySectionViewModel(store, "/projects/empty-export",
+            nowUtc: () => DateTime.UtcNow);
+
+        var content = vm.BuildExportContent();
+
+        Assert.That(content, Does.Contain("LaunchFast Run History Export"));
+        Assert.That(content, Does.Contain("(no runs match the current filter)"));
+    }
+
+    [Test]
+    public void BuildExportContent_contains_lane_status_when_and_duration_for_each_row()
+    {
+        var store = new RunHistoryStore(TempDir());
+        const string proj = "/projects/build-export";
+        var now = new DateTime(2026, 6, 1, 12, 0, 0, DateTimeKind.Utc);
+
+        store.Append(proj, Record("beta", RunStatus.Succeeded, now.AddMinutes(-5),
+            TimeSpan.FromSeconds(107), tail: "built ipa"));
+        store.Append(proj, Record("release", RunStatus.Failed, now.AddDays(-1),
+            TimeSpan.FromSeconds(38), tail: "sign failed"));
+
+        var vm = new RunHistorySectionViewModel(store, proj, nowUtc: () => now);
+
+        var content = vm.BuildExportContent();
+
+        // Header present
+        Assert.That(content, Does.Contain("LaunchFast Run History Export"));
+
+        // Row for "beta"
+        Assert.That(content, Does.Contain("ios beta"));
+        Assert.That(content, Does.Contain("Succeeded"));
+        Assert.That(content, Does.Contain("built ipa"));
+        Assert.That(content, Does.Contain("1m 47s"));
+
+        // Row for "release"
+        Assert.That(content, Does.Contain("ios release"));
+        Assert.That(content, Does.Contain("Failed"));
+        Assert.That(content, Does.Contain("sign failed"));
+        Assert.That(content, Does.Contain("38s"));
+    }
+
+    [Test]
+    public void BuildExportContent_respects_active_filter()
+    {
+        var store = new RunHistoryStore(TempDir());
+        const string proj = "/projects/filter-export";
+        var now = new DateTime(2026, 6, 1, 12, 0, 0, DateTimeKind.Utc);
+
+        store.Append(proj, Record("beta", RunStatus.Succeeded, now.AddMinutes(-1),
+            TimeSpan.FromSeconds(10), tail: "beta output"));
+        store.Append(proj, Record("release", RunStatus.Failed, now.AddMinutes(-2),
+            TimeSpan.FromSeconds(20), tail: "release output"));
+
+        var vm = new RunHistorySectionViewModel(store, proj, nowUtc: () => now);
+        vm.SelectedLaneFilter = "ios beta";
+
+        var content = vm.BuildExportContent();
+
+        Assert.That(content, Does.Contain("beta output"));
+        Assert.That(content, Does.Not.Contain("release output"));
+    }
+
+    // ---- WriteExport ----------------------------------------------------------
+
+    [Test]
+    public void WriteExport_writes_content_to_the_given_path_and_sets_success_status()
+    {
+        var store = new RunHistoryStore(TempDir());
+        const string proj = "/projects/write-export";
+        var now = new DateTime(2026, 6, 1, 12, 0, 0, DateTimeKind.Utc);
+
+        store.Append(proj, Record("beta", RunStatus.Succeeded, now, TimeSpan.FromSeconds(10),
+            tail: "all good"));
+
+        var vm = new RunHistorySectionViewModel(store, proj, nowUtc: () => now);
+
+        var dest = Path.Combine(TempDir(), "out.txt");
+        Directory.CreateDirectory(Path.GetDirectoryName(dest)!);
+
+        vm.WriteExport(dest);
+
+        Assert.That(File.Exists(dest), Is.True);
+        var written = File.ReadAllText(dest);
+        Assert.That(written, Does.Contain("all good"));
+        Assert.That(vm.ExportStatus, Does.StartWith("Exported"));
+        Assert.That(vm.ExportStatus, Does.Contain(dest));
+    }
+
+    [Test]
+    public void WriteExport_sets_failure_status_when_path_is_invalid()
+    {
+        var store = new RunHistoryStore(TempDir());
+        const string proj = "/projects/write-fail";
+        var now = new DateTime(2026, 6, 1, 12, 0, 0, DateTimeKind.Utc);
+        store.Append(proj, Record("beta", RunStatus.Succeeded, now, TimeSpan.FromSeconds(10)));
+
+        var vm = new RunHistorySectionViewModel(store, proj, nowUtc: () => now);
+
+        // A path to a non-existent nested directory should cause an IOException.
+        var badPath = Path.Combine(TempDir(), "nonexistent", "subdir", "out.txt");
+        vm.WriteExport(badPath);
+
+        Assert.That(vm.ExportStatus, Does.StartWith("Export failed:"));
+    }
+
+    // NOTE: The save-as file picker (StorageProvider / TopLevel) is Avalonia view-layer
+    // and requires a real window host, so it is not tested here.  The picker lives
+    // in RunHistorySectionView.axaml.cs and drives WriteExport after the user picks a path.
 }
