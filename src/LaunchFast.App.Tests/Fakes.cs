@@ -52,8 +52,18 @@ public sealed class RecordingPtyFactory : IPtyFactory
     public string? Command { get; private set; }
     public string[]? Args { get; private set; }
     public string? Cwd { get; private set; }
+    /// <summary>Alias for <see cref="Cwd"/> — the working directory of the last Start call.</summary>
+    public string? LastCwd => Cwd;
     public IReadOnlyDictionary<string, string>? Env { get; private set; }
     public FakeProcess? Last { get; private set; }
+    public int StartCount { get; private set; }
+
+    /// <summary>
+    /// When true, each <see cref="FakeProcess"/> fires <c>Exited</c> immediately
+    /// when the first subscriber registers on its <c>Exited</c> event.
+    /// Use this for tests where <c>ApplyAsync</c> is awaited directly.
+    /// </summary>
+    public bool AutoComplete { get; init; }
 
     public IPtyProcess Start(string command, string[] args, string cwd,
         IReadOnlyDictionary<string, string> env)
@@ -62,7 +72,8 @@ public sealed class RecordingPtyFactory : IPtyFactory
         Args = args;
         Cwd = cwd;
         Env = env;
-        Last = new FakeProcess();
+        Last = new FakeProcess(AutoComplete);
+        StartCount++;
         return Last;
     }
 
@@ -72,14 +83,33 @@ public sealed class RecordingPtyFactory : IPtyFactory
 
 public sealed class FakeProcess : IPtyProcess
 {
+    readonly bool _autoComplete;
+    Action<int>? _exited;
+
+    public FakeProcess(bool autoComplete = false) => _autoComplete = autoComplete;
+
     public event Action<string>? OutputReceived;
-    public event Action<int>? Exited;
+
+    /// <summary>
+    /// When constructed with <c>autoComplete: true</c>, fires <c>Exited(0)</c>
+    /// immediately upon subscription so the awaiting TCS resolves without manual driving.
+    /// </summary>
+    public event Action<int>? Exited
+    {
+        add
+        {
+            _exited += value;
+            if (_autoComplete) value?.Invoke(0);
+        }
+        remove => _exited -= value;
+    }
+
     public bool Killed { get; private set; }
     public string? LastInput { get; private set; }
 
     public void Emit(string line) => OutputReceived?.Invoke(line);
-    public void Finish(int code) => Exited?.Invoke(code);
+    public void Finish(int code) => _exited?.Invoke(code);
     public void Write(string input) => LastInput = input;
-    public void Kill() { Killed = true; Exited?.Invoke(-1); }
+    public void Kill() { Killed = true; _exited?.Invoke(-1); }
     public void Dispose() { }
 }
