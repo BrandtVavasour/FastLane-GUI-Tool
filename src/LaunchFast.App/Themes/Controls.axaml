@@ -5,6 +5,49 @@
          LaunchFast · control themes / style classes mapping the design tokens.
          ======================================================================== -->
 
+    <Styles.Resources>
+        <!-- .tgl ToggleSwitch — 38x22 pill track, 18px white thumb, green when on,
+             no on/off labels. Avalonia's default ToggleSwitch sizes its track from
+             On/OffContent, so the template is fully custom with a fixed-size knob. -->
+        <ControlTheme x:Key="TglSwitchTheme" TargetType="ToggleSwitch">
+            <Setter Property="OnContent" Value="{x:Null}" />
+            <Setter Property="OffContent" Value="{x:Null}" />
+            <Setter Property="Foreground" Value="{DynamicResource Text1Brush}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Width="38" Height="22"
+                            Name="OuterBorder"
+                            CornerRadius="11"
+                            Background="{DynamicResource SegTrackBrush}">
+                        <Panel Name="PART_MovingKnobs"
+                               HorizontalAlignment="Left"
+                               VerticalAlignment="Center"
+                               Margin="2,0,0,0">
+                            <Ellipse Name="SwitchKnob"
+                                     Width="18" Height="18"
+                                     Fill="White">
+                                <Ellipse.Effect>
+                                    <DropShadowEffect Color="#4D000000" BlurRadius="2"
+                                                      OffsetX="0" OffsetY="1" />
+                                </Ellipse.Effect>
+                            </Ellipse>
+                        </Panel>
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+            <Style Selector="^:checked /template/ Border#OuterBorder">
+                <Setter Property="Background" Value="{DynamicResource GreenBrush}" />
+            </Style>
+            <Style Selector="^:checked /template/ Panel#PART_MovingKnobs">
+                <Setter Property="Margin" Value="18,0,0,0" />
+            </Style>
+            <Style Selector="^:disabled">
+                <Setter Property="Opacity" Value="0.4" />
+            </Style>
+        </ControlTheme>
+    </Styles.Resources>
+
     <!-- Buttons -->
     <!-- Base toolbar/secondary button (.btn) -->
     <Style Selector="Button.btn">
@@ -235,6 +278,423 @@
                 </KeyFrame>
             </Animation>
         </Style.Animations>
+    </Style>
+
+    <!-- ====================================================================
+         Fastlane-expansion reusable atoms (Signing / Secrets / TestFlight /
+         Screenshots / Build & Test). Foundational styling only.
+         ==================================================================== -->
+
+    <!-- Button: ghost (.btn.ghost) — transparent, accent text -->
+    <Style Selector="Button.btn.ghost">
+        <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+    <Style Selector="Button.btn.ghost /template/ ContentPresenter">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+    <Style Selector="Button.btn.ghost:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource HoverFillBrush}" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+
+    <!-- Button: red (.btn.red) — tinted red bg, red text, red-ish border -->
+    <Style Selector="Button.btn.red">
+        <Setter Property="Foreground" Value="#FF6B63" />
+        <Setter Property="Background" Value="{DynamicResource TintRedBrush}" />
+        <Setter Property="BorderBrush" Value="#4DFF453A" />
+    </Style>
+    <Style Selector="Button.btn.red /template/ ContentPresenter">
+        <Setter Property="BorderBrush" Value="#4DFF453A" />
+    </Style>
+    <Style Selector="Button.btn.red:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="#33FF453A" />
+        <Setter Property="BorderBrush" Value="#4DFF453A" />
+    </Style>
+
+    <!-- Button: small (.btn.small) — tighter padding / smaller font -->
+    <Style Selector="Button.btn.small">
+        <Setter Property="FontSize" Value="11.5" />
+        <Setter Property="Padding" Value="9,4" />
+    </Style>
+
+    <!-- ============================ Segmented control ===================== -->
+    <!-- .seg — the track Border holding RadioButton.seg-item children -->
+    <Style Selector="Border.seg">
+        <Setter Property="Background" Value="{DynamicResource SegTrackBrush}" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="Padding" Value="2" />
+    </Style>
+    <!-- seg item (single-select group) — styled as a flat pill thumb -->
+    <Style Selector="RadioButton.seg-item">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontWeight" Value="Medium" />
+        <Setter Property="Foreground" Value="{DynamicResource Text2Brush}" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="Padding" Value="11,5" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Name="root"
+                        Background="{TemplateBinding Background}"
+                        CornerRadius="{TemplateBinding CornerRadius}"
+                        Padding="{TemplateBinding Padding}">
+                    <ContentPresenter Name="PART_ContentPresenter"
+                                      Content="{TemplateBinding Content}"
+                                      ContentTemplate="{TemplateBinding ContentTemplate}"
+                                      VerticalAlignment="Center"
+                                      HorizontalAlignment="Center" />
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="RadioButton.seg-item:pointerover">
+        <Setter Property="Foreground" Value="{DynamicResource Text1Brush}" />
+    </Style>
+    <!-- checked / .on = thumb -->
+    <Style Selector="RadioButton.seg-item:checked /template/ Border#root">
+        <Setter Property="Background" Value="{DynamicResource SegThumbBrush}" />
+        <Setter Property="BoxShadow" Value="0 1 2.5 0 #24000000" />
+    </Style>
+    <Style Selector="RadioButton.seg-item:checked">
+        <Setter Property="Foreground" Value="{DynamicResource Text1Brush}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="RadioButton.seg-item.on /template/ Border#root">
+        <Setter Property="Background" Value="{DynamicResource SegThumbBrush}" />
+        <Setter Property="BoxShadow" Value="0 1 2.5 0 #24000000" />
+    </Style>
+    <Style Selector="RadioButton.seg-item.on">
+        <Setter Property="Foreground" Value="{DynamicResource Text1Brush}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <!-- .seg.sm smaller variant -->
+    <Style Selector="Border.seg.sm RadioButton.seg-item">
+        <Setter Property="FontSize" Value="11.5" />
+        <Setter Property="Padding" Value="10,4" />
+    </Style>
+
+    <!-- ================================ Pills ============================= -->
+    <Style Selector="Border.pill">
+        <Setter Property="Background" Value="{DynamicResource BadgeBgBrush}" />
+        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="Padding" Value="8,3" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Border.pill > TextBlock">
+        <Setter Property="FontSize" Value="10" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="LineHeight" Value="12" />
+        <Setter Property="Foreground" Value="{DynamicResource BadgeTextBrush}" />
+        <!-- Design shows uppercase text; views supply already-uppercased content
+             (Avalonia 11.2 TextBlock has no text-transform). -->
+    </Style>
+    <Style Selector="Border.pill.ok">
+        <Setter Property="Background" Value="{DynamicResource TintGreenBrush}" />
+    </Style>
+    <Style Selector="Border.pill.ok > TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource BadgeOkTextBrush}" />
+    </Style>
+    <Style Selector="Border.pill.warn">
+        <Setter Property="Background" Value="{DynamicResource TintAmberBrush}" />
+    </Style>
+    <Style Selector="Border.pill.warn > TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource BadgeAmberTextBrush}" />
+    </Style>
+    <Style Selector="Border.pill.bad">
+        <Setter Property="Background" Value="{DynamicResource TintRedBrush}" />
+    </Style>
+    <Style Selector="Border.pill.bad > TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource BadgeBadTextBrush}" />
+    </Style>
+    <Style Selector="Border.pill.neutral">
+        <Setter Property="Background" Value="{DynamicResource BadgeBgBrush}" />
+    </Style>
+    <Style Selector="Border.pill.neutral > TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource BadgeTextBrush}" />
+    </Style>
+    <Style Selector="Border.pill.accent">
+        <Setter Property="Background" Value="{DynamicResource TintBlueBrush}" />
+    </Style>
+    <Style Selector="Border.pill.accent > TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+    </Style>
+
+    <!-- ================================ Chips ============================= -->
+    <!-- .chip — mono 11, badge bg, radius 6 -->
+    <Style Selector="Border.chip">
+        <Setter Property="Background" Value="{DynamicResource BadgeBgBrush}" />
+        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="Padding" Value="8,2" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Border.chip > TextBlock">
+        <Setter Property="FontFamily" Value="{DynamicResource MonoFontFamily}" />
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="Foreground" Value="{DynamicResource Text2Brush}" />
+    </Style>
+    <!-- .src — source label, mono 10.5, radius 5 -->
+    <Style Selector="Border.src">
+        <Setter Property="Background" Value="{DynamicResource BadgeBgBrush}" />
+        <Setter Property="CornerRadius" Value="5" />
+        <Setter Property="Padding" Value="7,2" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Border.src > TextBlock">
+        <Setter Property="FontFamily" Value="{DynamicResource MonoFontFamily}" />
+        <Setter Property="FontSize" Value="10.5" />
+        <Setter Property="Foreground" Value="{DynamicResource Text2Brush}" />
+    </Style>
+
+    <!-- ========================== List card + rows ======================= -->
+    <!-- .listcard -->
+    <Style Selector="Border.listcard">
+        <Setter Property="Background" Value="{DynamicResource CardBgBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="11" />
+        <Setter Property="ClipToBounds" Value="True" />
+    </Style>
+    <!-- .lrow — list row with bottom separator + hover -->
+    <Style Selector="Border.lrow">
+        <Setter Property="Padding" Value="15,13" />
+        <Setter Property="BorderBrush" Value="{DynamicResource SeparatorBrush}" />
+        <Setter Property="BorderThickness" Value="0,0,0,1" />
+    </Style>
+    <Style Selector="Border.lrow:pointerover">
+        <Setter Property="Background" Value="{DynamicResource HoverFillBrush}" />
+    </Style>
+    <Style Selector="Border.lrow.last">
+        <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <!-- .lic — colored icon chip 34x34 -->
+    <Style Selector="Border.lic">
+        <Setter Property="Width" Value="34" />
+        <Setter Property="Height" Value="34" />
+        <Setter Property="CornerRadius" Value="9" />
+        <Setter Property="Background" Value="{DynamicResource BadgeBgBrush}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Border.lic > TextBlock">
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Foreground" Value="{DynamicResource Text2Brush}" />
+    </Style>
+    <Style Selector="Border.lic.blue">
+        <Setter Property="Background" Value="{DynamicResource TintBlueBrush}" />
+    </Style>
+    <Style Selector="Border.lic.blue > TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+    </Style>
+    <Style Selector="Border.lic.green">
+        <Setter Property="Background" Value="{DynamicResource TintGreenBrush}" />
+    </Style>
+    <Style Selector="Border.lic.green > TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource BadgeOkTextBrush}" />
+    </Style>
+    <Style Selector="Border.lic.amber">
+        <Setter Property="Background" Value="{DynamicResource TintAmberBrush}" />
+    </Style>
+    <Style Selector="Border.lic.amber > TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource BadgeAmberTextBrush}" />
+    </Style>
+    <Style Selector="Border.lic.red">
+        <Setter Property="Background" Value="{DynamicResource TintRedBrush}" />
+    </Style>
+    <Style Selector="Border.lic.red > TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource BadgeBadTextBrush}" />
+    </Style>
+    <Style Selector="Border.lic.neutral">
+        <Setter Property="Background" Value="{DynamicResource BadgeBgBrush}" />
+    </Style>
+    <Style Selector="Border.lic.neutral > TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource Text2Brush}" />
+    </Style>
+    <!-- .ltitle / .lsub / .lmeta -->
+    <Style Selector="TextBlock.ltitle">
+        <Setter Property="FontSize" Value="13.5" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{DynamicResource Text1Brush}" />
+    </Style>
+    <Style Selector="TextBlock.ltitle.mono">
+        <Setter Property="FontFamily" Value="{DynamicResource MonoFontFamily}" />
+        <Setter Property="FontSize" Value="12.5" />
+    </Style>
+    <Style Selector="TextBlock.lsub">
+        <Setter Property="FontSize" Value="11.5" />
+        <Setter Property="Foreground" Value="{DynamicResource Text2Brush}" />
+    </Style>
+    <Style Selector="TextBlock.lmeta">
+        <Setter Property="FontSize" Value="11.5" />
+        <Setter Property="Foreground" Value="{DynamicResource Text2Brush}" />
+        <Setter Property="TextAlignment" Value="Right" />
+        <Setter Property="HorizontalAlignment" Value="Right" />
+    </Style>
+
+    <!-- ====================== Panel + definition rows ==================== -->
+    <Style Selector="Border.panel">
+        <Setter Property="Background" Value="{DynamicResource CardBgBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="11" />
+        <Setter Property="Padding" Value="14,4" />
+    </Style>
+    <!-- .dl-row — key/value definition row -->
+    <Style Selector="Border.dl-row">
+        <Setter Property="Padding" Value="0,10" />
+        <Setter Property="BorderBrush" Value="{DynamicResource SeparatorBrush}" />
+        <Setter Property="BorderThickness" Value="0,0,0,1" />
+    </Style>
+    <Style Selector="Border.dl-row.last">
+        <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style Selector="Border.dl-row TextBlock.k">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Foreground" Value="{DynamicResource Text2Brush}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Border.dl-row TextBlock.v">
+        <Setter Property="FontFamily" Value="{DynamicResource MonoFontFamily}" />
+        <Setter Property="FontSize" Value="11.5" />
+        <Setter Property="Foreground" Value="{DynamicResource Text1Brush}" />
+        <Setter Property="TextAlignment" Value="Right" />
+        <Setter Property="HorizontalAlignment" Value="Right" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <!-- ============================== Toggle switch ====================== -->
+    <!-- .tgl — 38x22 pill track, 18px white thumb, green when on, no labels.
+         Custom ControlTheme (defined in Styles.Resources below). -->
+    <!-- Apply as default ToggleSwitch look and via Classes="tgl" -->
+    <Style Selector="ToggleSwitch">
+        <Setter Property="Theme" Value="{StaticResource TglSwitchTheme}" />
+    </Style>
+    <Style Selector="ToggleSwitch.tgl">
+        <Setter Property="Theme" Value="{StaticResource TglSwitchTheme}" />
+    </Style>
+
+    <!-- ================================ Inputs =========================== -->
+    <!-- .inp — TextBox look (default TextBox + .inp class) -->
+    <Style Selector="TextBox.inp">
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Foreground" Value="{DynamicResource Text1Brush}" />
+        <Setter Property="Background" Value="{DynamicResource InputBgBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="Padding" Value="10,7" />
+        <Setter Property="MinHeight" Value="0" />
+    </Style>
+    <Style Selector="TextBox.inp /template/ Border#PART_BorderElement">
+        <Setter Property="Background" Value="{DynamicResource InputBgBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
+    </Style>
+    <Style Selector="TextBox.inp:pointerover /template/ Border#PART_BorderElement">
+        <Setter Property="Background" Value="{DynamicResource InputBgBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
+    </Style>
+    <Style Selector="TextBox.inp:focus /template/ Border#PART_BorderElement">
+        <Setter Property="Background" Value="{DynamicResource InputBgBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+        <Setter Property="BoxShadow" Value="0 0 0 3 #1A0A84FF" />
+    </Style>
+    <!-- .mono-inp — monospace input -->
+    <Style Selector="TextBox.mono-inp">
+        <Setter Property="FontFamily" Value="{DynamicResource MonoFontFamily}" />
+        <Setter Property="FontSize" Value="12" />
+    </Style>
+
+    <!-- .sel — ComboBox look -->
+    <Style Selector="ComboBox.sel">
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Foreground" Value="{DynamicResource Text1Brush}" />
+        <Setter Property="Background" Value="{DynamicResource InputBgBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="Padding" Value="10,7" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="ComboBox.sel /template/ Border#Background">
+        <Setter Property="Background" Value="{DynamicResource InputBgBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
+    </Style>
+    <Style Selector="ComboBox.sel:pointerover /template/ Border#Background">
+        <Setter Property="Background" Value="{DynamicResource InputBgBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
+    </Style>
+    <Style Selector="ComboBox.sel:focus /template/ Border#Background">
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+        <Setter Property="BoxShadow" Value="0 0 0 3 #1A0A84FF" />
+    </Style>
+
+    <!-- ======================= Subbar / block headers =================== -->
+    <!-- .subbar -->
+    <Style Selector="Border.subbar">
+        <Setter Property="Background" Value="{DynamicResource Surface0Brush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource SeparatorBrush}" />
+        <Setter Property="BorderThickness" Value="0,0,0,1" />
+        <Setter Property="Padding" Value="20,14" />
+    </Style>
+    <Style Selector="Border.subbar TextBlock.h2">
+        <Setter Property="FontSize" Value="17" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{DynamicResource Text1Brush}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Border.subbar TextBlock.lbl">
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{DynamicResource Text3Brush}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <!-- .blk-h — block header with .t label + .x meta -->
+    <Style Selector="TextBlock.blk-t">
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{DynamicResource Text3Brush}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="TextBlock.blk-x">
+        <Setter Property="FontSize" Value="11.5" />
+        <Setter Property="Foreground" Value="{DynamicResource Text2Brush}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <!-- .fldlabel — field label -->
+    <Style Selector="TextBlock.fldlabel">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{DynamicResource Text1Brush}" />
+    </Style>
+
+    <!-- =============================== Danger zone ====================== -->
+    <Style Selector="Border.danger">
+        <Setter Property="Background" Value="{DynamicResource TintRedBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource TintRedBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="11" />
+        <Setter Property="Padding" Value="14" />
+    </Style>
+
+    <!-- =========================== Synced indicator ===================== -->
+    <Style Selector="StackPanel.synced > TextBlock">
+        <Setter Property="FontSize" Value="11.5" />
+        <Setter Property="Foreground" Value="{DynamicResource Text2Brush}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Border.synced-dot">
+        <Setter Property="Width" Value="6" />
+        <Setter Property="Height" Value="6" />
+        <Setter Property="CornerRadius" Value="3" />
+        <Setter Property="Background" Value="{DynamicResource GreenBrush}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
     <!-- Footer spinner animation -->

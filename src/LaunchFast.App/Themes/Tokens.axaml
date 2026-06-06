@@ -84,7 +84,16 @@
 
             <SolidColorBrush x:Key="TintBlueBrush" Color="#1A0A84FF" />
             <SolidColorBrush x:Key="TintGreenBrush" Color="#1F28AA5A" />
+            <SolidColorBrush x:Key="TintAmberBrush" Color="#24FF9F0A" />
+            <SolidColorBrush x:Key="TintRedBrush" Color="#1FFF453A" />
             <SolidColorBrush x:Key="BadgeOkTextBrush" Color="#34C759" />
+            <SolidColorBrush x:Key="BadgeBadTextBrush" Color="#FF453A" />
+            <SolidColorBrush x:Key="BadgeAmberTextBrush" Color="#FF9F0A" />
+
+            <!-- Segmented control + inputs -->
+            <SolidColorBrush x:Key="SegTrackBrush" Color="#0F000000" />
+            <SolidColorBrush x:Key="SegThumbBrush" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="InputBgBrush" Color="#FFFFFF" />
         </ResourceDictionary>
 
         <!-- ============================== DARK ============================== -->
@@ -122,7 +131,16 @@
 
             <SolidColorBrush x:Key="TintBlueBrush" Color="#330A84FF" />
             <SolidColorBrush x:Key="TintGreenBrush" Color="#2E34C759" />
+            <SolidColorBrush x:Key="TintAmberBrush" Color="#33FF9F0A" />
+            <SolidColorBrush x:Key="TintRedBrush" Color="#33FF453A" />
             <SolidColorBrush x:Key="BadgeOkTextBrush" Color="#5BE07B" />
+            <SolidColorBrush x:Key="BadgeBadTextBrush" Color="#FF6B63" />
+            <SolidColorBrush x:Key="BadgeAmberTextBrush" Color="#FF9F0A" />
+
+            <!-- Segmented control + inputs -->
+            <SolidColorBrush x:Key="SegTrackBrush" Color="#4D000000" />
+            <SolidColorBrush x:Key="SegThumbBrush" Color="#636366" />
+            <SolidColorBrush x:Key="InputBgBrush" Color="#38000000" />
         </ResourceDictionary>
 
     </ResourceDictionary.ThemeDictionaries>
