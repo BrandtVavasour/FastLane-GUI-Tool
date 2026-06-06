@@ -10,6 +10,7 @@
     <PackageVersion Include="Avalonia.Fonts.Inter" Version="11.2.3" />
     <PackageVersion Include="Avalonia.Diagnostics" Version="11.2.3" />
     <PackageVersion Include="Avalonia.Headless.NUnit" Version="11.2.3" />
+    <PackageVersion Include="Avalonia.Skia" Version="11.2.3" />
     <!-- Transitive (via Avalonia on Linux). Pinned to a patched version to clear
          the NU1903 audit for GHSA-xrw6-gwf8-vvr9 in 0.20.0. -->
     <PackageVersion Include="Tmds.DBus.Protocol" Version="0.94.1" />
