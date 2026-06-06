@@ -1,5 +1,6 @@
 using LaunchFast.App.ViewModels;
 using LaunchFast.Core.Models;
+using LaunchFast.Core.Stores;
 
 namespace LaunchFast.App.Tests;
 
@@ -101,5 +102,111 @@ public class StoreListingSectionViewModelTests
         var near = new StoreFieldViewModel("App name", null, new string('y', 29), 30);
         Assert.That(near.IsNearLimit, Is.True);
         Assert.That(near.IsOverLimit, Is.False);
+    }
+
+    // ---- editing / save / discard --------------------------------------------
+
+    [Test]
+    public void Editing_a_field_marks_dirty_and_enables_save()
+    {
+        var project = TestProjects.MakeProjectWithStoreMetadata();
+        var vm = new StoreListingSectionViewModel(project);
+
+        Assert.That(vm.IsDirty, Is.False);
+        Assert.That(vm.SaveCommand.CanExecute(null), Is.False);
+
+        vm.Fields.Single(f => f.Label == "App name").Value = "Renamed App";
+
+        Assert.That(vm.IsDirty, Is.True);
+        Assert.That(vm.SaveCommand.CanExecute(null), Is.True);
+        Assert.That(vm.DiscardCommand.CanExecute(null), Is.True);
+    }
+
+    [Test]
+    public void Save_writes_new_value_to_disk_and_clears_dirty()
+    {
+        var project = TestProjects.MakeProjectWithStoreMetadata();
+        var vm = new StoreListingSectionViewModel(project);
+
+        vm.Fields.Single(f => f.Label == "App name").Value = "Renamed App";
+        vm.Fields.Single(f => f.Label == "Subtitle").Value = "A new subtitle";
+        vm.SaveCommand.Execute(null);
+
+        // On disk now.
+        var onDisk = StoreMetadataReader.ReadListing(project, Platform.Ios, "en-US");
+        Assert.That(onDisk.Name, Is.EqualTo("Renamed App"));
+        Assert.That(onDisk.Subtitle, Is.EqualTo("A new subtitle"));
+
+        // Baseline refreshed → no longer dirty; reloaded field shows the saved value.
+        Assert.That(vm.IsDirty, Is.False);
+        Assert.That(vm.SaveFailed, Is.False);
+        Assert.That(vm.Fields.Single(f => f.Label == "App name").Value, Is.EqualTo("Renamed App"));
+    }
+
+    [Test]
+    public void Save_android_writes_supply_files()
+    {
+        var project = TestProjects.MakeProjectWithStoreMetadata();
+        var vm = new StoreListingSectionViewModel(project) { Platform = Platform.Android };
+
+        vm.Fields.Single(f => f.Label == "Title").Value = "Renamed Play";
+        vm.SaveCommand.Execute(null);
+
+        var onDisk = StoreMetadataReader.ReadListing(project, Platform.Android, "en-US");
+        Assert.That(onDisk.Name, Is.EqualTo("Renamed Play"));
+        Assert.That(vm.IsDirty, Is.False);
+    }
+
+    [Test]
+    public void Discard_reverts_edits_to_on_disk_value()
+    {
+        var project = TestProjects.MakeProjectWithStoreMetadata();
+        var vm = new StoreListingSectionViewModel(project);
+
+        var field = vm.Fields.Single(f => f.Label == "App name");
+        field.Value = "Scratch edit";
+        Assert.That(vm.IsDirty, Is.True);
+
+        vm.DiscardCommand.Execute(null);
+
+        Assert.That(vm.IsDirty, Is.False);
+        Assert.That(vm.Fields.Single(f => f.Label == "App name").Value, Is.EqualTo("Demo App"));
+        // Disk untouched.
+        Assert.That(StoreMetadataReader.ReadListing(project, Platform.Ios, "en-US").Name,
+            Is.EqualTo("Demo App"));
+    }
+
+    [Test]
+    public void Over_limit_edit_is_flagged_but_still_saves()
+    {
+        var project = TestProjects.MakeProjectWithStoreMetadata();
+        var vm = new StoreListingSectionViewModel(project);
+
+        vm.Fields.Single(f => f.Label == "App name").Value = new string('x', 40); // > 30
+        Assert.That(vm.HasOverLimit, Is.True);
+        Assert.That(vm.SaveCommand.CanExecute(null), Is.True); // not blocked
+
+        vm.SaveCommand.Execute(null);
+
+        Assert.That(vm.SaveFailed, Is.False);
+        Assert.That(StoreMetadataReader.ReadListing(project, Platform.Ios, "en-US").Name,
+            Is.EqualTo(new string('x', 40)));
+    }
+
+    [Test]
+    public void Switching_locale_discards_unsaved_edits()
+    {
+        var project = TestProjects.MakeProjectWithStoreMetadata();
+        var vm = new StoreListingSectionViewModel(project);
+
+        vm.Fields.Single(f => f.Label == "App name").Value = "Scratch edit";
+        Assert.That(vm.IsDirty, Is.True);
+
+        vm.SelectedLocale = "ja"; // switch away
+
+        Assert.That(vm.IsDirty, Is.False);
+        // Disk for en-US never saw the scratch edit.
+        Assert.That(StoreMetadataReader.ReadListing(project, Platform.Ios, "en-US").Name,
+            Is.EqualTo("Demo App"));
     }
 }

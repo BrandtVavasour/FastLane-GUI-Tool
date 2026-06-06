@@ -14,11 +14,16 @@ namespace LaunchFast.App.ViewModels;
 /// against the store's what's-new limit (App Store 4000, Play 500), and the
 /// fastlane path the text is written to.
 ///
-/// READ-ONLY for this pass — the editor textarea is editable in-memory but is NOT
-/// persisted (Discard / Save changelog are inert). The version rail lists the
-/// project's current parsed <see cref="Version"/> plus, on Android, any extra
-/// versionCodes that have changelog files on disk (real). When no locales exist on
-/// disk, <see cref="IsEmpty"/> drives an empty state.
+/// EDITABLE: the editor textarea is two-way bound; editing flips <see cref="IsDirty"/>.
+/// <see cref="SaveChangelogCommand"/> writes the notes to the real file via
+/// <see cref="StoreMetadataWriter.WriteReleaseNotes"/> — iOS
+/// <c>release_notes.txt</c> / Android <c>changelogs/&lt;versionCode&gt;.txt</c> (the
+/// selected version's build) — then re-reads to refresh the baseline and the locale
+/// dot. <see cref="DiscardCommand"/> re-reads from disk to revert. Switching
+/// platform/version/locale auto-discards unsaved edits (kept simple). The version rail
+/// lists the project's current parsed <see cref="Version"/> plus, on Android, any
+/// extra versionCodes that have changelog files on disk (real). When no locales exist
+/// on disk, <see cref="IsEmpty"/> drives an empty state.
 /// </summary>
 public partial class WhatsNewSectionViewModel : ObservableObject
 {
@@ -137,13 +142,16 @@ public partial class WhatsNewSectionViewModel : ObservableObject
 
     public string IntroText =>
         $"Release notes shown to users on the {StoreName} listing for this version. " +
-        "Read from fastlane metadata on disk (editing is a follow-up).";
+        "Read from — and saved back to — fastlane metadata on disk.";
 
     // ---- editor content ------------------------------------------------------
 
+    /// <summary>The last-loaded on-disk note text — the clean baseline for dirtiness.</summary>
+    string _noteBaseline = string.Empty;
+
     /// <summary>
-    /// The release-notes text for the selected version + locale. Editable in-memory
-    /// for a realistic feel, but NOT persisted this pass (Save is inert).
+    /// The release-notes text for the selected version + locale. Two-way bound and
+    /// persisted by <see cref="SaveChangelogCommand"/>.
     /// </summary>
     [ObservableProperty]
     private string _noteText = string.Empty;
@@ -157,13 +165,75 @@ public partial class WhatsNewSectionViewModel : ObservableObject
         {
             SelectedLocale.HasText = !string.IsNullOrWhiteSpace(value);
         }
+        IsDirty = !string.Equals(value, _noteBaseline, StringComparison.Ordinal);
     }
+
+    /// <summary>True when the editor text differs from the last-loaded on-disk value.</summary>
+    [ObservableProperty]
+    private bool _isDirty;
+
+    partial void OnIsDirtyChanged(bool value)
+    {
+        SaveChangelogCommand.NotifyCanExecuteChanged();
+        DiscardCommand.NotifyCanExecuteChanged();
+    }
+
+    /// <summary>Status / error line shown in the toolbar after a save attempt.</summary>
+    [ObservableProperty]
+    private string? _saveStatus;
+
+    [ObservableProperty]
+    private bool _saveFailed;
 
     public string CounterText => $"{NoteText.Length} / {CharLimit}";
 
     public bool IsOverLimit => NoteText.Length > CharLimit;
 
     public bool IsNearLimit => !IsOverLimit && NoteText.Length >= CharLimit * 0.88;
+
+    // ---- save / discard ------------------------------------------------------
+
+    [RelayCommand(CanExecute = nameof(CanSave))]
+    void SaveChangelog()
+    {
+        var locale = SelectedLocale?.Code;
+        if (locale is null)
+        {
+            return;
+        }
+
+        // Android writes to changelogs/<versionCode>.txt; iOS ignores the code.
+        var versionCode = IsIos ? null : SelectedVersion?.Build;
+        if (!IsIos && string.IsNullOrWhiteSpace(versionCode))
+        {
+            SaveFailed = true;
+            SaveStatus = "No versionCode for the selected version — cannot write a changelog.";
+            return;
+        }
+
+        try
+        {
+            StoreMetadataWriter.WriteReleaseNotes(_project, Platform, locale, versionCode, NoteText);
+            SaveFailed = false;
+            SaveStatus = IsOverLimit
+                ? $"Saved (exceeds the {StoreName} {CharLimit}-char limit)."
+                : "Saved to fastlane metadata.";
+            // Re-read so the baseline + locale dots reflect what's on disk now.
+            Reload();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
+        {
+            SaveFailed = true;
+            SaveStatus = $"Save failed: {ex.Message}";
+        }
+    }
+
+    bool CanSave() => IsDirty;
+
+    [RelayCommand(CanExecute = nameof(CanDiscard))]
+    void Discard() => Reload();
+
+    bool CanDiscard() => IsDirty;
 
     /// <summary>The fastlane file path the selected version+locale writes to.</summary>
     public string FastlanePath
@@ -267,22 +337,83 @@ public partial class WhatsNewSectionViewModel : ObservableObject
         var locale = SelectedLocale?.Code;
         if (locale is null)
         {
+            _noteBaseline = string.Empty;
             NoteText = string.Empty;
+            IsDirty = false;
+            SaveStatus = null;
+            SaveFailed = false;
             RaiseDerived();
             return;
         }
 
-        var listing = StoreMetadataReader.ReadListing(_project, Platform, locale);
-        NoteText = listing.ReleaseNotes ?? string.Empty;
+        var listing = ReadNotes(locale);
+        _noteBaseline = listing;
+        NoteText = listing;
+        IsDirty = false;
+        SaveStatus = null;
+        SaveFailed = false;
 
-        // Refresh the full/empty dot for every loaded locale tab.
+        // Refresh the full/empty dot for every loaded locale tab (against the
+        // currently-selected version, so the Android dot tracks the active build).
         foreach (var tab in Locales)
         {
-            var l = StoreMetadataReader.ReadListing(_project, Platform, tab.Code);
-            tab.HasText = !string.IsNullOrWhiteSpace(l.ReleaseNotes);
+            tab.HasText = !string.IsNullOrWhiteSpace(ReadNotes(tab.Code));
         }
 
         RaiseDerived();
+    }
+
+    /// <summary>
+    /// Reads the release notes for a locale under the currently-selected version: iOS
+    /// → <c>release_notes.txt</c>; Android → the changelog for the selected version's
+    /// build (falling back to the latest changelog when the version has no build).
+    /// </summary>
+    string ReadNotes(string locale)
+    {
+        var listing = StoreMetadataReader.ReadListing(_project, Platform, locale);
+        if (IsIos)
+        {
+            return listing.ReleaseNotes ?? string.Empty;
+        }
+
+        var build = SelectedVersion?.Build;
+        if (string.IsNullOrWhiteSpace(build))
+        {
+            // No specific build → reader's latest-changelog view.
+            return listing.ReleaseNotes ?? string.Empty;
+        }
+
+        return ReadAndroidChangelog(locale, build) ?? string.Empty;
+    }
+
+    /// <summary>The on-disk Android changelog text for an explicit versionCode, or null.</summary>
+    string? ReadAndroidChangelog(string locale, string versionCode)
+    {
+        if (_project.AndroidFastlaneDir is not { } android)
+        {
+            return null;
+        }
+
+        var path = Path.Combine(
+            android, "metadata", "android", locale, "changelogs", versionCode + ".txt");
+        if (!File.Exists(path))
+        {
+            return null;
+        }
+
+        try
+        {
+            var text = File.ReadAllText(path).Trim();
+            return text.Length == 0 ? null : text;
+        }
+        catch (IOException)
+        {
+            return null;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return null;
+        }
     }
 
     void RaiseDerived()

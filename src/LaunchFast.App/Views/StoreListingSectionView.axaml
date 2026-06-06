@@ -46,6 +46,11 @@
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Foreground" Value="{DynamicResource Text3Brush}" />
         </Style>
+        <!-- save-error status text -->
+        <Style Selector="TextBlock.err">
+            <Setter Property="Foreground" Value="{DynamicResource RedBrush}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
         <!-- screenshot frame: phone aspect (9:19) -->
         <Style Selector="Border.shotframe">
             <Setter Property="CornerRadius" Value="12" />
@@ -69,11 +74,29 @@
                 Background="{DynamicResource Surface1Brush}"
                 BorderBrush="{DynamicResource SeparatorBrush}"
                 BorderThickness="0,0,0,1">
-            <Grid ColumnDefinitions="*,Auto,Auto" Margin="16,11">
-                <Button Grid.Column="1" Classes="btn" Margin="0,0,8,0"
-                        Content="Discard" IsEnabled="False" />
-                <Button Grid.Column="2" Classes="accent"
-                        Content="Save" IsEnabled="False" />
+            <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto" Margin="16,11">
+                <!-- dirty + save-status line -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="7"
+                            VerticalAlignment="Center">
+                    <Border Width="7" Height="7" CornerRadius="4"
+                            VerticalAlignment="Center"
+                            IsVisible="{Binding IsDirty}"
+                            Background="{DynamicResource AmberBrush}" />
+                    <TextBlock VerticalAlignment="Center" FontSize="12"
+                               IsVisible="{Binding IsDirty}"
+                               Foreground="{DynamicResource Text3Brush}"
+                               Text="Unsaved changes" />
+                </StackPanel>
+                <TextBlock Grid.Column="1" VerticalAlignment="Center" FontSize="12"
+                           Margin="10,0,0,0" TextTrimming="CharacterEllipsis"
+                           IsVisible="{Binding SaveStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                           Foreground="{DynamicResource Text3Brush}"
+                           Classes.err="{Binding SaveFailed}"
+                           Text="{Binding SaveStatus}" />
+                <Button Grid.Column="3" Classes="btn" Margin="0,0,8,0"
+                        Content="Discard" Command="{Binding DiscardCommand}" />
+                <Button Grid.Column="4" Classes="accent"
+                        Content="Save" Command="{Binding SaveCommand}" />
             </Grid>
         </Border>
 
@@ -152,8 +175,7 @@
                                                    Text="{Binding CounterText}" />
                                     </Grid>
                                     <TextBox Classes="inp"
-                                             Text="{Binding Value, Mode=OneWay}"
-                                             IsReadOnly="True"
+                                             Text="{Binding Value, Mode=TwoWay}"
                                              AcceptsReturn="{Binding Multiline}"
                                              TextWrapping="Wrap"
                                              MaxHeight="160"

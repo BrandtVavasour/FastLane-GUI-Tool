@@ -114,4 +114,93 @@ public class WhatsNewSectionViewModelTests
         Assert.That(WhatsNewSectionViewModel.ParseVersion(null),
             Is.EqualTo(((string?)null, (string?)null)));
     }
+
+    // ---- editing / save / discard --------------------------------------------
+
+    [Test]
+    public void Editing_notes_marks_dirty_and_enables_save()
+    {
+        var project = TestProjects.MakeProjectWithStoreMetadata();
+        var vm = new WhatsNewSectionViewModel(project);
+
+        Assert.That(vm.IsDirty, Is.False);
+        Assert.That(vm.SaveChangelogCommand.CanExecute(null), Is.False);
+
+        vm.NoteText = "Brand new iOS release notes.";
+
+        Assert.That(vm.IsDirty, Is.True);
+        Assert.That(vm.SaveChangelogCommand.CanExecute(null), Is.True);
+        Assert.That(vm.DiscardCommand.CanExecute(null), Is.True);
+    }
+
+    [Test]
+    public void Save_ios_writes_release_notes_file_and_clears_dirty()
+    {
+        var project = TestProjects.MakeProjectWithStoreMetadata();
+        var vm = new WhatsNewSectionViewModel(project);
+
+        vm.NoteText = "Brand new iOS release notes.";
+        vm.SaveChangelogCommand.Execute(null);
+
+        var onDisk = StoreMetadataReader.ReadListing(project, Platform.Ios, "en-US");
+        Assert.That(onDisk.ReleaseNotes, Is.EqualTo("Brand new iOS release notes."));
+        Assert.That(vm.IsDirty, Is.False);
+        Assert.That(vm.SaveFailed, Is.False);
+    }
+
+    [Test]
+    public void Save_ios_to_empty_locale_makes_dot_full()
+    {
+        var project = TestProjects.MakeProjectWithStoreMetadata();
+        var vm = new WhatsNewSectionViewModel(project);
+
+        // ja starts empty (name only, no release_notes).
+        var ja = vm.Locales.Single(l => l.Code == "ja");
+        vm.SelectLocaleCommand.Execute(ja);
+        Assert.That(ja.HasText, Is.False);
+
+        vm.NoteText = "Japanese notes.";
+        vm.SaveChangelogCommand.Execute(null);
+
+        Assert.That(vm.Locales.Single(l => l.Code == "ja").HasText, Is.True);
+        Assert.That(StoreMetadataReader.ReadListing(project, Platform.Ios, "ja").ReleaseNotes,
+            Is.EqualTo("Japanese notes."));
+    }
+
+    [Test]
+    public void Save_android_writes_changelog_for_selected_version_code()
+    {
+        var project = TestProjects.MakeProjectWithStoreMetadata();
+        var vm = new WhatsNewSectionViewModel(project) { Platform = Platform.Android };
+
+        // Selected version is the current build (9).
+        Assert.That(vm.SelectedVersion?.Build, Is.EqualTo("9"));
+
+        vm.NoteText = "Updated build 9 changelog.";
+        vm.SaveChangelogCommand.Execute(null);
+
+        var path = Path.Combine(
+            project.AndroidFastlaneDir!, "metadata", "android", "en-US", "changelogs", "9.txt");
+        Assert.That(File.ReadAllText(path).Trim(), Is.EqualTo("Updated build 9 changelog."));
+        Assert.That(vm.IsDirty, Is.False);
+    }
+
+    [Test]
+    public void Discard_reverts_notes_to_on_disk_value()
+    {
+        var project = TestProjects.MakeProjectWithStoreMetadata();
+        var vm = new WhatsNewSectionViewModel(project);
+
+        var original = vm.NoteText;
+        vm.NoteText = "Scratch notes.";
+        Assert.That(vm.IsDirty, Is.True);
+
+        vm.DiscardCommand.Execute(null);
+
+        Assert.That(vm.IsDirty, Is.False);
+        Assert.That(vm.NoteText, Is.EqualTo(original));
+        // Disk untouched.
+        Assert.That(StoreMetadataReader.ReadListing(project, Platform.Ios, "en-US").ReleaseNotes,
+            Does.Contain("Faster sync"));
+    }
 }

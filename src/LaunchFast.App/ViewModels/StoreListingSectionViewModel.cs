@@ -13,8 +13,14 @@ namespace LaunchFast.App.ViewModels;
 /// <see cref="StoreMetadataReader"/>, surfacing each text field with a live char
 /// count against the store's limit (and an over-limit flag).
 ///
-/// Read-only for this pass — editing/Save is a follow-up. When no metadata exists on
-/// disk for the selected platform, <see cref="IsEmpty"/> drives an empty state.
+/// EDITABLE: each field's text is two-way bound; editing flips <see cref="IsDirty"/>.
+/// <see cref="SaveCommand"/> writes the current values to the real deliver/supply
+/// <c>.txt</c> files via <see cref="StoreMetadataWriter"/> (allowed even when
+/// over-limit — the over-limit state is shown but does not block Save), then re-reads
+/// to refresh the baseline. <see cref="DiscardCommand"/> re-reads from disk to revert.
+/// Switching platform/locale auto-discards any unsaved edits (kept simple). When no
+/// metadata exists on disk for the selected platform, <see cref="IsEmpty"/> drives an
+/// empty state.
 /// </summary>
 public partial class StoreListingSectionViewModel : ObservableObject
 {
@@ -133,6 +139,26 @@ public partial class StoreListingSectionViewModel : ObservableObject
     [ObservableProperty]
     private bool _isEmpty;
 
+    /// <summary>True when any field differs from the last-loaded on-disk snapshot.</summary>
+    [ObservableProperty]
+    private bool _isDirty;
+
+    partial void OnIsDirtyChanged(bool value)
+    {
+        SaveCommand.NotifyCanExecuteChanged();
+        DiscardCommand.NotifyCanExecuteChanged();
+    }
+
+    /// <summary>True when any field's value currently exceeds its store limit.</summary>
+    public bool HasOverLimit => Fields.Any(f => f.IsOverLimit);
+
+    /// <summary>Status / error line shown under the toolbar after a save attempt.</summary>
+    [ObservableProperty]
+    private string? _saveStatus;
+
+    [ObservableProperty]
+    private bool _saveFailed;
+
     public string EmptyStateText =>
         "No store metadata found under fastlane/metadata — run deliver/supply or add it.";
 
@@ -198,6 +224,11 @@ public partial class StoreListingSectionViewModel : ObservableObject
     /// <summary>Re-reads the listing for the current platform/locale and rebuilds fields.</summary>
     void Reload()
     {
+        foreach (var existing in Fields)
+        {
+            existing.Changed -= OnFieldChanged;
+        }
+
         Fields.Clear();
         Screenshots.Clear();
 
@@ -205,6 +236,7 @@ public partial class StoreListingSectionViewModel : ObservableObject
         if (locale is null)
         {
             IsEmpty = true;
+            IsDirty = false;
             RaiseDerived();
             return;
         }
@@ -213,6 +245,7 @@ public partial class StoreListingSectionViewModel : ObservableObject
 
         foreach (var field in BuildFields(listing))
         {
+            field.Changed += OnFieldChanged;
             Fields.Add(field);
         }
 
@@ -223,7 +256,90 @@ public partial class StoreListingSectionViewModel : ObservableObject
 
         // Empty when this platform has no locale folders at all on disk.
         IsEmpty = Locales.Count == 0;
+        // A fresh load is the clean baseline.
+        IsDirty = false;
+        SaveStatus = null;
+        SaveFailed = false;
         RaiseDerived();
+    }
+
+    /// <summary>A field's text or limit-state changed — recompute dirty + over-limit.</summary>
+    void OnFieldChanged()
+    {
+        IsDirty = Fields.Any(f => f.IsDirty);
+        OnPropertyChanged(nameof(HasOverLimit));
+    }
+
+    // ---- save / discard ------------------------------------------------------
+
+    [RelayCommand(CanExecute = nameof(CanSave))]
+    void Save()
+    {
+        var locale = SelectedLocale;
+        if (locale is null)
+        {
+            return;
+        }
+
+        try
+        {
+            StoreMetadataWriter.WriteListing(_project, Platform, locale, BuildListing(locale));
+            SaveFailed = false;
+            SaveStatus = HasOverLimit
+                ? "Saved to fastlane metadata (some fields exceed the store limit)."
+                : "Saved to fastlane metadata.";
+            // Re-read so the on-disk values become the new clean baseline.
+            Reload();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            SaveFailed = true;
+            SaveStatus = $"Save failed: {ex.Message}";
+        }
+    }
+
+    bool CanSave() => IsDirty;
+
+    [RelayCommand(CanExecute = nameof(CanDiscard))]
+    void Discard() => Reload();
+
+    bool CanDiscard() => IsDirty;
+
+    /// <summary>Builds a <see cref="StoreListing"/> from the current field values.</summary>
+    StoreListing BuildListing(string locale)
+    {
+        string? Field(string label) =>
+            Fields.FirstOrDefault(f => f.Label == label)?.Value ?? string.Empty;
+
+        return Platform == Platform.Ios
+            ? new StoreListing(
+                Platform.Ios, locale,
+                Name: Field("App name"),
+                Subtitle: Field("Subtitle"),
+                ShortDescription: null,
+                PromotionalText: Field("Promotional text"),
+                Keywords: Field("Keywords"),
+                FullDescription: Field("Full description"),
+                ReleaseNotes: null, // owned by the What's New section
+                MarketingUrl: Field("Marketing URL"),
+                SupportUrl: Field("Support URL"),
+                PrivacyUrl: Field("Privacy Policy URL"),
+                VideoUrl: null,
+                ScreenshotPaths: Array.Empty<string>())
+            : new StoreListing(
+                Platform.Android, locale,
+                Name: Field("Title"),
+                Subtitle: null,
+                ShortDescription: Field("Short description"),
+                PromotionalText: null,
+                Keywords: null,
+                FullDescription: Field("Full description"),
+                ReleaseNotes: null, // owned by the What's New section
+                MarketingUrl: null,
+                SupportUrl: null,
+                PrivacyUrl: null,
+                VideoUrl: Field("Promo video URL"),
+                ScreenshotPaths: Array.Empty<string>());
     }
 
     void RaiseDerived()
@@ -231,6 +347,7 @@ public partial class StoreListingSectionViewModel : ObservableObject
         OnPropertyChanged(nameof(PlatformMetaTitle));
         OnPropertyChanged(nameof(ScreenshotCountText));
         OnPropertyChanged(nameof(HasScreenshots));
+        OnPropertyChanged(nameof(HasOverLimit));
     }
 
     static IEnumerable<StoreFieldViewModel> BuildFields(StoreListing l)
@@ -277,31 +394,56 @@ public sealed partial class DeviceOption : ObservableObject
 
 /// <summary>
 /// One metadata field row: label, optional platform badge ("iOS"/"Android"), the
-/// on-disk value (may be null/empty), and — for counted fields — its length against
-/// the store limit with warn / over-limit flags.
+/// editable value, and — for counted fields — its length against the store limit with
+/// warn / over-limit flags. <see cref="Value"/> is two-way bound; editing recomputes
+/// the counter/over-limit state, sets <see cref="IsDirty"/> (vs the loaded baseline),
+/// and raises <see cref="Changed"/> so the parent can recompute its own dirty signal.
 /// </summary>
-public sealed class StoreFieldViewModel
+public sealed partial class StoreFieldViewModel : ObservableObject
 {
+    readonly string _baseline;
+
     public StoreFieldViewModel(
         string label, string? badge, string? value, int max = 0,
         bool multiline = false, bool counted = true)
     {
         Label = label;
         Badge = badge;
-        Value = value ?? string.Empty;
+        _baseline = value ?? string.Empty;
+        _value = _baseline;
         Max = max;
         Multiline = multiline;
         Counted = counted && max > 0;
     }
 
+    /// <summary>Raised whenever the field's value changes (drives parent dirty state).</summary>
+    public event Action? Changed;
+
     public string Label { get; }
     public string? Badge { get; }
     public bool HasBadge => !string.IsNullOrEmpty(Badge);
-    public string Value { get; }
+
+    [ObservableProperty]
+    private string _value;
+
+    partial void OnValueChanged(string value)
+    {
+        OnPropertyChanged(nameof(IsBlank));
+        OnPropertyChanged(nameof(Length));
+        OnPropertyChanged(nameof(CounterText));
+        OnPropertyChanged(nameof(IsOverLimit));
+        OnPropertyChanged(nameof(IsNearLimit));
+        OnPropertyChanged(nameof(IsDirty));
+        Changed?.Invoke();
+    }
+
     public bool IsBlank => Value.Length == 0;
     public int Max { get; }
     public bool Multiline { get; }
     public bool Counted { get; }
+
+    /// <summary>True when the value has been edited away from the loaded baseline.</summary>
+    public bool IsDirty => !string.Equals(Value, _baseline, StringComparison.Ordinal);
 
     public int Length => Value.Length;
 
