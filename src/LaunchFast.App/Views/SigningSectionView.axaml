@@ -61,7 +61,7 @@
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate x:DataType="vm:SigningCertRow">
                                             <Border Classes="lrow">
-                                                <Grid ColumnDefinitions="Auto,12,*,Auto">
+                                                <Grid ColumnDefinitions="Auto,12,*">
                                                     <Border Grid.Column="0" Classes="lic green">
                                                         <TextBlock Text="🛡" FontSize="15" />
                                                     </Border>
@@ -75,11 +75,18 @@
                                                         </StackPanel>
                                                         <TextBlock Classes="lsub" Text="{Binding Sub}"
                                                                    TextWrapping="Wrap" />
+                                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                                            <Border Classes="pill ok">
+                                                                <TextBlock Text="SHA-1" />
+                                                            </Border>
+                                                            <TextBlock Classes="lsub mono" FontSize="10.5"
+                                                                       FontFamily="{DynamicResource MonoFontFamily}"
+                                                                       Foreground="{DynamicResource Text2Brush}"
+                                                                       Text="{Binding Sha1Display}"
+                                                                       TextWrapping="Wrap"
+                                                                       VerticalAlignment="Center" />
+                                                        </StackPanel>
                                                     </StackPanel>
-                                                    <TextBlock Grid.Column="3" Classes="lmeta mono"
-                                                               FontFamily="{DynamicResource MonoFontFamily}"
-                                                               Text="{Binding ExpiresMeta}"
-                                                               VerticalAlignment="Center" />
                                                 </Grid>
                                             </Border>
                                         </DataTemplate>

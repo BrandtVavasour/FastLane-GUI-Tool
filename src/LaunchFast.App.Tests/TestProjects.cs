@@ -99,7 +99,7 @@ public static class TestProjects
     /// <paramref name="withBuildLane"/> is true.
     /// </summary>
     public static Project MakeProjectWithAndroidSigning(
-        string name = "android", bool withBuildLane = true)
+        string name = "android", bool withBuildLane = true, bool withKeystoreFile = false)
     {
         var root = Path.Combine(Path.GetTempPath(), "lf-androidsign-" + Guid.NewGuid().ToString("N"), name);
         var androidFl = Path.Combine(root, "android", "fastlane");
@@ -107,6 +107,11 @@ public static class TestProjects
         Directory.CreateDirectory(androidFl);
         Directory.CreateDirectory(androidApp);
         File.WriteAllText(Path.Combine(root, "pubspec.yaml"), "name: demo\nversion: 1.2.3+9\n");
+
+        // A placeholder keystore file so the path resolves on disk (the fingerprints
+        // themselves come from an injected supplier — keytool is never run in tests).
+        if (withKeystoreFile)
+            File.WriteAllBytes(Path.Combine(androidApp, "upload-keystore.jks"), new byte[] { 0x00, 0x01 });
 
         File.WriteAllText(Path.Combine(androidApp, "build.gradle"),
             """

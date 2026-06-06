@@ -94,6 +94,13 @@ public class SigningSectionViewModelTests
         Assert.That(vm.Certificates, Has.Count.EqualTo(2));
         Assert.That(vm.Certificates[0].Title, Does.StartWith("Apple Distribution"));
         Assert.That(vm.Certificates[0].Sub, Does.Contain("Distribution"));
+
+        // The real SHA-1 from `security find-identity` is surfaced on the row — both the
+        // raw 40-hex digest and the colon-formatted display form.
+        Assert.That(vm.Certificates[0].Sha1, Is.EqualTo(
+            "A1B2C3D4E5F60718293A4B5C6D7E8F90A1B2C3D4"));
+        Assert.That(vm.Certificates[0].Sha1Display, Is.EqualTo(
+            "A1:B2:C3:D4:E5:F6:07:18:29:3A:4B:5C:6D:7E:8F:90:A1:B2:C3:D4"));
     }
 
     [Test]

@@ -221,13 +221,11 @@ public partial class SigningSectionViewModel : ObservableObject
         Certificates.Clear();
         foreach (var cert in _reader.ReadInstalledCertificates())
         {
-            // Short fingerprint for the row sub-line; full sha1 is the source of truth.
-            var shortSha = cert.Sha1.Length >= 10 ? cert.Sha1[..10] : cert.Sha1;
             Certificates.Add(new SigningCertRow(
                 cert.Name,
                 "Valid",
                 IsValid: true,
-                $"{cert.Kind} · {shortSha}…",
+                cert.Kind,
                 cert.Sha1));
         }
     }
@@ -288,9 +286,26 @@ public partial class SigningSectionViewModel : ObservableObject
     }
 }
 
-/// <summary>One REAL codesigning certificate row (name + validity + fingerprint).</summary>
+/// <summary>
+/// One REAL codesigning certificate row. <see cref="Sha1"/> is the real SHA-1
+/// fingerprint reported by <c>security find-identity</c> (formatted colon-separated for
+/// display). <c>security</c> does not report a SHA-256, so none is shown — honestly.
+/// </summary>
 public sealed record SigningCertRow(
-    string Title, string StatusText, bool IsValid, string Sub, string ExpiresMeta);
+    string Title, string StatusText, bool IsValid, string Sub, string Sha1)
+{
+    /// <summary>The SHA-1 with colon separators every two hex chars, for display.</summary>
+    public string Sha1Display => FormatSha1(Sha1);
+
+    static string FormatSha1(string sha1)
+    {
+        if (string.IsNullOrEmpty(sha1)) return sha1;
+        var pairs = new List<string>(sha1.Length / 2 + 1);
+        for (var i = 0; i < sha1.Length; i += 2)
+            pairs.Add(sha1.Substring(i, Math.Min(2, sha1.Length - i)));
+        return string.Join(":", pairs).ToUpperInvariant();
+    }
+}
 
 /// <summary>State of a provisioning profile (drives the status pill).</summary>
 public enum ProfileState { Ok, Warn, Bad }

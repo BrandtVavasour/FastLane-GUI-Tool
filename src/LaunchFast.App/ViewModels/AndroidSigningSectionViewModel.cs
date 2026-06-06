@@ -17,15 +17,18 @@ namespace LaunchFast.App.ViewModels;
 /// <c>android/app/build.gradle</c> on disk. The credential rows
 /// (<c>KEYSTORE_PASSWORD</c>, <c>KEY_PASSWORD</c>, the Play service-account key)
 /// are resolved against the real env / <c>.env*</c> / Keychain precedence, exactly
-/// like the Secrets screen. The "Build AAB" action runs the project's genuine
-/// Android <c>build</c> fastlane lane (disabled when that lane is absent).
+/// like the Secrets screen. The <b>certificate fingerprints</b> are read from the real
+/// keystore with <c>keytool -list -v</c> (<see cref="KeystoreFingerprintReader"/>): the
+/// keystore path is resolved from the gradle <c>storeFile</c> (relative to
+/// <c>android/app</c>) and the store password from <c>key.properties</c> / the secret
+/// store; when neither resolves the panel shows an honest empty state. "Verify keystore"
+/// re-reads the fingerprints. The "Build AAB" action runs the project's genuine Android
+/// <c>build</c> fastlane lane (disabled when that lane is absent).
 ///
 /// ILLUSTRATIVE (flagged via <see cref="IsPlaceholder"/> and an "Illustrative"
 /// hint in the view): the upper "Signing keys" list (upload / app-signing keys),
-/// the certificate-fingerprints panel, the "Play App Signing · Enrolled" pills,
-/// and the upload-key-reset danger zone. These need <c>keytool</c> / the Play
-/// Developer API, which are not wired yet. "Verify keystore" is an inert
-/// placeholder (running <c>keytool</c> is a future enhancement).
+/// the "Play App Signing · Enrolled" pills, and the upload-key-reset danger zone.
+/// These need the Play Developer API, which is not wired yet.
 /// </summary>
 public partial class AndroidSigningSectionViewModel : ObservableObject
 {
@@ -43,24 +46,36 @@ public partial class AndroidSigningSectionViewModel : ObservableObject
         "PLAY_JSON_KEY", "SUPPLY_JSON_KEY", "GOOGLE_PLAY_JSON_KEY", "PLAY_JSON_KEY_DATA",
     };
 
+    /// <summary>
+    /// Reads a keystore's fingerprints with keytool. Injectable so tests can supply parsed
+    /// fingerprints without a real keystore / keytool on PATH. Args: keystore path, store
+    /// password (may be null), alias (may be null).
+    /// </summary>
+    public delegate IReadOnlyList<CertFingerprint> FingerprintsSupplier(
+        string keystorePath, string? storePassword, string? alias);
+
     readonly Project _project;
     readonly ISecretStore _secrets;
     readonly Func<string, string?> _readProcessEnv;
     readonly Action<Platform, string>? _runLane;
     readonly Func<bool> _hasBuildLane;
+    readonly FingerprintsSupplier _readFingerprints;
 
     public AndroidSigningSectionViewModel(
         Project project,
         ISecretStore secrets,
         Action<Platform, string>? runLane = null,
         Func<bool>? hasBuildLane = null,
-        Func<string, string?>? readProcessEnv = null)
+        Func<string, string?>? readProcessEnv = null,
+        FingerprintsSupplier? readFingerprints = null)
     {
         _project = project;
         _secrets = secrets;
         _runLane = runLane;
         _hasBuildLane = hasBuildLane ?? (() => false);
         _readProcessEnv = readProcessEnv ?? Environment.GetEnvironmentVariable;
+        _readFingerprints = readFingerprints
+            ?? KeystoreFingerprintReader.ReadKeystoreFingerprints;
 
         var info = AndroidSigningReader.Read(project);
         HasAndroid = info.HasAndroid;
@@ -69,10 +84,10 @@ public partial class AndroidSigningSectionViewModel : ObservableObject
         BuildGradleRows(info);
         BuildCredentialRows();
         BuildIllustrativeKeys();
-        BuildFingerprints();
+        LoadFingerprints();
     }
 
-    /// <summary>True only for the illustrative blocks (keys, fingerprints, enrolment).</summary>
+    /// <summary>True only for the illustrative blocks (keys, Play-App-Signing enrolment).</summary>
     public bool IsPlaceholder => true;
 
     /// <summary>False when the project has no Android module → an empty-state view.</summary>
@@ -101,8 +116,18 @@ public partial class AndroidSigningSectionViewModel : ObservableObject
     // ---- illustrative signing keys ------------------------------------------
     public ObservableCollection<SigningKeyRow> SigningKeys { get; } = new();
 
-    // ---- illustrative fingerprints ------------------------------------------
+    // ---- real fingerprints (keytool) ----------------------------------------
     public ObservableCollection<FingerprintRow> Fingerprints { get; } = new();
+
+    /// <summary>True when keytool returned at least one fingerprint for the keystore.</summary>
+    public bool HasFingerprints { get; private set; }
+
+    /// <summary>Convenience inverse for the honest empty-state panel.</summary>
+    public bool HasNoFingerprints => !HasFingerprints;
+
+    /// <summary>Honest empty-state copy for the fingerprints panel.</summary>
+    public string FingerprintsEmptyText { get; private set; } =
+        "No keystore resolved. Configure a release signingConfig (storeFile / key.properties) to read SHA-1 / SHA-256 with keytool.";
 
     // ---- subbar illustrative pills ------------------------------------------
     public string EnrolledText => "Enrolled";
@@ -119,6 +144,10 @@ public partial class AndroidSigningSectionViewModel : ObservableObject
         if (!CanBuildAab) return;
         _runLane?.Invoke(Platform.Android, "build");
     }
+
+    /// <summary>Re-reads the certificate fingerprints from the keystore with keytool.</summary>
+    [RelayCommand]
+    void VerifyKeystore() => LoadFingerprints();
 
     void BuildGradleRows(AndroidSigningInfo info)
     {
@@ -184,18 +213,63 @@ public partial class AndroidSigningSectionViewModel : ObservableObject
             "Held & managed by Google Play · re-signs each release", "Google"));
     }
 
-    void BuildFingerprints()
+    /// <summary>
+    /// Resolves the keystore (path + optional password/alias) and reads its real SHA-1 /
+    /// SHA-256 fingerprints with keytool via the injected supplier. On any failure
+    /// (no keystore resolved, keytool absent, wrong/absent password) the panel falls back
+    /// to an honest empty state — fingerprints are never fabricated.
+    /// </summary>
+    void LoadFingerprints()
     {
         Fingerprints.Clear();
-        Fingerprints.Add(new FingerprintRow("Upload", "SHA-256",
-            "A1:B2:C3:D4:E5:F6:07:18:29:3A:4B:5C:6D:7E:8F:90:A1:B2:C3:D4:E5:F6:07:18:29:3A:4B:5C:6D:7E:8F:90",
-            IsAccent: true));
-        Fingerprints.Add(new FingerprintRow("App signing", "SHA-256",
-            "5F:0E:1D:2C:3B:4A:59:68:77:86:95:A4:B3:C2:D1:E0:FF:0E:1D:2C:3B:4A:59:68:77:86:95:A4:B3:C2:D1:E0",
-            IsAccent: false));
-        Fingerprints.Add(new FingerprintRow("App signing", "SHA-1",
-            "9C:8B:7A:69:58:47:36:25:14:03:F2:E1:D0:CF:BE:AD:9C:8B:7A:69",
-            IsAccent: false));
+        HasFingerprints = false;
+
+        var location = AndroidSigningReader.ResolveKeystoreLocation(_project);
+        if (!location.HasKeystore)
+        {
+            FingerprintsEmptyText =
+                "No keystore resolved. Configure a release signingConfig (storeFile / key.properties) to read SHA-1 / SHA-256 with keytool.";
+            RaiseFingerprintProps();
+            return;
+        }
+
+        // The password may live in the Keychain under KEYSTORE_PASSWORD when not in
+        // key.properties. key.properties wins (it is what gradle itself uses).
+        var storePassword = location.StorePassword
+            ?? _secrets.Get(_project.Path, "KEYSTORE_PASSWORD");
+
+        IReadOnlyList<CertFingerprint> fingerprints;
+        try
+        {
+            fingerprints = _readFingerprints(location.Path, storePassword, location.Alias);
+        }
+        catch
+        {
+            fingerprints = Array.Empty<CertFingerprint>();
+        }
+
+        foreach (var fp in fingerprints)
+        {
+            var label = string.IsNullOrEmpty(fp.Alias) ? "Certificate" : fp.Alias;
+            Fingerprints.Add(new FingerprintRow(
+                label!, fp.Type, fp.Value, IsAccent: fp.Type == "SHA-256"));
+        }
+
+        HasFingerprints = Fingerprints.Count > 0;
+        if (!HasFingerprints)
+        {
+            FingerprintsEmptyText =
+                "keytool returned no fingerprints. Check the keystore path, alias, and that the store password is available (key.properties / Keychain), and that keytool is on PATH.";
+        }
+
+        RaiseFingerprintProps();
+    }
+
+    void RaiseFingerprintProps()
+    {
+        OnPropertyChanged(nameof(HasFingerprints));
+        OnPropertyChanged(nameof(HasNoFingerprints));
+        OnPropertyChanged(nameof(FingerprintsEmptyText));
     }
 
     static string? ReadPackageName(Project project)
@@ -239,5 +313,5 @@ public sealed record AndroidCredentialRow(string Name, string Description, Secre
 public sealed record SigningKeyRow(
     string Title, string StatusText, bool IsGreen, string Sub, string Meta);
 
-/// <summary>Illustrative certificate-fingerprint row.</summary>
+/// <summary>One REAL certificate-fingerprint row read from the keystore via keytool.</summary>
 public sealed record FingerprintRow(string Label, string Algorithm, string Value, bool IsAccent);

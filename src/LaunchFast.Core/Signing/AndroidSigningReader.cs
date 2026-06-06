@@ -209,14 +209,27 @@ public static partial class AndroidSigningReader
 
     static (bool Present, IReadOnlyList<string> Names) ReadKeyProperties(string androidRoot)
     {
+        var props = ReadKeyPropertyMap(androidRoot);
+        return props is null
+            ? (false, Array.Empty<string>())
+            : (true, props.Keys.ToArray());
+    }
+
+    /// <summary>
+    /// Parses <c>android/key.properties</c> into a key→value map, preserving declaration
+    /// order. Returns null when the file is absent / unreadable. (Used to resolve the
+    /// keystore path + store password for keytool; the values are never logged.)
+    /// </summary>
+    static IReadOnlyDictionary<string, string>? ReadKeyPropertyMap(string androidRoot)
+    {
         var path = Path.Combine(androidRoot, "key.properties");
-        if (!File.Exists(path)) return (false, Array.Empty<string>());
+        if (!File.Exists(path)) return null;
 
         string text;
         try { text = File.ReadAllText(path); }
-        catch { return (true, Array.Empty<string>()); }
+        catch { return new Dictionary<string, string>(StringComparer.Ordinal); }
 
-        var names = new List<string>();
+        var map = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (var rawLine in text.Split('\n'))
         {
             var line = rawLine.Trim();
@@ -226,10 +239,93 @@ public static partial class AndroidSigningReader
             if (eq <= 0) continue;
 
             var key = line[..eq].Trim();
-            if (key.Length > 0 && !names.Contains(key, StringComparer.Ordinal))
-                names.Add(key);
+            var value = line[(eq + 1)..].Trim();
+            if (key.Length > 0 && !map.ContainsKey(key)) map[key] = value;
         }
 
-        return (true, names);
+        return map;
     }
+
+    /// <summary>
+    /// Resolves the on-disk keystore location for a project so the fingerprints can be
+    /// read with keytool: the absolute keystore path (the gradle <c>storeFile</c> literal,
+    /// or — when gradle references a <c>key.properties</c> entry — that entry's value),
+    /// resolved relative to <c>android/app</c> when not already absolute, plus the
+    /// <c>keyAlias</c> and <c>storePassword</c> drawn from <c>key.properties</c> when
+    /// available. Returns <see cref="KeystoreLocation.None"/> when no keystore path can be
+    /// resolved or the file does not exist. Total — never throws.
+    /// </summary>
+    public static KeystoreLocation ResolveKeystoreLocation(Project project)
+    {
+        var androidRoot = AndroidRoot(project);
+        if (androidRoot is null) return KeystoreLocation.None;
+
+        var gradle = ReadGradle(androidRoot);
+        var release = gradle is null ? null : ExtractReleaseSigningBlock(gradle);
+        if (release is null) return KeystoreLocation.None;
+
+        var storeFileRaw = FindValue(release, StoreFileLiteralRegex(), "storeFile");
+        var keyAliasRaw = FindValue(release, KeyAliasLiteralRegex(), "keyAlias");
+        if (storeFileRaw is null) return KeystoreLocation.None;
+
+        var props = ReadKeyPropertyMap(androidRoot);
+
+        // FindValue returns the referenced key.properties NAME when gradle uses a
+        // property ref; otherwise the literal. Resolve a ref to its value.
+        var storeFile = ResolveRef(storeFileRaw, release, props);
+        var alias = ResolveRef(keyAliasRaw, release, props);
+        var storePassword = props is not null && props.TryGetValue("storePassword", out var sp)
+            ? (string.IsNullOrEmpty(sp) ? null : sp)
+            : null;
+
+        if (string.IsNullOrWhiteSpace(storeFile)) return KeystoreLocation.None;
+
+        var appDir = Path.Combine(androidRoot, "app");
+        var fullPath = Path.IsPathRooted(storeFile)
+            ? storeFile
+            : Path.GetFullPath(Path.Combine(appDir, storeFile));
+
+        // Some setups key storeFile relative to android/ rather than android/app.
+        if (!File.Exists(fullPath))
+        {
+            var altPath = Path.IsPathRooted(storeFile)
+                ? storeFile
+                : Path.GetFullPath(Path.Combine(androidRoot, storeFile));
+            if (File.Exists(altPath)) fullPath = altPath;
+        }
+
+        return File.Exists(fullPath)
+            ? new KeystoreLocation(fullPath, string.IsNullOrEmpty(alias) ? null : alias, storePassword)
+            : KeystoreLocation.None;
+    }
+
+    /// <summary>
+    /// When <paramref name="value"/> is the name of a <c>key.properties</c> entry that the
+    /// gradle <paramref name="block"/> references, returns that entry's value; otherwise
+    /// returns <paramref name="value"/> unchanged (it is already a literal).
+    /// </summary>
+    static string? ResolveRef(
+        string? value, string block, IReadOnlyDictionary<string, string>? props)
+    {
+        if (value is null || props is null) return value;
+        // A property ref surfaces as the property NAME (which key.properties also defines).
+        return props.TryGetValue(value, out var resolved) && block.Contains(value, StringComparison.Ordinal)
+            ? resolved
+            : value;
+    }
+}
+
+/// <summary>
+/// A resolved Android keystore location: the absolute keystore <see cref="Path"/>, plus
+/// the optional <see cref="Alias"/> and <see cref="StorePassword"/> needed to read it
+/// with keytool. The password is carried only to hand to the keytool runner — it is never
+/// logged or surfaced.
+/// </summary>
+public sealed record KeystoreLocation(string Path, string? Alias, string? StorePassword)
+{
+    /// <summary>True when a keystore path was resolved (the file exists on disk).</summary>
+    public bool HasKeystore => !string.IsNullOrEmpty(Path);
+
+    /// <summary>An empty location for projects with no resolvable keystore.</summary>
+    public static KeystoreLocation None { get; } = new(string.Empty, null, null);
 }

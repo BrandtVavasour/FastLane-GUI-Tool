@@ -18,8 +18,8 @@
             <Grid ColumnDefinitions="*,Auto,Auto" Margin="16,11">
                 <Button Grid.Column="1" Classes="btn" Margin="0,0,8,0"
                         Content="Verify keystore"
-                        ToolTip.Tip="Inert placeholder — running keytool is a future enhancement."
-                        IsEnabled="False" />
+                        ToolTip.Tip="Re-read the keystore's SHA-1 / SHA-256 fingerprints with keytool."
+                        Command="{Binding VerifyKeystoreCommand}" />
                 <Button Grid.Column="2" Classes="accent" Content="Build AAB (gradle)"
                         IsEnabled="{Binding CanBuildAab}"
                         Command="{Binding BuildAabCommand}" />
@@ -188,13 +188,10 @@
                 <ScrollViewer>
                     <StackPanel Margin="18,16,18,20" Spacing="16">
 
-                        <!-- Certificate fingerprints (ILLUSTRATIVE) -->
+                        <!-- Certificate fingerprints (REAL · keytool -list -v) -->
                         <StackPanel Spacing="9">
-                            <Grid ColumnDefinitions="*,Auto">
-                                <TextBlock Grid.Column="0" Classes="blk-t" Text="CERTIFICATE FINGERPRINTS" />
-                                <TextBlock Grid.Column="1" Classes="blk-x" Text="Illustrative" />
-                            </Grid>
-                            <Border Classes="panel">
+                            <TextBlock Classes="blk-t" Text="CERTIFICATE FINGERPRINTS" />
+                            <Border Classes="panel" IsVisible="{Binding HasFingerprints}">
                                 <ItemsControl ItemsSource="{Binding Fingerprints}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate x:DataType="vm:FingerprintRow">
@@ -217,9 +214,13 @@
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
                             </Border>
+                            <Border Classes="panel" IsVisible="{Binding HasNoFingerprints}">
+                                <TextBlock Classes="lsub" TextWrapping="Wrap"
+                                           Text="{Binding FingerprintsEmptyText}" />
+                            </Border>
                             <TextBlock FontSize="11.5" TextWrapping="Wrap"
                                        Foreground="{DynamicResource Text3Brush}"
-                                       Text="Add these SHA-256 fingerprints to Firebase, Google Sign-In and Maps — services validate against the app signing key, not the upload key." />
+                                       Text="Add these SHA-256 fingerprints to Firebase, Google Sign-In and Maps. With Play App Signing, services validate against the app signing key Google holds, not your upload key." />
                         </StackPanel>
 
                         <!-- Danger zone (ILLUSTRATIVE / inert) -->
