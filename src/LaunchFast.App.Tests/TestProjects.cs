@@ -63,9 +63,12 @@ public static class TestProjects
         File.WriteAllText(Path.Combine(iosEn, "keywords.txt"), "demo,track,fast\n");
         File.WriteAllText(Path.Combine(iosEn, "description.txt"), "A long full description of the demo app.\n");
         File.WriteAllText(Path.Combine(iosEn, "marketing_url.txt"), "https://example.com\n");
+        File.WriteAllText(Path.Combine(iosEn, "release_notes.txt"),
+            "• Faster sync.\n• New offline mode.\n• Bug fixes.\n");
 
         Directory.CreateDirectory(Path.Combine(iosFl, "metadata", "ja"));
         File.WriteAllText(Path.Combine(iosFl, "metadata", "ja", "name.txt"), "デモアプリ\n");
+        // ja has a name but NO release notes → an "empty" locale tab.
 
         var iosShots = Path.Combine(iosFl, "screenshots", "en-US");
         Directory.CreateDirectory(iosShots);
@@ -78,6 +81,10 @@ public static class TestProjects
         File.WriteAllText(Path.Combine(aEn, "title.txt"), "Demo Play\n");
         File.WriteAllText(Path.Combine(aEn, "short_description.txt"), "Short blurb\n");
         File.WriteAllText(Path.Combine(aEn, "full_description.txt"), "Full Android description.\n");
+        var aChangelogs = Path.Combine(aEn, "changelogs");
+        Directory.CreateDirectory(aChangelogs);
+        File.WriteAllText(Path.Combine(aChangelogs, "9.txt"), "• Android changelog for build 9.\n");
+        File.WriteAllText(Path.Combine(aChangelogs, "8.txt"), "• Older Android changelog.\n");
         WriteFakePng(Path.Combine(aEn, "images", "phoneScreenshots", "1.png"));
 
         return ProjectScanner.TryScanRoot(root)!;

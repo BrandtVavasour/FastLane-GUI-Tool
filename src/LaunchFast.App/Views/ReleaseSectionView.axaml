@@ -1,0 +1,344 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:LaunchFast.App.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="980" d:DesignHeight="660"
+             x:Class="LaunchFast.App.Views.ReleaseSectionView"
+             x:DataType="vm:ReleaseSectionViewModel"
+             x:CompileBindings="True"
+             Background="{DynamicResource Surface0Brush}">
+
+    <UserControl.Styles>
+        <Style Selector="TextBlock.rlh">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource Text3Brush}" />
+            <Setter Property="Margin" Value="0,0,0,7" />
+        </Style>
+        <Style Selector="TextBlock.grouplbl">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource Text3Brush}" />
+        </Style>
+        <!-- key/value row -->
+        <Style Selector="TextBlock.kl">
+            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="Foreground" Value="{DynamicResource Text2Brush}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="TextBlock.kr">
+            <Setter Property="FontFamily" Value="{DynamicResource MonoFontFamily}" />
+            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="Foreground" Value="{DynamicResource Text1Brush}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <!-- toggle row labels -->
+        <Style Selector="TextBlock.tn">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource Text1Brush}" />
+        </Style>
+        <Style Selector="TextBlock.td">
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="Foreground" Value="{DynamicResource Text3Brush}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <!-- check row status dot -->
+        <Style Selector="Border.ci">
+            <Setter Property="Width" Value="9" />
+            <Setter Property="Height" Value="9" />
+            <Setter Property="CornerRadius" Value="5" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Border.ci.pass">
+            <Setter Property="Background" Value="{DynamicResource GreenBrush}" />
+        </Style>
+        <Style Selector="Border.ci.warn">
+            <Setter Property="Background" Value="{DynamicResource AmberBrush}" />
+        </Style>
+        <Style Selector="Border.ci.fail">
+            <Setter Property="Background" Value="{DynamicResource RedBrush}" />
+        </Style>
+        <Style Selector="TextBlock.cname">
+            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource Text1Brush}" />
+        </Style>
+        <Style Selector="TextBlock.cdet">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Foreground" Value="{DynamicResource Text3Brush}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <!-- mini terminal -->
+        <Style Selector="Border.miniterm">
+            <Setter Property="Background" Value="{DynamicResource TermBgBrush}" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="ClipToBounds" Value="True" />
+        </Style>
+        <Style Selector="Border.miniterm TextBlock.ml">
+            <Setter Property="FontFamily" Value="{DynamicResource MonoFontFamily}" />
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="Foreground" Value="{DynamicResource TermGreenBrush}" />
+        </Style>
+        <Style Selector="Slider.rng">
+            <Setter Property="MinHeight" Value="22" />
+        </Style>
+    </UserControl.Styles>
+
+    <DockPanel>
+        <!-- Toolbar -->
+        <Border DockPanel.Dock="Top"
+                Background="{DynamicResource Surface1Brush}"
+                BorderBrush="{DynamicResource SeparatorBrush}"
+                BorderThickness="0,0,0,1">
+            <Grid ColumnDefinitions="*,Auto" Margin="16,11">
+                <Button Grid.Column="1" Classes="btn"
+                        Content="↻ Re-run checks"
+                        Command="{Binding RunChecksCommand}" />
+            </Grid>
+        </Border>
+
+        <!-- Subbar -->
+        <Border DockPanel.Dock="Top" Classes="subbar">
+            <Grid ColumnDefinitions="Auto,*,Auto" HorizontalAlignment="Stretch">
+                <TextBlock Grid.Column="0" Classes="h2" Text="{Binding Name}" />
+                <StackPanel Grid.Column="2" Classes="synced" Orientation="Horizontal" Spacing="6">
+                    <Border Classes="synced-dot" />
+                    <TextBlock Text="Real pre-flight checks · illustrative precheck" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Two-column body -->
+        <Grid ColumnDefinitions="1.05*,1*">
+
+            <!-- LEFT: compose -->
+            <ScrollViewer Grid.Column="0">
+                <StackPanel Margin="22,18" Spacing="16">
+
+                    <StackPanel>
+                        <TextBlock Classes="rlh" Text="Platform" />
+                        <Border Classes="seg" HorizontalAlignment="Left">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Classes="seg-item" GroupName="relplat"
+                                             Content="iOS"
+                                             IsChecked="{Binding IsIosSelected, Mode=TwoWay}" />
+                                <RadioButton Classes="seg-item" GroupName="relplat"
+                                             Content="Android"
+                                             IsChecked="{Binding IsAndroidSelected, Mode=TwoWay}" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <StackPanel>
+                        <TextBlock Classes="rlh" Text="Track" />
+                        <Border Classes="seg" HorizontalAlignment="Left">
+                            <ItemsControl ItemsSource="{Binding Tracks}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:ReleaseTrackOption">
+                                        <RadioButton Classes="seg-item" GroupName="reltrack"
+                                                     Content="{Binding Title}"
+                                                     IsChecked="{Binding IsSelected, Mode=OneWay}"
+                                                     Command="{Binding $parent[ItemsControl].((vm:ReleaseSectionViewModel)DataContext).SelectTrackCommand}"
+                                                     CommandParameter="{Binding}" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Border>
+                    </StackPanel>
+
+                    <StackPanel>
+                        <TextBlock Classes="rlh" Text="Version &amp; build" />
+                        <Grid ColumnDefinitions="Auto,*">
+                            <TextBlock Grid.Column="0" Classes="kl" Text="Submitting" />
+                            <TextBlock Grid.Column="1" Classes="kr" HorizontalAlignment="Right"
+                                       Text="{Binding SubmittingText}" />
+                        </Grid>
+                    </StackPanel>
+
+                    <StackPanel>
+                        <TextBlock Classes="rlh" Text="Release rollout" />
+                        <Border Classes="panel">
+                            <StackPanel>
+                                <Grid ColumnDefinitions="*,Auto" Margin="0,10">
+                                    <StackPanel Grid.Column="0" Spacing="2">
+                                        <TextBlock Classes="tn" Text="Phased release over 7 days" />
+                                        <TextBlock Classes="td"
+                                                   Text="App Store · release to a growing % of users each day" />
+                                    </StackPanel>
+                                    <ToggleSwitch Grid.Column="1" Classes="tgl"
+                                                  VerticalAlignment="Center"
+                                                  IsChecked="{Binding PhasedRelease, Mode=TwoWay}" />
+                                </Grid>
+                                <Grid ColumnDefinitions="*,Auto" Margin="0,10">
+                                    <StackPanel Grid.Column="0" Spacing="2">
+                                        <TextBlock Classes="tn" Text="Auto-release after approval" />
+                                        <TextBlock Classes="td"
+                                                   Text="Go live immediately once approved" />
+                                    </StackPanel>
+                                    <ToggleSwitch Grid.Column="1" Classes="tgl"
+                                                  VerticalAlignment="Center"
+                                                  IsChecked="{Binding AutoRelease, Mode=TwoWay}" />
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Classes="panel" Margin="0,10,0,0">
+                            <StackPanel Margin="0,8" Spacing="6">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Grid.Column="0" Classes="tn" Text="Play staged rollout" />
+                                    <TextBlock Grid.Column="1" Classes="kr"
+                                               Text="{Binding StagedRolloutText}" />
+                                </Grid>
+                                <Slider Classes="rng" Minimum="0" Maximum="100"
+                                        Value="{Binding StagedRolloutPercent, Mode=TwoWay}" />
+                                <TextBlock Classes="td"
+                                           Text="production track · promote toward 100% when stable" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <StackPanel>
+                        <TextBlock Classes="rlh" Text="Attached changelog" />
+                        <Border Classes="panel">
+                            <StackPanel Margin="0,10" Spacing="8">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+                                        <TextBlock Classes="cname" Text="What's new" />
+                                        <TextBlock Classes="cdet" VerticalAlignment="Center"
+                                                   Text="{Binding ChangelogLocale}" />
+                                        <Border Classes="pill warn"
+                                                IsVisible="{Binding !HasRealChangelog}">
+                                            <TextBlock Text="PLACEHOLDER" />
+                                        </Border>
+                                    </StackPanel>
+                                    <Border Grid.Column="1" Classes="chip">
+                                        <TextBlock Text="{Binding ChangelogVersionText}" />
+                                    </Border>
+                                </Grid>
+                                <TextBlock FontSize="12" TextWrapping="Wrap"
+                                           Foreground="{DynamicResource Text2Brush}"
+                                           Text="{Binding ChangelogText}" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- RIGHT: checklist + submit -->
+            <Border Grid.Column="1" Background="{DynamicResource Surface2Brush}"
+                    BorderBrush="{DynamicResource SeparatorBrush}"
+                    BorderThickness="1,0,0,0">
+                <ScrollViewer>
+                    <StackPanel Margin="20,18" Spacing="10">
+
+                        <TextBlock Classes="grouplbl" Text="Pre-flight checklist" />
+                        <ItemsControl ItemsSource="{Binding Checks}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:ReleaseCheckViewModel">
+                                    <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,9">
+                                        <Border Grid.Column="0" Classes="ci"
+                                                Classes.pass="{Binding IsPass}"
+                                                Classes.warn="{Binding IsWarn}"
+                                                Classes.fail="{Binding IsFail}"
+                                                VerticalAlignment="Top" Margin="0,4,10,0" />
+                                        <StackPanel Grid.Column="1" Spacing="2" Margin="0,0,10,0">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <TextBlock Classes="cname" Text="{Binding Name}" />
+                                                <Border Classes="chip">
+                                                    <TextBlock Text="{Binding SourceBadge}" />
+                                                </Border>
+                                            </StackPanel>
+                                            <TextBlock Classes="cdet" Text="{Binding Detail}" />
+                                        </StackPanel>
+                                        <Border Grid.Column="2" VerticalAlignment="Top"
+                                                Classes="pill"
+                                                Classes.ok="{Binding IsPass}"
+                                                Classes.warn="{Binding IsWarn}"
+                                                Classes.bad="{Binding IsFail}">
+                                            <TextBlock Text="{Binding StatusLabel}" />
+                                        </Border>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <StackPanel Orientation="Horizontal" Spacing="7" Margin="0,6,0,0">
+                            <TextBlock Classes="grouplbl" Text="Metadata precheck" />
+                            <Border Classes="chip">
+                                <TextBlock Text="illustrative" />
+                            </Border>
+                        </StackPanel>
+                        <ItemsControl ItemsSource="{Binding Prechecks}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:ReleaseCheckViewModel">
+                                    <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,0,0,9">
+                                        <Border Grid.Column="0" Classes="ci"
+                                                Classes.pass="{Binding IsPass}"
+                                                Classes.warn="{Binding IsWarn}"
+                                                Classes.fail="{Binding IsFail}"
+                                                VerticalAlignment="Top" Margin="0,4,10,0" />
+                                        <StackPanel Grid.Column="1" Spacing="2" Margin="0,0,10,0">
+                                            <TextBlock Classes="cname" Text="{Binding Name}" />
+                                            <TextBlock Classes="cdet" Text="{Binding Detail}" />
+                                        </StackPanel>
+                                        <Border Grid.Column="2" VerticalAlignment="Top"
+                                                Classes="pill"
+                                                Classes.ok="{Binding IsPass}"
+                                                Classes.warn="{Binding IsWarn}"
+                                                Classes.bad="{Binding IsFail}">
+                                            <TextBlock Text="{Binding StatusLabel}" />
+                                        </Border>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <!-- Submit -->
+                        <StackPanel Spacing="6" Margin="0,8,0,0">
+                            <Button Classes="accent" HorizontalAlignment="Stretch"
+                                    Content="Submit for review"
+                                    IsEnabled="{Binding CanSubmit}"
+                                    Command="{Binding SubmitCommand}" />
+                            <TextBlock FontSize="11.5" TextWrapping="Wrap"
+                                       Foreground="{DynamicResource Text3Brush}"
+                                       Text="{Binding CheckSummary}" />
+                            <TextBlock FontSize="11" TextWrapping="Wrap"
+                                       Foreground="{DynamicResource AmberBrush}"
+                                       IsVisible="{Binding !CanSubmit}"
+                                       Text="{Binding SubmitDisabledReason}" />
+                        </StackPanel>
+
+                        <!-- mini terminal (static "ready" line — never fakes a run) -->
+                        <Border Classes="miniterm" Margin="0,8,0,0">
+                            <StackPanel>
+                                <Border Background="{DynamicResource TermBarBrush}"
+                                        Padding="12,8">
+                                    <Grid ColumnDefinitions="Auto,*,Auto">
+                                        <TextBlock Grid.Column="0" Text="release log"
+                                                   FontSize="11" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TermLabelBrush}" />
+                                        <TextBlock Grid.Column="2" FontSize="11"
+                                                   Foreground="{DynamicResource TermLabelBrush}"
+                                                   Text="{Binding TerminalContext}" />
+                                    </Grid>
+                                </Border>
+                                <StackPanel Margin="12,10">
+                                    <TextBlock Classes="ml" TextWrapping="Wrap"
+                                               Text="{Binding TerminalReadyLine}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+    </DockPanel>
+</UserControl>

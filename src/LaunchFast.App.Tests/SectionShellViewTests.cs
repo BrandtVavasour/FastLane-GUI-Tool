@@ -84,6 +84,54 @@ public class SectionShellViewTests
     }
 
     [AvaloniaTest]
+    public void WhatsNewSectionView_renders_with_real_release_notes_without_throwing()
+    {
+        var project = TestProjects.MakeProjectWithStoreMetadata();
+        var vm = new WhatsNewSectionViewModel(project);
+
+        var window = new Window { Content = new WhatsNewSectionView { DataContext = vm } };
+        window.Show();
+
+        Assert.That(window.IsVisible, Is.True);
+        Assert.That(vm.Locales, Is.Not.Empty);
+        Assert.That(vm.NoteText, Does.Contain("Faster sync"));
+
+        window.Close();
+    }
+
+    [AvaloniaTest]
+    public void WhatsNewSectionView_renders_empty_state_without_throwing()
+    {
+        var root = TestProjects.MakeFlutterProject();
+        var project = LaunchFast.Core.Scanning.ProjectScanner.TryScanRoot(root)!;
+        var vm = new WhatsNewSectionViewModel(project);
+
+        var window = new Window { Content = new WhatsNewSectionView { DataContext = vm } };
+        window.Show();
+
+        Assert.That(window.IsVisible, Is.True);
+        Assert.That(vm.IsEmpty, Is.True);
+
+        window.Close();
+    }
+
+    [AvaloniaTest]
+    public void ReleaseSectionView_renders_with_real_checks_without_throwing()
+    {
+        var project = TestProjects.MakeFlutterProjectWithRealFastfiles();
+        var vm = new ReleaseSectionViewModel(project,
+            runLane: (_, _) => { }, hasLane: (_, _) => true);
+
+        var window = new Window { Content = new ReleaseSectionView { DataContext = vm } };
+        window.Show();
+
+        Assert.That(window.IsVisible, Is.True);
+        Assert.That(vm.Checks, Is.Not.Empty);
+
+        window.Close();
+    }
+
+    [AvaloniaTest]
     public void BuildTestSectionView_renders_with_placeholder_vm_without_throwing()
     {
         var project = TestProjects.MakeFlutterProjectWithRealFastfiles();

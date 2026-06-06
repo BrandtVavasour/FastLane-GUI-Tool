@@ -77,7 +77,7 @@ public class ProjectShellViewModelTests
     }
 
     [Test]
-    public void Store_and_release_sections_resolve_to_listing_and_placeholders()
+    public void Store_whatsnew_and_release_sections_resolve_to_real_section_vms()
     {
         var shell = MakeShell(out _);
 
@@ -85,15 +85,30 @@ public class ProjectShellViewModelTests
         Assert.That(shell.CurrentContent, Is.InstanceOf<StoreListingSectionViewModel>());
 
         shell.SelectSectionCommand.Execute(ProjectSection.WhatsNew);
-        Assert.That(shell.CurrentContent, Is.InstanceOf<SectionPlaceholderViewModel>());
+        Assert.That(shell.CurrentContent, Is.InstanceOf<WhatsNewSectionViewModel>());
 
         shell.SelectSectionCommand.Execute(ProjectSection.Release);
-        Assert.That(shell.CurrentContent, Is.InstanceOf<SectionPlaceholderViewModel>());
+        Assert.That(shell.CurrentContent, Is.InstanceOf<ReleaseSectionViewModel>());
 
         // All three new sidebar entries exist.
         Assert.That(shell.Sections.Any(s => s.Section == ProjectSection.StoreListing), Is.True);
         Assert.That(shell.Sections.Any(s => s.Section == ProjectSection.WhatsNew), Is.True);
         Assert.That(shell.Sections.Any(s => s.Section == ProjectSection.Release), Is.True);
+    }
+
+    [Test]
+    public void Release_section_submit_reflects_lane_presence_for_real_fastfiles()
+    {
+        var shell = MakeShell(out _);
+
+        shell.SelectSectionCommand.Execute(ProjectSection.Release);
+        var release = (ReleaseSectionViewModel)shell.CurrentContent!;
+
+        // The fixture iOS Fastfile defines a `release` lane → lane is present, but
+        // the fixture has missing secrets → a real check fails → Submit gated.
+        Assert.That(release.HasReleaseLane, Is.True);
+        Assert.That(release.HasFailingCheck, Is.True);
+        Assert.That(release.CanSubmit, Is.False);
     }
 
     [Test]

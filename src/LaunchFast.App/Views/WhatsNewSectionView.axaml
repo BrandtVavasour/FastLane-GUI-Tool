@@ -1,0 +1,268 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:LaunchFast.App.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="980" d:DesignHeight="640"
+             x:Class="LaunchFast.App.Views.WhatsNewSectionView"
+             x:DataType="vm:WhatsNewSectionViewModel"
+             x:CompileBindings="True"
+             Background="{DynamicResource Surface0Brush}">
+
+    <UserControl.Styles>
+        <!-- bare button wrapper (no chrome) used for clickable rail rows -->
+        <Style Selector="Button.rowbtn">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Button.rowbtn /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <!-- version rail row -->
+        <Style Selector="Border.verrow">
+            <Setter Property="CornerRadius" Value="9" />
+            <Setter Property="Padding" Value="11,9" />
+            <Setter Property="Margin" Value="0,0,0,7" />
+            <Setter Property="Background" Value="{DynamicResource Surface1Brush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SeparatorBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+        <Style Selector="Border.verrow.on">
+            <Setter Property="Background" Value="{DynamicResource Surface2Brush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+        </Style>
+        <Style Selector="TextBlock.vname">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource Text1Brush}" />
+        </Style>
+        <Style Selector="TextBlock.vmeta">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Foreground" Value="{DynamicResource Text3Brush}" />
+        </Style>
+        <!-- locale tab -->
+        <Style Selector="RadioButton.loctab">
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Name="root" CornerRadius="8" Padding="9,6"
+                            Background="{DynamicResource Surface1Brush}"
+                            BorderBrush="{DynamicResource SeparatorBrush}"
+                            BorderThickness="1">
+                        <ContentPresenter Content="{TemplateBinding Content}" />
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+            <Setter Property="Margin" Value="0,0,7,0" />
+        </Style>
+        <Style Selector="RadioButton.loctab:checked /template/ Border#root">
+            <Setter Property="Background" Value="{DynamicResource Surface2Brush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+        </Style>
+        <!-- full/empty dot -->
+        <Style Selector="Border.ld">
+            <Setter Property="Width" Value="7" />
+            <Setter Property="Height" Value="7" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Background" Value="{DynamicResource AmberBrush}" />
+        </Style>
+        <Style Selector="Border.ld.full">
+            <Setter Property="Background" Value="{DynamicResource GreenBrush}" />
+        </Style>
+        <Style Selector="TextBlock.loccode">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource Text1Brush}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <!-- char counter -->
+        <Style Selector="TextBlock.counter">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Foreground" Value="{DynamicResource Text3Brush}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style Selector="TextBlock.counter.warn">
+            <Setter Property="Foreground" Value="{DynamicResource AmberBrush}" />
+        </Style>
+        <Style Selector="TextBlock.counter.over">
+            <Setter Property="Foreground" Value="{DynamicResource RedBrush}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <Style Selector="TextBlock.sectitle">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource Text3Brush}" />
+        </Style>
+        <!-- fastlane path note -->
+        <Style Selector="Border.flnote">
+            <Setter Property="Background" Value="{DynamicResource BadgeBgBrush}" />
+            <Setter Property="CornerRadius" Value="7" />
+            <Setter Property="Padding" Value="10,7" />
+            <Setter Property="Margin" Value="0,10,0,0" />
+        </Style>
+        <Style Selector="Border.flnote TextBlock.path">
+            <Setter Property="FontFamily" Value="{DynamicResource MonoFontFamily}" />
+            <Setter Property="FontSize" Value="11.5" />
+            <Setter Property="Foreground" Value="{DynamicResource Text1Brush}" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+    </UserControl.Styles>
+
+    <DockPanel>
+        <!-- Toolbar (inert this pass — read-focused) -->
+        <Border DockPanel.Dock="Top"
+                Background="{DynamicResource Surface1Brush}"
+                BorderBrush="{DynamicResource SeparatorBrush}"
+                BorderThickness="0,0,0,1">
+            <Grid ColumnDefinitions="*,Auto,Auto" Margin="16,11">
+                <Button Grid.Column="1" Classes="btn" Margin="0,0,8,0"
+                        Content="Discard" IsEnabled="False" />
+                <Button Grid.Column="2" Classes="accent"
+                        Content="Save changelog" IsEnabled="False" />
+            </Grid>
+        </Border>
+
+        <!-- Subbar -->
+        <Border DockPanel.Dock="Top" Classes="subbar">
+            <Grid ColumnDefinitions="Auto,Auto,Auto,*,Auto" HorizontalAlignment="Stretch">
+                <TextBlock Grid.Column="0" Classes="h2" Text="{Binding Name}" />
+                <TextBlock Grid.Column="1" Classes="lbl" Text="Platform"
+                           Margin="18,0,8,0" />
+                <Border Grid.Column="2" Classes="seg sm">
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton Classes="seg-item" GroupName="wnplatform"
+                                     Content="App Store"
+                                     IsChecked="{Binding IsIosSelected, Mode=TwoWay}" />
+                        <RadioButton Classes="seg-item" GroupName="wnplatform"
+                                     Content="Google Play"
+                                     IsChecked="{Binding IsAndroidSelected, Mode=TwoWay}" />
+                    </StackPanel>
+                </Border>
+                <StackPanel Grid.Column="4" Classes="synced" Orientation="Horizontal" Spacing="6">
+                    <Border Classes="synced-dot" />
+                    <TextBlock Text="Read from fastlane metadata on disk" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Empty state -->
+        <Border IsVisible="{Binding IsEmpty}">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
+                        Spacing="10" MaxWidth="420">
+                <TextBlock Text="📝" FontSize="34" HorizontalAlignment="Center" />
+                <TextBlock Text="No release notes" FontSize="16" FontWeight="SemiBold"
+                           HorizontalAlignment="Center"
+                           Foreground="{DynamicResource Text1Brush}" />
+                <TextBlock Text="{Binding EmptyStateText}" FontSize="12.5"
+                           TextWrapping="Wrap" TextAlignment="Center"
+                           Foreground="{DynamicResource Text3Brush}" />
+            </StackPanel>
+        </Border>
+
+        <!-- Two-column body -->
+        <Grid ColumnDefinitions="240,*" IsVisible="{Binding !IsEmpty}">
+
+            <!-- LEFT: version rail -->
+            <Border Grid.Column="0"
+                    Background="{DynamicResource Surface1Brush}"
+                    BorderBrush="{DynamicResource SeparatorBrush}"
+                    BorderThickness="0,0,1,0">
+                <ScrollViewer>
+                    <StackPanel Margin="14,16" Spacing="2">
+                        <TextBlock Classes="sectitle" Text="Release history" Margin="0,0,0,8" />
+                        <ItemsControl ItemsSource="{Binding Versions}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:ReleaseVersionViewModel">
+                                    <Button Classes="rowbtn"
+                                            Command="{Binding $parent[ItemsControl].((vm:WhatsNewSectionViewModel)DataContext).SelectVersionCommand}"
+                                            CommandParameter="{Binding}">
+                                        <Border Classes="verrow" Classes.on="{Binding IsSelected}">
+                                            <StackPanel Spacing="3">
+                                                <Grid ColumnDefinitions="*,Auto">
+                                                    <TextBlock Grid.Column="0" Classes="vname"
+                                                               Text="{Binding Name}" />
+                                                    <Border Grid.Column="1" Classes="pill neutral">
+                                                        <TextBlock Text="{Binding Tag}" />
+                                                    </Border>
+                                                </Grid>
+                                                <TextBlock Classes="vmeta" Text="{Binding BuildMeta}" />
+                                            </StackPanel>
+                                        </Border>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBlock FontSize="11" Margin="2,6,0,0" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource Text3Brush}"
+                                   Text="Versions derived from pubspec + on-disk changelogs." />
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <!-- RIGHT: editor -->
+            <ScrollViewer Grid.Column="1">
+                <StackPanel Margin="22,18" Spacing="12">
+                    <TextBlock FontSize="15" FontWeight="SemiBold"
+                               Foreground="{DynamicResource Text1Brush}"
+                               Text="{Binding EditorTitle}" />
+                    <TextBlock FontSize="12.5" TextWrapping="Wrap"
+                               Foreground="{DynamicResource Text3Brush}"
+                               Text="{Binding IntroText}" />
+
+                    <!-- locale tabs -->
+                    <ItemsControl ItemsSource="{Binding Locales}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:LocaleTabViewModel">
+                                <RadioButton Classes="loctab" GroupName="wnlocale"
+                                             IsChecked="{Binding IsSelected, Mode=OneWay}"
+                                             Command="{Binding $parent[ItemsControl].((vm:WhatsNewSectionViewModel)DataContext).SelectLocaleCommand}"
+                                             CommandParameter="{Binding}">
+                                    <RadioButton.Content>
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <Border Classes="ld" Classes.full="{Binding HasText}" />
+                                            <TextBlock Classes="loccode" Text="{Binding Code}" />
+                                        </StackPanel>
+                                    </RadioButton.Content>
+                                </RadioButton>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <!-- editor area -->
+                    <StackPanel Spacing="6" Margin="0,4,0,0">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Grid.Column="0" Classes="fldlabel"
+                                       VerticalAlignment="Center"
+                                       Text="{Binding LocaleFieldLabel}" />
+                            <TextBlock Grid.Column="1" Classes="counter"
+                                       Classes.warn="{Binding IsNearLimit}"
+                                       Classes.over="{Binding IsOverLimit}"
+                                       Text="{Binding CounterText}" />
+                        </Grid>
+                        <TextBox Classes="inp"
+                                 Text="{Binding NoteText, Mode=TwoWay}"
+                                 AcceptsReturn="True"
+                                 TextWrapping="Wrap"
+                                 MinHeight="180"
+                                 Watermark="What's new in this version…" />
+                        <Border Classes="flnote">
+                            <TextBlock Classes="path">
+                                <Run Text="🌐 fastlane writes this to " />
+                                <Run Text="{Binding FastlanePath}" />
+                            </TextBlock>
+                        </Border>
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+    </DockPanel>
+</UserControl>

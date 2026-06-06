@@ -215,6 +215,27 @@ public sealed class StoreMetadataReaderTests
     }
 
     [Test]
+    public void ChangelogVersionCodes_lists_codes_sorted_descending()
+    {
+        var dir = AndroidMeta("en-US");
+        Write(Path.Combine(dir, "changelogs", "15.txt"), "Old notes");
+        Write(Path.Combine(dir, "changelogs", "18.txt"), "New notes");
+        Write(Path.Combine(dir, "changelogs", "16.txt"), "Mid notes");
+
+        var codes = StoreMetadataReader.ChangelogVersionCodes(_project, "en-US");
+
+        Assert.That(codes, Is.EqualTo(new[] { "18", "16", "15" }));
+    }
+
+    [Test]
+    public void ChangelogVersionCodes_empty_when_no_changelogs()
+    {
+        Directory.CreateDirectory(AndroidMeta("en-US"));
+        var codes = StoreMetadataReader.ChangelogVersionCodes(_project, "en-US");
+        Assert.That(codes, Is.Empty);
+    }
+
+    [Test]
     public void ReadListing_android_enumerates_phone_and_tablet_screenshots()
     {
         var images = Path.Combine(AndroidMeta("en-US"), "images");

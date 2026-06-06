@@ -128,6 +128,49 @@ public static class StoreMetadataReader
     }
 
     /// <summary>
+    /// The Android changelog versionCodes present on disk for a locale — the file
+    /// stems of <c>android/fastlane/metadata/android/&lt;locale&gt;/changelogs/*.txt</c>,
+    /// sorted descending by numeric version code. Empty when none exist or the
+    /// project has no Android fastlane dir. Never throws.
+    /// </summary>
+    public static IReadOnlyList<string> ChangelogVersionCodes(Project project, string locale)
+    {
+        var root = MetadataRoot(project, Platform.Android);
+        if (root is null)
+        {
+            return Array.Empty<string>();
+        }
+
+        var dir = Path.Combine(root, locale, "changelogs");
+        if (!Directory.Exists(dir))
+        {
+            return Array.Empty<string>();
+        }
+
+        try
+        {
+            return Directory.GetFiles(dir, "*.txt")
+                .Select(Path.GetFileNameWithoutExtension)
+                .Where(n => !string.IsNullOrEmpty(n))
+                .Select(n => n!)
+                .OrderByDescending(ParseVersionCodeName)
+                .ThenByDescending(n => n, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+        }
+        catch (IOException)
+        {
+            return Array.Empty<string>();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Array.Empty<string>();
+        }
+    }
+
+    static long ParseVersionCodeName(string name) =>
+        long.TryParse(name, out var code) ? code : -1;
+
+    /// <summary>
     /// Reads the listing text + screenshots for a single locale. Returns an empty
     /// listing when the locale folder is absent. Never throws.
     /// </summary>

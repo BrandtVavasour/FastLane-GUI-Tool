@@ -105,8 +105,8 @@ public partial class ProjectShellViewModel : ObservableObject
         ProjectSection.Screenshots => BuildScreenshots(),
         ProjectSection.BuildTest => BuildBuildTest(),
         ProjectSection.StoreListing => BuildStoreListing(),
-        ProjectSection.WhatsNew => Placeholder("What's New"),
-        ProjectSection.Release => Placeholder("Release"),
+        ProjectSection.WhatsNew => BuildWhatsNew(),
+        ProjectSection.Release => BuildRelease(),
         _ => Placeholder(section.ToString()),
     };
 
@@ -147,6 +147,12 @@ public partial class ProjectShellViewModel : ObservableObject
 
     StoreListingSectionViewModel BuildStoreListing() =>
         new(_project);
+
+    WhatsNewSectionViewModel BuildWhatsNew() =>
+        new(_project);
+
+    ReleaseSectionViewModel BuildRelease() =>
+        new(_project, RunLane, (p, lane) => Lanes.HasLane(p, lane));
 
     /// <summary>
     /// Runs a lane on behalf of a section screen: switches to the Lanes section so

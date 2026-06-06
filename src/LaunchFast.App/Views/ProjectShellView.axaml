@@ -37,6 +37,12 @@
         <DataTemplate DataType="vm:StoreListingSectionViewModel">
             <views:StoreListingSectionView />
         </DataTemplate>
+        <DataTemplate DataType="vm:WhatsNewSectionViewModel">
+            <views:WhatsNewSectionView />
+        </DataTemplate>
+        <DataTemplate DataType="vm:ReleaseSectionViewModel">
+            <views:ReleaseSectionView />
+        </DataTemplate>
         <DataTemplate DataType="vm:SectionPlaceholderViewModel">
             <Border Background="{DynamicResource Surface0Brush}">
                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">

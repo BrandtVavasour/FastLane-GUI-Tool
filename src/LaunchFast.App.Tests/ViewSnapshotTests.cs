@@ -138,6 +138,29 @@ public class ViewSnapshotTests
     }
 
     [AvaloniaTest]
+    public void WhatsNewSectionView_snapshot()
+    {
+        ForEachTheme("WhatsNewSectionView", () =>
+        {
+            var project = TestProjects.MakeProjectWithStoreMetadata();
+            var vm = new WhatsNewSectionViewModel(project);
+            return new WhatsNewSectionView { DataContext = vm };
+        });
+    }
+
+    [AvaloniaTest]
+    public void ReleaseSectionView_snapshot()
+    {
+        ForEachTheme("ReleaseSectionView", () =>
+        {
+            var project = TestProjects.MakeFlutterProjectWithRealFastfiles();
+            var vm = new ReleaseSectionViewModel(project,
+                runLane: (_, _) => { }, hasLane: (_, _) => true);
+            return new ReleaseSectionView { DataContext = vm };
+        });
+    }
+
+    [AvaloniaTest]
     public void SecretsDialog_snapshot()
     {
         // SecretsDialog is itself a Window, so it is rendered directly rather than
