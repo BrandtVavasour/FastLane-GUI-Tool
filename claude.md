@@ -59,6 +59,8 @@ src/
   LaunchFast.App          → Avalonia UI (MVVM)
     ViewModels/  Launcher, ProjectCard, ProjectDetail, Lane, Run, SecretsDialog, Shell
     Views/       LauncherView, ProjectDetailView, SecretsDialog, MainWindow
+    Themes/      Tokens.axaml (macOS-native design tokens, Light/Dark ThemeDictionaries),
+                 Controls.axaml (button/card/badge/lane/banner/terminal styles)
     Converters/  PathToBitmapConverter
     Services/    AppServices (composition root)
   LaunchFast.Core.Tests   → Verify + NUnit unit/snapshot tests (+ fixtures/)

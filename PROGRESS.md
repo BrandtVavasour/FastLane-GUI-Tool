@@ -63,6 +63,15 @@ store data. Next: sub-project #2 (lane scaffolding).
 - ⬜ UI snapshot tests (Avalonia headless frame capture) — Phase 10 if feasible.
 - ⬜ Final Simon-standard cleanup pass (sealed/records/file-scoped/naming) + full review.
 
+## UI design
+- ✅ **macOS-native restyle** from a Claude Design handoff (`LaunchFast.html`): tokenised
+  Light/Dark theme (`Themes/Tokens.axaml`) + reusable control styles (`Themes/Controls.axaml`),
+  applied to the launcher grid + project detail (cards, badges, warning banner, lane list,
+  dark terminal panel). Follows the OS theme. Reviewed/approved; **needs a visual eyeball on a
+  real Mac** (`dotnet run --project src/LaunchFast.App`). Known approximations: platform glyphs
+  are simple colour markers (no brand-icon set in Avalonia); button drop-shadows omitted
+  (Avalonia `BoxShadow` is Border-only).
+
 ## Test count (keep current)
 - Final: **85** passing (Core 70 + App 15) + **3** integration tests (real fastlane/PTY/Keychain),
   build 0 warnings (Debug + Release, both solutions).
