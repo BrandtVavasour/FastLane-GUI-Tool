@@ -342,6 +342,42 @@ public static class TestProjects
         return "CMS-PREAMBLE\n" + plist + "\nTRAILING-BYTES";
     }
 
+    /// <summary>
+    /// Creates a temp Flutter project whose iOS deliver screenshots include both an
+    /// iPhone and an iPad shot for en-US (named in the fastlane deliver convention),
+    /// and whose iOS metadata has NO <c>name.txt</c> (the store name is not synced to
+    /// disk) but an <c>ios/Runner/Info.plist</c> with a literal display name. Used to
+    /// exercise the app-name fallback and the device filter / grouping.
+    /// </summary>
+    public static Project MakeProjectWithMixedDeviceScreenshots(string name = "mixed")
+    {
+        var root = Path.Combine(Path.GetTempPath(), "lf-mixed-" + Guid.NewGuid().ToString("N"), name);
+        var iosFl = Path.Combine(root, "ios", "fastlane");
+        Directory.CreateDirectory(iosFl);
+        Directory.CreateDirectory(Path.Combine(root, "android", "fastlane"));
+        File.WriteAllText(Path.Combine(root, "pubspec.yaml"), "name: vending_machine_tracker\nversion: 1.2.3+9\n");
+
+        // Info.plist with a literal display name (no name.txt in metadata).
+        var runner = Path.Combine(root, "ios", "Runner");
+        Directory.CreateDirectory(runner);
+        File.WriteAllText(Path.Combine(runner, "Info.plist"),
+            "<?xml version=\"1.0\"?>\n<plist version=\"1.0\">\n<dict>\n" +
+            "<key>CFBundleDisplayName</key><string>Example App</string>\n" +
+            "</dict>\n</plist>\n");
+
+        // Metadata WITHOUT name.txt — subtitle only.
+        var iosEn = Path.Combine(iosFl, "metadata", "en-US");
+        Directory.CreateDirectory(iosEn);
+        File.WriteAllText(Path.Combine(iosEn, "subtitle.txt"), "Track everything\n");
+
+        // Screenshots: one iPhone, one iPad (deliver naming convention).
+        var shots = Path.Combine(iosFl, "screenshots", "en-US");
+        WriteFakePng(Path.Combine(shots, "iPhone 16 Pro Max-01_home_en.png"));
+        WriteFakePng(Path.Combine(shots, "iPad Pro 13-inch (M5)-02_register_en.png"));
+
+        return ProjectScanner.TryScanRoot(root)!;
+    }
+
     static void WriteFakePng(string path)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);

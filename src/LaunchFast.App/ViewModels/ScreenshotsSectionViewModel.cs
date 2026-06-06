@@ -68,6 +68,7 @@ public partial class ScreenshotsSectionViewModel : ObservableObject
                 .Distinct(StringComparer.OrdinalIgnoreCase));
 
         Screenshots = new ObservableCollection<string>();
+        ScreenshotGroups = new ObservableCollection<ScreenshotDeviceGroup>();
         SelectedLocale = CapturedLocales.FirstOrDefault();
         RefreshGallery();
     }
@@ -161,6 +162,13 @@ public partial class ScreenshotsSectionViewModel : ObservableObject
     /// <summary>The PNG paths for the selected locale (or all locales when none selected).</summary>
     public ObservableCollection<string> Screenshots { get; }
 
+    /// <summary>
+    /// The selected locale's PNGs grouped by device (parsed from each file name), with
+    /// iPhone-type groups before iPad-type before others. Drives the device-grouped
+    /// gallery so the user can see which device each shot belongs to.
+    /// </summary>
+    public ObservableCollection<ScreenshotDeviceGroup> ScreenshotGroups { get; }
+
     public bool HasScreenshots => Screenshots.Count > 0;
 
     /// <summary>Honest "N of M" / "N captured" count for the gallery header.</summary>
@@ -189,20 +197,46 @@ public partial class ScreenshotsSectionViewModel : ObservableObject
     void RefreshGallery()
     {
         Screenshots.Clear();
+        ScreenshotGroups.Clear();
 
-        IEnumerable<string> paths = SelectedLocale is { } locale
+        var paths = (SelectedLocale is { } locale
             ? _config.Captured
                 .Where(g => string.Equals(g.Locale, locale, StringComparison.OrdinalIgnoreCase))
                 .SelectMany(g => g.Paths)
-            : _config.Captured.SelectMany(g => g.Paths);
+            : _config.Captured.SelectMany(g => g.Paths)).ToList();
 
         foreach (var path in paths)
         {
             Screenshots.Add(path);
         }
 
+        foreach (var group in GroupByDevice(paths))
+        {
+            ScreenshotGroups.Add(group);
+        }
+
         OnPropertyChanged(nameof(HasScreenshots));
         OnPropertyChanged(nameof(CapturedCountText));
+    }
+
+    /// <summary>
+    /// Groups paths by their parsed device label (preserving first-seen path order
+    /// within each group), ordering iPhone-type groups before iPad-type before others.
+    /// </summary>
+    static IEnumerable<ScreenshotDeviceGroup> GroupByDevice(IReadOnlyList<string> paths)
+    {
+        return paths
+            .GroupBy(ScreenshotDevice.Label)
+            .OrderBy(g => DeviceRank(g.Key))
+            .ThenBy(g => g.Key, StringComparer.OrdinalIgnoreCase)
+            .Select(g => new ScreenshotDeviceGroup(g.Key, g.ToList()));
+    }
+
+    static int DeviceRank(string label)
+    {
+        if (label.Contains("iphone", StringComparison.OrdinalIgnoreCase)) return 0;
+        if (label.Contains("ipad", StringComparison.OrdinalIgnoreCase)) return 1;
+        return 2;
     }
 
     /// <summary>Select a captured-screenshot locale to show in the gallery.</summary>
@@ -286,3 +320,9 @@ public sealed partial class SnapshotDeviceRow : ObservableObject
 
 /// <summary>A configured/captured language chip for the Screenshots section.</summary>
 public sealed record LanguageChip(string Code);
+
+/// <summary>
+/// A device-labelled group of captured screenshot PNG paths, rendered under a device
+/// header in the gallery.
+/// </summary>
+public sealed record ScreenshotDeviceGroup(string Device, IReadOnlyList<string> Paths);

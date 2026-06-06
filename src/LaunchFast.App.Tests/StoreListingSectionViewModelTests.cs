@@ -193,6 +193,40 @@ public class StoreListingSectionViewModelTests
             Is.EqualTo(new string('x', 40)));
     }
 
+    // ---- app-name fallback ----------------------------------------------------
+
+    [Test]
+    public void App_name_falls_back_to_native_display_name_when_metadata_lacks_name()
+    {
+        // Metadata has no name.txt; Info.plist carries a literal display name.
+        var project = TestProjects.MakeProjectWithMixedDeviceScreenshots();
+        var vm = new StoreListingSectionViewModel(project);
+
+        var appName = vm.Fields.Single(f => f.Label == "App name");
+        Assert.That(appName.Value, Is.EqualTo("Example App"));
+        // The fallback is the baseline → does not mark the field/VM dirty on load.
+        Assert.That(appName.IsDirty, Is.False);
+        Assert.That(vm.IsDirty, Is.False);
+    }
+
+    // ---- device filtering -----------------------------------------------------
+
+    [Test]
+    public void Selecting_ipad_device_filters_screenshots_to_ipad_only()
+    {
+        var project = TestProjects.MakeProjectWithMixedDeviceScreenshots();
+        var vm = new StoreListingSectionViewModel(project);
+
+        // Default device is iPhone → only the iPhone shot.
+        Assert.That(vm.Screenshots, Has.Count.EqualTo(1));
+        Assert.That(vm.Screenshots[0], Does.Contain("iPhone"));
+
+        vm.SelectedDevice = vm.Devices.Single(d => d.Key == "iPad");
+
+        Assert.That(vm.Screenshots, Has.Count.EqualTo(1));
+        Assert.That(vm.Screenshots[0], Does.Contain("iPad"));
+    }
+
     [Test]
     public void Switching_locale_discards_unsaved_edits()
     {

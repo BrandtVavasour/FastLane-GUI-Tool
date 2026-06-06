@@ -51,7 +51,7 @@
             <Setter Property="Foreground" Value="{DynamicResource RedBrush}" />
             <Setter Property="FontWeight" Value="SemiBold" />
         </Style>
-        <!-- screenshot frame: phone aspect (9:19) -->
+        <!-- screenshot frame: fits its image's true aspect ratio (height fixed) -->
         <Style Selector="Border.shotframe">
             <Setter Property="CornerRadius" Value="12" />
             <Setter Property="ClipToBounds" Value="True" />
@@ -65,6 +65,7 @@
             <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
             <Setter Property="BorderThickness" Value="1.5" />
             <Setter Property="Height" Value="232" />
+            <Setter Property="Width" Value="130" />
         </Style>
     </UserControl.Styles>
 
@@ -222,18 +223,18 @@
                             <Button Classes="btn" Content="Upload" IsEnabled="False" />
                         </StackPanel>
 
-                        <!-- screenshots grid (real PNGs) -->
+                        <!-- screenshots gallery (real PNGs, true aspect ratio) -->
                         <ItemsControl ItemsSource="{Binding Screenshots}" Margin="0,2,0,0"
                                       IsVisible="{Binding HasScreenshots}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
-                                    <UniformGrid Columns="3" />
+                                    <WrapPanel />
                                 </ItemsPanelTemplate>
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="x:String">
                                     <Border Classes="shotframe" Margin="6">
-                                        <Image Stretch="UniformToFill"
+                                        <Image Stretch="Uniform" Height="232"
                                                Source="{Binding Converter={StaticResource PathToBitmap}}" />
                                     </Border>
                                 </DataTemplate>
@@ -241,7 +242,7 @@
                         </ItemsControl>
 
                         <!-- Add tile -->
-                        <UniformGrid Columns="3">
+                        <WrapPanel>
                             <Border Classes="shotadd" Margin="6">
                                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
                                             Spacing="6">
@@ -253,7 +254,7 @@
                                                Foreground="{DynamicResource Text3Brush}" />
                                 </StackPanel>
                             </Border>
-                        </UniformGrid>
+                        </WrapPanel>
 
                         <TextBlock IsVisible="{Binding !HasScreenshots}"
                                    FontSize="12" TextWrapping="Wrap"

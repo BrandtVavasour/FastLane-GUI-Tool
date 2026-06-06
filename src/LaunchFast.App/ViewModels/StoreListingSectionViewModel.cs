@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LaunchFast.Core.Models;
+using LaunchFast.Core.Screenshots;
 using LaunchFast.Core.Stores;
 
 namespace LaunchFast.App.ViewModels;
@@ -48,6 +49,7 @@ public partial class StoreListingSectionViewModel : ObservableObject
         Screenshots = new ObservableCollection<string>();
 
         ReloadLocales();
+        ReloadDevices();
         Reload();
     }
 
@@ -116,8 +118,9 @@ public partial class StoreListingSectionViewModel : ObservableObject
         {
             d.IsSelected = d == value;
         }
-        Reload();
+        RefreshScreenshots();
         OnPropertyChanged(nameof(ScreenshotCountText));
+        OnPropertyChanged(nameof(HasScreenshots));
     }
 
     /// <summary>Selects a screenshot device (drives the segmented control).</summary>
@@ -135,6 +138,9 @@ public partial class StoreListingSectionViewModel : ObservableObject
     public ObservableCollection<StoreFieldViewModel> Fields { get; }
 
     public ObservableCollection<string> Screenshots { get; }
+
+    /// <summary>All of the current locale's screenshot paths, before device filtering.</summary>
+    readonly List<string> _allShots = [];
 
     [ObservableProperty]
     private bool _isEmpty;
@@ -231,6 +237,7 @@ public partial class StoreListingSectionViewModel : ObservableObject
 
         Fields.Clear();
         Screenshots.Clear();
+        _allShots.Clear();
 
         var locale = SelectedLocale;
         if (locale is null)
@@ -249,10 +256,8 @@ public partial class StoreListingSectionViewModel : ObservableObject
             Fields.Add(field);
         }
 
-        foreach (var path in listing.ScreenshotPaths)
-        {
-            Screenshots.Add(path);
-        }
+        _allShots.AddRange(listing.ScreenshotPaths);
+        RefreshScreenshots();
 
         // Empty when this platform has no locale folders at all on disk.
         IsEmpty = Locales.Count == 0;
@@ -261,6 +266,24 @@ public partial class StoreListingSectionViewModel : ObservableObject
         SaveStatus = null;
         SaveFailed = false;
         RaiseDerived();
+    }
+
+    /// <summary>
+    /// Rebuilds <see cref="Screenshots"/> from <see cref="_allShots"/>, keeping only the
+    /// paths in the selected device class (all paths when no device is selected).
+    /// </summary>
+    void RefreshScreenshots()
+    {
+        Screenshots.Clear();
+
+        var key = SelectedDevice?.Key;
+        foreach (var path in _allShots)
+        {
+            if (key is null || ScreenshotDevice.InClass(path, key))
+            {
+                Screenshots.Add(path);
+            }
+        }
     }
 
     /// <summary>A field's text or limit-state changed — recompute dirty + over-limit.</summary>
@@ -350,11 +373,17 @@ public partial class StoreListingSectionViewModel : ObservableObject
         OnPropertyChanged(nameof(HasOverLimit));
     }
 
-    static IEnumerable<StoreFieldViewModel> BuildFields(StoreListing l)
+    IEnumerable<StoreFieldViewModel> BuildFields(StoreListing l)
     {
+        // The store name is often not synced to disk (managed in App Store Connect /
+        // Play Console), so fall back to the native/pubspec app name for display so the
+        // field isn't blank on load. The fallback becomes the field's baseline too, so
+        // it does NOT mark the field dirty.
+        var nameFallback = l.Name ?? AppDisplayName.Read(_project, l.Platform);
+
         if (l.Platform == Platform.Ios)
         {
-            yield return new StoreFieldViewModel("App name", null, l.Name, StoreFieldLimits.AppStoreName);
+            yield return new StoreFieldViewModel("App name", null, nameFallback, StoreFieldLimits.AppStoreName);
             yield return new StoreFieldViewModel("Subtitle", "iOS", l.Subtitle, StoreFieldLimits.AppStoreSubtitle);
             yield return new StoreFieldViewModel("Promotional text", "iOS", l.PromotionalText, StoreFieldLimits.AppStorePromotionalText, multiline: true);
             yield return new StoreFieldViewModel("Keywords", "iOS", l.Keywords, StoreFieldLimits.AppStoreKeywords, multiline: true);
@@ -365,7 +394,7 @@ public partial class StoreListingSectionViewModel : ObservableObject
         }
         else
         {
-            yield return new StoreFieldViewModel("Title", null, l.Name, StoreFieldLimits.PlayTitle);
+            yield return new StoreFieldViewModel("Title", null, nameFallback, StoreFieldLimits.PlayTitle);
             yield return new StoreFieldViewModel("Short description", "Android", l.ShortDescription, StoreFieldLimits.PlayShortDescription, multiline: true);
             yield return new StoreFieldViewModel("Full description", null, l.FullDescription, StoreFieldLimits.PlayFullDescription, multiline: true);
             yield return new StoreFieldViewModel("Promo video URL", "Android", l.VideoUrl, counted: false);

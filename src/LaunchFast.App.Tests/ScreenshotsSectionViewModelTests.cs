@@ -59,6 +59,26 @@ public class ScreenshotsSectionViewModelTests
     }
 
     [Test]
+    public void Builds_device_grouped_screenshot_sections()
+    {
+        // en-US has one iPhone shot and one iPad shot (deliver naming).
+        var project = TestProjects.MakeProjectWithMixedDeviceScreenshots();
+        var vm = new ScreenshotsSectionViewModel(project);
+
+        Assert.That(vm.ScreenshotGroups, Has.Count.EqualTo(2));
+
+        var iphone = vm.ScreenshotGroups[0]; // iPhone ranked before iPad
+        Assert.That(iphone.Device, Is.EqualTo("iPhone 16 Pro Max"));
+        Assert.That(iphone.Paths, Has.Count.EqualTo(1));
+        Assert.That(iphone.Paths[0], Does.Contain("iPhone"));
+
+        var ipad = vm.ScreenshotGroups[1];
+        Assert.That(ipad.Device, Is.EqualTo("iPad Pro 13-inch (M5)"));
+        Assert.That(ipad.Paths, Has.Count.EqualTo(1));
+        Assert.That(ipad.Paths[0], Does.Contain("iPad"));
+    }
+
+    [Test]
     public void No_snapfile_derives_locales_from_disk_and_shows_devices_off()
     {
         // MakeProjectWithStoreMetadata has iOS screenshots under en-US but no Snapfile.
