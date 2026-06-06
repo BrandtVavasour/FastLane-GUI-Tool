@@ -87,8 +87,11 @@ Goal: cover most of fastlane via per-project section screens. Built as shells no
   screenshots from disk), **What's New** (real release notes per version/locale), **Release Flow**
   (compose + pre-flight checklist with REAL checks — secrets/metadata/screenshots/version — Submit
   wired to the release lane). Edit/Save for metadata + release notes is a noted follow-up.
-- ⬜ Remaining design file: `Lanes, History & Android Signing` (492 lines).
-- Per-project sidebar now: Lanes · Signing · Secrets · TestFlight · Screenshots · Build & Test ·
+- 🔨 **Lanes, History & Android Signing** design (3 screens): ✅ **Fastfile / Lane inspector — REAL**
+  (`FastfileParser.ParseDetailed` extracts each lane's raw Ruby source + parsed steps with tool badges;
+  rail + Steps/Source views + Run lane wired). ⬜ Run history & audit log (needs a run-history store) +
+  ⬜ Android Signing (keystore / Play App Signing) — next.
+- Per-project sidebar now: Lanes · Fastfile · Signing · Secrets · TestFlight · Screenshots · Build & Test ·
   Store Listing · What's New · Release.
 
 ## UI design
