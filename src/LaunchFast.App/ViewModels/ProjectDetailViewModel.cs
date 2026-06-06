@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using System.Text.RegularExpressions;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -30,9 +29,6 @@ public partial class ProjectDetailViewModel : ObservableObject
 
     DispatcherTimer? _elapsedTimer;
     DateTime _runStarted;
-
-    [GeneratedRegex("""ENV\[\s*['"](?<k>[A-Z0-9_]+)['"]""")]
-    private static partial Regex EnvRefRegex();
 
     public ProjectDetailViewModel(
         Project project,
@@ -101,16 +97,16 @@ public partial class ProjectDetailViewModel : ObservableObject
         AndroidLanes.Clear();
         MissingSecrets.Clear();
 
-        var required = new SortedSet<string>(StringComparer.Ordinal);
+        LoadLanes(_project.IosFastlaneDir, Platform.Ios, IosLanes);
+        LoadLanes(_project.AndroidFastlaneDir, Platform.Android, AndroidLanes);
 
-        LoadPlatform(_project.IosFastlaneDir, Platform.Ios, IosLanes, required);
-        LoadPlatform(_project.AndroidFastlaneDir, Platform.Android, AndroidLanes, required);
-
-        // Only genuine secrets gate a run; non-secret control/config vars
+        // Required secrets + file-sourced values are computed by the shared Core
+        // scanner: only genuine secrets gate a run; non-secret control/config vars
         // (CI, FASTLANE_ENV, locales, ...) are referenced by the Fastfile but
         // can't be supplied via the secrets dialog, so they must not be required.
-        _required = required.Where(SecretEnvFilter.IsSecret).ToList();
-        _fromFiles = ReadEnvFiles(_project.Path);
+        var scan = ProjectSecretScanner.Scan(_project);
+        _required = scan.RequiredSecrets;
+        _fromFiles = scan.FromFiles;
 
         var status = _resolver.Resolve(ProjectId, _required, _fromFiles);
         foreach (var key in status.Missing) MissingSecrets.Add(key);
@@ -184,8 +180,8 @@ public partial class ProjectDetailViewModel : ObservableObject
         await RefreshStoreStatusAsync().ConfigureAwait(false);
     }
 
-    void LoadPlatform(string? fastlaneDir, Platform platform,
-        ObservableCollection<LaneViewModel> target, SortedSet<string> required)
+    static void LoadLanes(string? fastlaneDir, Platform platform,
+        ObservableCollection<LaneViewModel> target)
     {
         if (fastlaneDir is null || !Directory.Exists(fastlaneDir)) return;
 
@@ -197,21 +193,7 @@ public partial class ProjectDetailViewModel : ObservableObject
             var text = File.ReadAllText(fastfile);
             foreach (var lane in FastfileParser.Parse(text, platform))
                 target.Add(new LaneViewModel(lane, platformDir));
-            CollectEnvRefs(text, required);
         }
-
-        // Appfile / Matchfile may also reference ENV[...] vars.
-        foreach (var extra in new[] { "Appfile", "Matchfile" })
-        {
-            var path = Path.Combine(fastlaneDir, extra);
-            if (File.Exists(path)) CollectEnvRefs(File.ReadAllText(path), required);
-        }
-    }
-
-    static void CollectEnvRefs(string text, SortedSet<string> into)
-    {
-        foreach (Match m in EnvRefRegex().Matches(text))
-            into.Add(m.Groups["k"].Value);
     }
 
     /// <summary>
@@ -220,31 +202,7 @@ public partial class ProjectDetailViewModel : ObservableObject
     /// credentials with the same env the run uses.
     /// </summary>
     public static IReadOnlyDictionary<string, string> ResolveProjectEnv(string projectRoot) =>
-        ReadEnvFiles(projectRoot);
-
-    static IReadOnlyDictionary<string, string> ReadEnvFiles(string projectRoot)
-    {
-        var merged = new Dictionary<string, string>(StringComparer.Ordinal);
-
-        if (Directory.Exists(projectRoot))
-        {
-            foreach (var file in Directory.EnumerateFiles(projectRoot)
-                         .Where(f => Path.GetFileName(f).StartsWith(".env", StringComparison.Ordinal)))
-            {
-                Merge(merged, File.ReadAllText(file));
-            }
-        }
-
-        var deployEnv = Path.Combine(projectRoot, "scripts", "deploy-env.sh");
-        if (File.Exists(deployEnv)) Merge(merged, File.ReadAllText(deployEnv));
-
-        return merged;
-    }
-
-    static void Merge(Dictionary<string, string> into, string content)
-    {
-        foreach (var (k, v) in EnvFileReader.Parse(content)) into[k] = v;
-    }
+        ProjectSecretScanner.ReadEnvFiles(projectRoot);
 
     [RelayCommand]
     void RunLane(LaneViewModel? lane)
