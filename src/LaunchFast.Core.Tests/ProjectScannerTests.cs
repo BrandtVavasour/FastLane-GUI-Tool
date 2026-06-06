@@ -1,9 +1,19 @@
+using LaunchFast.Core.Models;
 using LaunchFast.Core.Scanning;
 
 namespace LaunchFast.Core.Tests;
 
 public class ProjectScannerTests
 {
+    [Test]
+    public void HasFastlane_true_when_a_platform_dir_present()
+    {
+        var p = new Project("n", "/p", null, "/p/ios/fastlane", null, false, null);
+        Assert.That(p.HasFastlane, Is.True);
+        var none = p with { IosFastlaneDir = null };
+        Assert.That(none.HasFastlane, Is.False);
+    }
+
     static string MakeProject(string name, bool ios = true, bool android = true, bool match = true)
     {
         var root = Path.Combine(Path.GetTempPath(), "lf-" + Guid.NewGuid().ToString("N"), name);
