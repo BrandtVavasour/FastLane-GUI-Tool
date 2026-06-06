@@ -1,6 +1,5 @@
 using Avalonia;
 using Avalonia.Headless;
-using LaunchFast.App;
 using LaunchFast.App.Tests;
 
 [assembly: AvaloniaTestApplication(typeof(TestAppBuilder))]

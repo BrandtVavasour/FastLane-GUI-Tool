@@ -1,4 +1,3 @@
-using Avalonia.Controls;
 using Avalonia.Headless.NUnit;
 using LaunchFast.App.ViewModels;
 using LaunchFast.App.Views;

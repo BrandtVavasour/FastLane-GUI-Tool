@@ -1,5 +1,4 @@
 using LaunchFast.Core.Env;
-using LaunchFast.Core.Models;
 
 namespace LaunchFast.Core.Tests;
 
