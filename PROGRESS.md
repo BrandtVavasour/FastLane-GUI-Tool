@@ -87,12 +87,14 @@ Goal: cover most of fastlane via per-project section screens. Built as shells no
   screenshots from disk), **What's New** (real release notes per version/locale), **Release Flow**
   (compose + pre-flight checklist with REAL checks — secrets/metadata/screenshots/version — Submit
   wired to the release lane). Edit/Save for metadata + release notes is a noted follow-up.
-- 🔨 **Lanes, History & Android Signing** design (3 screens): ✅ **Fastfile / Lane inspector — REAL**
-  (`FastfileParser.ParseDetailed`). ✅ **Run history & audit log — REAL** (Core `RunHistoryStore` records
-  every lane run — status/duration/output tail; stats + expandable logs + re-run; recording hooks the
-  run completion without changing run semantics). ⬜ Android Signing (keystore / Play App Signing) — last.
-- Per-project sidebar: Lanes · Fastfile · History · Signing · Secrets · TestFlight · Screenshots ·
-  Build & Test · Store Listing · What's New · Release.
+- ✅ **Lanes, History & Android Signing** design fully implemented: **Fastfile inspector** (real
+  ParseDetailed), **Run history** (real RunHistoryStore + recording), **Android Signing** (real gradle
+  signingConfig parse + credential presence; keystore keys/fingerprints illustrative — keytool is a
+  follow-up).
+- 🎉 **ALL THREE design files fully implemented.** Per-project sidebar: Lanes · Fastfile · History ·
+  Signing · Secrets · TestFlight · Screenshots · Build & Test · Store Listing · What's New · Release ·
+  Android Signing.
+- 🔨 Closing: full end-to-end review, docs refresh, confirm no author names + conventions.
 
 ## UI design
 - ✅ **macOS-native restyle** from a Claude Design handoff (`LaunchFast.html`): tokenised
