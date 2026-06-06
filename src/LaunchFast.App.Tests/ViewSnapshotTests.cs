@@ -144,7 +144,7 @@ public class ViewSnapshotTests
     {
         ForEachTheme("BuildTestSectionView", () =>
         {
-            var project = TestProjects.MakeFlutterProjectWithRealFastfiles();
+            var project = TestProjects.MakeProjectWithBuildTestConfig();
             var vm = new BuildTestSectionViewModel(project,
                 hasTestLane: () => true, hasBuildLane: () => true);
             return new BuildTestSectionView { DataContext = vm };

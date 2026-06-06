@@ -1,24 +1,130 @@
+using Avalonia.Controls;
 using LaunchFast.App.ViewModels;
+using LaunchFast.Core.Building;
 using LaunchFast.Core.Models;
 
 namespace LaunchFast.App.Tests;
 
 public class BuildTestSectionViewModelTests
 {
+    // ---- real build/test config (Gymfile + Scanfile + JUnit) -----------------
+
     [Test]
-    public void Exposes_non_empty_placeholder_collections()
+    public void Surfaces_real_build_settings_from_gymfile()
     {
+        var project = TestProjects.MakeProjectWithBuildTestConfig();
+        var vm = new BuildTestSectionViewModel(project);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(vm.HasBuildSettings, Is.True);
+            Assert.That(vm.SchemeText, Is.EqualTo("Runner"));
+            Assert.That(vm.ConfigurationText, Is.EqualTo("Release"));
+            Assert.That(vm.ExportAppStore, Is.True);
+            Assert.That(vm.ExportAdHoc, Is.False);
+            Assert.That(vm.CleanText, Is.EqualTo("Yes"));
+            Assert.That(vm.IncludeBitcodeText, Is.EqualTo("No"));
+            Assert.That(vm.OutputPath, Is.EqualTo("./build/VendingTracker.ipa"));
+        });
+    }
+
+    [Test]
+    public void Surfaces_real_test_settings_from_scanfile()
+    {
+        var project = TestProjects.MakeProjectWithBuildTestConfig();
+        var vm = new BuildTestSectionViewModel(project);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(vm.HasTestSettings, Is.True);
+            Assert.That(vm.TestSchemeText, Is.EqualTo("RunnerTests"));
+            Assert.That(vm.TestPlanText, Is.EqualTo("FullSuite"));
+            Assert.That(vm.HasDevices, Is.True);
+            Assert.That(vm.DevicesText, Does.Contain("iPhone 15 Pro"));
+        });
+    }
+
+    [Test]
+    public void Surfaces_real_results_from_junit_report()
+    {
+        var project = TestProjects.MakeProjectWithBuildTestConfig();
+        var vm = new BuildTestSectionViewModel(project);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(vm.HasResults, Is.True);
+            Assert.That(vm.PassedCount, Is.EqualTo("4"));
+            Assert.That(vm.FailedCount, Is.EqualTo("1"));
+            Assert.That(vm.SkippedCount, Is.EqualTo("1"));
+            Assert.That(vm.Results, Has.Count.EqualTo(2));
+            Assert.That(vm.PassFraction, Is.EqualTo(4.0 / 6).Within(0.001));
+            Assert.That(vm.LastRunMeta, Is.EqualTo("1m 12s"));
+        });
+
+        var ui = vm.Results.Single(r => r.Name == "UITests");
+        Assert.That(ui.IsFail, Is.True);
+        Assert.That(ui.Count, Does.Contain("1 failed"));
+    }
+
+    [Test]
+    public void Falls_back_to_fastfile_build_app_when_no_gymfile()
+    {
+        var cfg = new BuildTestConfig(
+            HasIos: true,
+            Build: new BuildSettings("Runner", "Release", "ad-hoc", Clean: true,
+                IncludeBitcode: null, OutputPath: null),
+            Test: null,
+            LatestResults: null);
+
+        var vm = new BuildTestSectionViewModel(
+            TestProjects.MakeFlutterProjectWithRealFastfiles(),
+            readConfig: _ => cfg);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(vm.SchemeText, Is.EqualTo("Runner"));
+            Assert.That(vm.ExportAdHoc, Is.True);
+            Assert.That(vm.IncludeBitcodeText, Is.EqualTo("Not set"));
+            Assert.That(vm.OutputPath, Is.EqualTo("Not configured"));
+        });
+    }
+
+    // ---- honest empty states -------------------------------------------------
+
+    [Test]
+    public void Shows_not_configured_and_empty_results_when_nothing_on_disk()
+    {
+        // The sample fastfile project uses `flutter build ipa` (no gym/scan), and
+        // has no JUnit report — so everything is honestly empty.
         var project = TestProjects.MakeFlutterProjectWithRealFastfiles();
         var vm = new BuildTestSectionViewModel(project);
 
-        Assert.That(vm.IsPlaceholder, Is.True);
-        Assert.That(vm.Schemes, Is.Not.Empty);
-        Assert.That(vm.Configurations, Is.Not.Empty);
-        Assert.That(vm.TestPlans, Is.Not.Empty);
-        Assert.That(vm.Simulators, Is.Not.Empty);
-        Assert.That(vm.BuildToggles, Is.Not.Empty);
-        Assert.That(vm.Results, Is.Not.Empty);
+        Assert.Multiple(() =>
+        {
+            Assert.That(vm.HasBuildSettings, Is.False);
+            Assert.That(vm.HasTestSettings, Is.False);
+            Assert.That(vm.HasResults, Is.False);
+            Assert.That(vm.SchemeText, Is.EqualTo("Not configured"));
+            Assert.That(vm.OutputPath, Is.EqualTo("Not configured"));
+            Assert.That(vm.PassedCount, Is.EqualTo("0"));
+            Assert.That(vm.PassFraction, Is.EqualTo(0));
+            Assert.That(vm.Results, Is.Empty);
+            Assert.That(vm.EmptyResultsText, Is.Not.Empty);
+        });
     }
+
+    [Test]
+    public void Progress_bar_star_widths_are_valid_grid_lengths()
+    {
+        var project = TestProjects.MakeProjectWithBuildTestConfig();
+        var vm = new BuildTestSectionViewModel(project);
+
+        Assert.That(vm.PassStar.IsStar, Is.True);
+        Assert.That(vm.RemainderStar.IsStar, Is.True);
+        Assert.That(vm.PassStar.Value + vm.RemainderStar.Value, Is.EqualTo(1.0).Within(0.001));
+    }
+
+    // ---- run wiring ----------------------------------------------------------
 
     [Test]
     public void CanRunTests_and_CanBuild_reflect_lane_presence()
@@ -84,19 +190,5 @@ public class BuildTestSectionViewModelTests
         vm.RunTestsCommand.Execute(null);
         vm.BuildCommand.Execute(null);
         Assert.That(calls, Is.EqualTo(0));
-    }
-
-    [Test]
-    public void Export_method_segmented_control_is_mutually_exclusive()
-    {
-        var project = TestProjects.MakeFlutterProjectWithRealFastfiles();
-        var vm = new BuildTestSectionViewModel(project);
-
-        Assert.That(vm.ExportAppStore, Is.True);
-
-        vm.ExportAdHoc = true;
-        Assert.That(vm.ExportMethod, Is.EqualTo(ExportMethod.AdHoc));
-        Assert.That(vm.ExportAppStore, Is.False);
-        Assert.That(vm.ExportAdHoc, Is.True);
     }
 }

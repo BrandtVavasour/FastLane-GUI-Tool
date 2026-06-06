@@ -132,9 +132,9 @@ public class SectionShellViewTests
     }
 
     [AvaloniaTest]
-    public void BuildTestSectionView_renders_with_placeholder_vm_without_throwing()
+    public void BuildTestSectionView_renders_with_real_vm_without_throwing()
     {
-        var project = TestProjects.MakeFlutterProjectWithRealFastfiles();
+        var project = TestProjects.MakeProjectWithBuildTestConfig();
         var vm = new BuildTestSectionViewModel(project,
             hasTestLane: () => false, hasBuildLane: () => false);
 
@@ -143,6 +143,7 @@ public class SectionShellViewTests
 
         Assert.That(window.IsVisible, Is.True);
         Assert.That(vm.Results, Is.Not.Empty);
+        Assert.That(vm.HasResults, Is.True);
 
         window.Close();
     }

@@ -51,57 +51,56 @@
 
                         <TextBlock Classes="blk-t" Text="BUILD SETTINGS · GYM" />
 
-                        <!-- Scheme + Configuration -->
-                        <Grid ColumnDefinitions="*,14,*">
-                            <StackPanel Grid.Column="0" Spacing="6">
-                                <TextBlock Classes="fldlabel" Text="Scheme" />
-                                <ComboBox Classes="sel" HorizontalAlignment="Stretch"
-                                          ItemsSource="{Binding Schemes}"
-                                          SelectedItem="{Binding SelectedScheme, Mode=TwoWay}" />
+                        <!-- Real gym config (Gymfile / Fastfile build_app) -->
+                        <Border Classes="panel">
+                            <StackPanel>
+                                <Border Classes="dl-row">
+                                    <Grid ColumnDefinitions="Auto,*">
+                                        <TextBlock Grid.Column="0" Classes="k" Text="Scheme" />
+                                        <TextBlock Grid.Column="1" Classes="v" Text="{Binding SchemeText}" />
+                                    </Grid>
+                                </Border>
+                                <Border Classes="dl-row">
+                                    <Grid ColumnDefinitions="Auto,*">
+                                        <TextBlock Grid.Column="0" Classes="k" Text="Configuration" />
+                                        <TextBlock Grid.Column="1" Classes="v" Text="{Binding ConfigurationText}" />
+                                    </Grid>
+                                </Border>
+                                <Border Classes="dl-row">
+                                    <Grid ColumnDefinitions="Auto,*">
+                                        <TextBlock Grid.Column="0" Classes="k" Text="Clean build" />
+                                        <TextBlock Grid.Column="1" Classes="v" Text="{Binding CleanText}" />
+                                    </Grid>
+                                </Border>
+                                <Border Classes="dl-row last">
+                                    <Grid ColumnDefinitions="Auto,*">
+                                        <TextBlock Grid.Column="0" Classes="k" Text="Include bitcode" />
+                                        <TextBlock Grid.Column="1" Classes="v" Text="{Binding IncludeBitcodeText}" />
+                                    </Grid>
+                                </Border>
                             </StackPanel>
-                            <StackPanel Grid.Column="2" Spacing="6">
-                                <TextBlock Classes="fldlabel" Text="Configuration" />
-                                <ComboBox Classes="sel" HorizontalAlignment="Stretch"
-                                          ItemsSource="{Binding Configurations}"
-                                          SelectedItem="{Binding SelectedConfiguration, Mode=TwoWay}" />
-                            </StackPanel>
-                        </Grid>
+                        </Border>
 
-                        <!-- Export method -->
+                        <!-- Export method (reflects the real export_method) -->
                         <StackPanel Spacing="6">
                             <TextBlock Classes="fldlabel" Text="Export method" />
-                            <Border Classes="seg" HorizontalAlignment="Left">
+                            <Border Classes="seg" HorizontalAlignment="Left"
+                                    IsVisible="{Binding HasBuildSettings}">
                                 <StackPanel Orientation="Horizontal">
                                     <RadioButton Classes="seg-item" GroupName="bt-export" Content="app-store"
-                                                 IsChecked="{Binding ExportAppStore, Mode=TwoWay}" />
+                                                 IsHitTestVisible="False"
+                                                 IsChecked="{Binding ExportAppStore, Mode=OneWay}" />
                                     <RadioButton Classes="seg-item" GroupName="bt-export" Content="ad-hoc"
-                                                 IsChecked="{Binding ExportAdHoc, Mode=TwoWay}" />
+                                                 IsHitTestVisible="False"
+                                                 IsChecked="{Binding ExportAdHoc, Mode=OneWay}" />
                                     <RadioButton Classes="seg-item" GroupName="bt-export" Content="development"
-                                                 IsChecked="{Binding ExportDevelopment, Mode=TwoWay}" />
+                                                 IsHitTestVisible="False"
+                                                 IsChecked="{Binding ExportDevelopment, Mode=OneWay}" />
                                 </StackPanel>
                             </Border>
+                            <TextBlock Classes="lsub" Text="{Binding ExportMethodText}"
+                                       IsVisible="{Binding !HasBuildSettings}" />
                         </StackPanel>
-
-                        <!-- Build option toggles -->
-                        <Border Classes="listcard">
-                            <ItemsControl ItemsSource="{Binding BuildToggles}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate x:DataType="vm:BuildToggleRow">
-                                        <Border Classes="lrow">
-                                            <Grid ColumnDefinitions="*,Auto">
-                                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Spacing="3">
-                                                    <TextBlock Classes="ltitle" Text="{Binding Title}" />
-                                                    <TextBlock Classes="lsub" Text="{Binding Sub}" />
-                                                </StackPanel>
-                                                <ToggleSwitch Grid.Column="1" Classes="tgl"
-                                                              VerticalAlignment="Center"
-                                                              IsChecked="{Binding On, Mode=TwoWay}" />
-                                            </Grid>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </Border>
 
                         <!-- Output -->
                         <Border Background="{DynamicResource CardBgBrush}"
@@ -121,7 +120,8 @@
                         </Border>
 
                         <TextBlock FontSize="11" Foreground="{DynamicResource Text3Brush}"
-                                   Text="Illustrative build config — gym/scan backend not wired yet." />
+                                   IsVisible="{Binding !HasBuildSettings}"
+                                   Text="No Gymfile or build_app call found — gym not configured." />
 
                     </StackPanel>
                 </ScrollViewer>
@@ -134,37 +134,30 @@
 
                         <TextBlock Classes="blk-t" Text="TESTS · SCAN" />
 
-                        <!-- Run tests before release -->
-                        <Border Classes="listcard">
-                            <Border Classes="lrow last">
-                                <Grid ColumnDefinitions="*,Auto">
-                                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Spacing="3">
-                                        <TextBlock Classes="ltitle" Text="Run tests before release" />
-                                        <TextBlock Classes="lsub"
-                                                   Text="Block the release lane if any test fails" />
-                                    </StackPanel>
-                                    <ToggleSwitch Grid.Column="1" Classes="tgl"
-                                                  VerticalAlignment="Center"
-                                                  IsChecked="{Binding RunTestsBeforeRelease, Mode=TwoWay}" />
-                                </Grid>
-                            </Border>
+                        <!-- Real scan config (Scanfile / Fastfile run_tests) -->
+                        <Border Classes="panel">
+                            <StackPanel>
+                                <Border Classes="dl-row">
+                                    <Grid ColumnDefinitions="Auto,*">
+                                        <TextBlock Grid.Column="0" Classes="k" Text="Scheme" />
+                                        <TextBlock Grid.Column="1" Classes="v" Text="{Binding TestSchemeText}" />
+                                    </Grid>
+                                </Border>
+                                <Border Classes="dl-row">
+                                    <Grid ColumnDefinitions="Auto,*">
+                                        <TextBlock Grid.Column="0" Classes="k" Text="Test plan" />
+                                        <TextBlock Grid.Column="1" Classes="v" Text="{Binding TestPlanText}" />
+                                    </Grid>
+                                </Border>
+                                <Border Classes="dl-row last">
+                                    <Grid ColumnDefinitions="Auto,*">
+                                        <TextBlock Grid.Column="0" Classes="k" Text="Devices" />
+                                        <TextBlock Grid.Column="1" Classes="v" TextWrapping="Wrap"
+                                                   Text="{Binding DevicesText}" />
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
                         </Border>
-
-                        <!-- Test plan + Simulator -->
-                        <Grid ColumnDefinitions="*,14,*">
-                            <StackPanel Grid.Column="0" Spacing="6">
-                                <TextBlock Classes="fldlabel" Text="Test plan" />
-                                <ComboBox Classes="sel" HorizontalAlignment="Stretch"
-                                          ItemsSource="{Binding TestPlans}"
-                                          SelectedItem="{Binding SelectedTestPlan, Mode=TwoWay}" />
-                            </StackPanel>
-                            <StackPanel Grid.Column="2" Spacing="6">
-                                <TextBlock Classes="fldlabel" Text="Simulator" />
-                                <ComboBox Classes="sel" HorizontalAlignment="Stretch"
-                                          ItemsSource="{Binding Simulators}"
-                                          SelectedItem="{Binding SelectedSimulator, Mode=TwoWay}" />
-                            </StackPanel>
-                        </Grid>
 
                         <!-- Last test run -->
                         <StackPanel Spacing="9">
@@ -172,7 +165,9 @@
                                 <TextBlock Grid.Column="0" Classes="blk-t" Text="LAST TEST RUN" />
                                 <TextBlock Grid.Column="1" Classes="blk-x" Text="{Binding LastRunMeta}" />
                             </Grid>
-                            <Border Classes="panel" Padding="14">
+
+                            <!-- Real parsed JUnit results -->
+                            <Border Classes="panel" Padding="14" IsVisible="{Binding HasResults}">
                                 <StackPanel Spacing="14">
                                     <!-- Stat row -->
                                     <Grid ColumnDefinitions="*,*,*">
@@ -202,51 +197,61 @@
                                         </StackPanel>
                                     </Grid>
 
-                                    <!-- Progress bar (red track, green fill ~99%) -->
+                                    <!-- Progress bar (red track, green pass fraction) -->
                                     <Border Height="6" CornerRadius="3"
                                             Background="{DynamicResource TintRedBrush}"
                                             ClipToBounds="True">
-                                        <Grid ColumnDefinitions="99.2*,0.8*">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="{Binding PassStar}" />
+                                                <ColumnDefinition Width="{Binding RemainderStar}" />
+                                            </Grid.ColumnDefinitions>
                                             <Border Grid.Column="0" CornerRadius="3"
                                                     Background="{DynamicResource GreenBrush}" />
                                             <Border Grid.Column="1" Background="Transparent" />
                                         </Grid>
                                     </Border>
 
-                                    <!-- Result rows -->
-                                    <StackPanel Spacing="8">
-                                        <ItemsControl ItemsSource="{Binding Results}">
-                                            <ItemsControl.ItemsPanel>
-                                                <ItemsPanelTemplate>
-                                                    <StackPanel Spacing="8" />
-                                                </ItemsPanelTemplate>
-                                            </ItemsControl.ItemsPanel>
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate x:DataType="vm:TestResultRow">
-                                                    <Grid ColumnDefinitions="Auto,*,Auto">
-                                                        <Border Grid.Column="0" Classes="pill"
-                                                                Classes.ok="{Binding IsPass}"
-                                                                Classes.warn="{Binding IsSkip}"
-                                                                Classes.bad="{Binding IsFail}"
-                                                                VerticalAlignment="Center">
-                                                            <TextBlock Text="{Binding StatusText}" />
-                                                        </Border>
-                                                        <TextBlock Grid.Column="1" Classes="lsub"
-                                                                   Margin="9,0,0,0"
-                                                                   VerticalAlignment="Center"
-                                                                   Text="{Binding Name}" />
-                                                        <TextBlock Grid.Column="2" Classes="lmeta"
-                                                                   VerticalAlignment="Center"
-                                                                   Text="{Binding Count}" />
-                                                    </Grid>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                    </StackPanel>
+                                    <!-- Per-suite result rows -->
+                                    <ItemsControl ItemsSource="{Binding Results}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <StackPanel Spacing="8" />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:TestResultRow">
+                                                <Grid ColumnDefinitions="Auto,*,Auto">
+                                                    <Border Grid.Column="0" Classes="pill"
+                                                            Classes.ok="{Binding IsPass}"
+                                                            Classes.warn="{Binding IsSkip}"
+                                                            Classes.bad="{Binding IsFail}"
+                                                            VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding StatusText}" />
+                                                    </Border>
+                                                    <TextBlock Grid.Column="1" Classes="lsub"
+                                                               Margin="9,0,0,0"
+                                                               VerticalAlignment="Center"
+                                                               Text="{Binding Name}" />
+                                                    <TextBlock Grid.Column="2" Classes="lmeta"
+                                                               VerticalAlignment="Center"
+                                                               Text="{Binding Count}" />
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
                                 </StackPanel>
                             </Border>
-                            <TextBlock FontSize="11" Foreground="{DynamicResource Text3Brush}"
-                                       Text="Illustrative results — scan backend not wired yet." />
+
+                            <!-- Empty state -->
+                            <Border Classes="panel" Padding="14" IsVisible="{Binding !HasResults}">
+                                <StackPanel Spacing="6" HorizontalAlignment="Center" Margin="0,10">
+                                    <TextBlock HorizontalAlignment="Center"
+                                               Foreground="{DynamicResource Text2Brush}"
+                                               TextAlignment="Center"
+                                               Text="{Binding EmptyResultsText}" />
+                                </StackPanel>
+                            </Border>
                         </StackPanel>
 
                     </StackPanel>

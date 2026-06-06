@@ -193,6 +193,69 @@ public static class TestProjects
         return ProjectScanner.TryScanRoot(root)!;
     }
 
+    /// <summary>
+    /// Creates a temp Flutter project with a real iOS fastlane gym/scan setup: a
+    /// <c>Gymfile</c> (scheme/configuration/export_method/clean/output), a
+    /// <c>Scanfile</c> (scheme/test_plan/devices) and a JUnit
+    /// <c>test_output/report.junit</c> with two suites (one all-pass, one with a
+    /// failure + a skip). Used by the Build &amp; Test tests so the reader surfaces
+    /// real config + parsed results.
+    /// </summary>
+    public static Project MakeProjectWithBuildTestConfig(string name = "buildtest")
+    {
+        var root = Path.Combine(Path.GetTempPath(), "lf-buildtest-" + Guid.NewGuid().ToString("N"), name);
+        var iosFl = Path.Combine(root, "ios", "fastlane");
+        Directory.CreateDirectory(iosFl);
+        Directory.CreateDirectory(Path.Combine(root, "android", "fastlane"));
+        File.WriteAllText(Path.Combine(root, "pubspec.yaml"), "name: demo\nversion: 1.2.3+9\n");
+
+        File.WriteAllText(Path.Combine(iosFl, "Gymfile"),
+            """
+            scheme("Runner")
+            configuration("Release")
+            export_method("app-store")
+            clean(true)
+            include_bitcode(false)
+            output_directory("./build")
+            output_name("VendingTracker.ipa")
+            """);
+
+        File.WriteAllText(Path.Combine(iosFl, "Scanfile"),
+            """
+            scheme("RunnerTests")
+            test_plan("FullSuite")
+            devices([
+              "iPhone 15 Pro",
+              "iPhone SE (3rd generation)"
+            ])
+            """);
+
+        var testOut = Path.Combine(iosFl, "test_output");
+        Directory.CreateDirectory(testOut);
+        File.WriteAllText(Path.Combine(testOut, "report.junit"),
+            """
+            <?xml version="1.0" encoding="UTF-8"?>
+            <testsuites name="Tests" tests="6" failures="1" skipped="1" time="72.0">
+              <testsuite name="UnitTests" tests="3" failures="0" skipped="0" time="20.0">
+                <testcase classname="UnitTests" name="a" time="6.0"/>
+                <testcase classname="UnitTests" name="b" time="7.0"/>
+                <testcase classname="UnitTests" name="c" time="7.0"/>
+              </testsuite>
+              <testsuite name="UITests" tests="3" failures="1" skipped="1" time="52.0">
+                <testcase classname="UITests" name="d" time="20.0"/>
+                <testcase classname="UITests" name="e" time="32.0">
+                  <failure message="boom">stack</failure>
+                </testcase>
+                <testcase classname="UITests" name="f" time="0.0">
+                  <skipped/>
+                </testcase>
+              </testsuite>
+            </testsuites>
+            """);
+
+        return ProjectScanner.TryScanRoot(root)!;
+    }
+
     static void WriteFakePng(string path)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);

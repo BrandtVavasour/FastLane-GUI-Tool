@@ -108,7 +108,9 @@ public class ProjectShellViewModelTests
 
         shell.SelectSectionCommand.Execute(ProjectSection.BuildTest);
         Assert.That(shell.CurrentContent, Is.InstanceOf<BuildTestSectionViewModel>());
-        Assert.That(((BuildTestSectionViewModel)shell.CurrentContent!).Results, Is.Not.Empty);
+        // The sample Fastfile uses `flutter build ipa` (no gym/scan) and ships no
+        // JUnit report, so the section honestly reports no results.
+        Assert.That(((BuildTestSectionViewModel)shell.CurrentContent!).HasResults, Is.False);
     }
 
     [Test]
