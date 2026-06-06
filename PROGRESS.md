@@ -110,6 +110,20 @@ Goal: cover most of fastlane via per-project section screens. Built as shells no
 - ✅ Closing review (309 tests): **SHIP-READY** — all readers correct/total/honest/tested, no author
   names in file content, Core has zero Avalonia dep, no secrets, build 0/0 (both solutions).
 
+## Follow-ups (all done)
+- ✅ **Metadata + release-notes editing & save** — Store Listing + What's New are now editable;
+  `StoreMetadataWriter` writes deliver/supply text files back (lossless round-trip), Save/Discard,
+  dirty + over-limit handling.
+- ✅ **True colour PTY** — `MacPtyFactory` (openpty + posix_spawn + waitpid) gives a real tty/colour
+  on macOS, behind the `IPtyFactory` seam, with `DefaultPtyFactory` falling back to the pipe backend
+  off-macOS. Real-PTY integration tests PASS on this Mac (tty, exit code, env, cwd).
+- ✅ **keytool fingerprints** — Android SHA-1/SHA-256 via `keytool` (`KeystoreFingerprintReader`,
+  password via ArgumentList), iOS SHA-1 via `security`; honest empty states.
+- ✅ **Export-logs native save dialog** — Run history exports via `SaveFilePickerAsync` (write logic
+  testable in the VM).
+- ✅ **Package + import audit** — removed dead `coverlet.collector` pin (kept the `Tmds.DBus.Protocol`
+  security pin) and 13 unused `using` directives. Build 0/0, **351 tests** green (Core 182 + App 169).
+
 ## UI design
 - ✅ **macOS-native restyle** from a Claude Design handoff (`LaunchFast.html`): tokenised
   Light/Dark theme (`Themes/Tokens.axaml`) + reusable control styles (`Themes/Controls.axaml`),
