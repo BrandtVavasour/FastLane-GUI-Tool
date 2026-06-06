@@ -1,3 +1,5 @@
+using System.Collections.ObjectModel;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LaunchFast.Core.Models;
@@ -309,9 +311,27 @@ public sealed partial class SetupWizardViewModel : ObservableObject
 
     // ---- apply / cancel -----------------------------------------------------
 
+    /// <summary>
+    /// The streaming <c>bundle install</c> output shown by the apply panel. The shell
+    /// wires <c>ProjectScaffoldService.Output</c> into <see cref="AppendApplyLog"/>.
+    /// </summary>
+    public ObservableCollection<string> ApplyLog { get; } = new();
+
+    /// <summary>True while the plan is being applied (drives the run panel/overlay).</summary>
+    [ObservableProperty]
+    private bool _isApplying;
+
+    /// <summary>Appends a line to <see cref="ApplyLog"/>, marshalling onto the UI thread.</summary>
+    public void AppendApplyLog(string line)
+    {
+        if (Dispatcher.UIThread.CheckAccess()) ApplyLog.Add(line);
+        else Dispatcher.UIThread.Post(() => ApplyLog.Add(line));
+    }
+
     [RelayCommand]
     public async Task ApplyAsync()
     {
+        IsApplying = true;
         await _apply(BuildPlan());
         Closed?.Invoke();
     }

@@ -69,6 +69,24 @@ public class SetupWizardViewModelTests
         Assert.That(closed, Is.True);
     }
 
+    [Test]
+    public async Task Apply_sets_IsApplying_and_AppendApplyLog_appends()
+    {
+        var project = SetupCandidate(out _);
+        var vm = SetupWizardViewModel.ForInstall(project, apply: _ => Task.CompletedTask);
+        vm.Platforms.Ios = true; vm.Platforms.Android = false;
+        vm.Ios.BundleId = "com.acme.demo"; vm.Ios.TeamId = "T"; vm.Lanes.SetIos(["beta"]);
+
+        vm.AppendApplyLog("Fetching gem metadata…");
+        vm.AppendApplyLog("Bundle complete!");
+        Assert.That(vm.ApplyLog, Has.Count.EqualTo(2));
+        Assert.That(vm.ApplyLog[0], Is.EqualTo("Fetching gem metadata…"));
+
+        Assert.That(vm.IsApplying, Is.False);
+        await vm.ApplyAsync();
+        Assert.That(vm.IsApplying, Is.True);
+    }
+
     /// <summary>
     /// A fastlane-less temp Flutter project (ios/ + android/ + pubspec) — a valid
     /// install candidate. Returns the scanned <see cref="Project"/>; out-param is the root.
