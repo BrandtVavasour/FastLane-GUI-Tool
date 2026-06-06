@@ -140,6 +140,59 @@ public static class TestProjects
         return ProjectScanner.TryScanRoot(root)!;
     }
 
+    /// <summary>
+    /// Creates a temp Flutter project with a real iOS fastlane snapshot setup: a
+    /// <c>Snapfile</c> declaring devices/languages/scheme/launch_arguments, a
+    /// <c>Framefile.json</c> (frameit enabled), and captured screenshots on disk for
+    /// en-US and ja. Used by the Screenshots tests so the reader surfaces real config
+    /// + captured shots.
+    /// </summary>
+    public static Project MakeProjectWithSnapshotConfig(string name = "snap")
+    {
+        var root = Path.Combine(Path.GetTempPath(), "lf-snap-" + Guid.NewGuid().ToString("N"), name);
+        var iosFl = Path.Combine(root, "ios", "fastlane");
+        Directory.CreateDirectory(iosFl);
+        Directory.CreateDirectory(Path.Combine(root, "android", "fastlane"));
+        File.WriteAllText(Path.Combine(root, "pubspec.yaml"), "name: demo\nversion: 1.2.3+9\n");
+
+        File.WriteAllText(Path.Combine(iosFl, "Snapfile"),
+            """
+            devices([
+              "iPhone 15 Pro Max",
+              "iPad Pro (12.9-inch) (6th generation)"
+            ])
+
+            languages([
+              "en-US",
+              "ja"
+            ])
+
+            scheme("DemoAppUITests")
+
+            launch_arguments([
+              "-FASTLANE_SNAPSHOT YES",
+              "-ui_testing"
+            ])
+            """);
+
+        File.WriteAllText(Path.Combine(iosFl, "Framefile.json"),
+            """
+            {
+              "default": {
+                "title": "Track every machine",
+                "background": "./background.jpg"
+              }
+            }
+            """);
+
+        var shots = Path.Combine(iosFl, "screenshots");
+        WriteFakePng(Path.Combine(shots, "en-US", "0_iphone.png"));
+        WriteFakePng(Path.Combine(shots, "en-US", "1_iphone.png"));
+        WriteFakePng(Path.Combine(shots, "ja", "0_iphone.png"));
+
+        return ProjectScanner.TryScanRoot(root)!;
+    }
+
     static void WriteFakePng(string path)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);

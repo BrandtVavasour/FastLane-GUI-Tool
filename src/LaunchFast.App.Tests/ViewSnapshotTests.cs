@@ -133,7 +133,7 @@ public class ViewSnapshotTests
     {
         ForEachTheme("ScreenshotsSectionView", () =>
         {
-            var project = TestProjects.MakeFlutterProjectWithRealFastfiles();
+            var project = TestProjects.MakeProjectWithSnapshotConfig();
             var vm = new ScreenshotsSectionViewModel(project, hasScreenshotsLane: () => true);
             return new ScreenshotsSectionView { DataContext = vm };
         });

@@ -11,15 +11,8 @@
              Background="{DynamicResource Surface0Brush}">
 
     <UserControl.Resources>
-        <conv:HexToBrushConverter x:Key="HexToBrush" />
+        <conv:PathToBitmapConverter x:Key="PathToBitmap" />
     </UserControl.Resources>
-
-    <UserControl.Styles>
-        <!-- Selected background swatch gets an accent ring -->
-        <Style Selector="Border.ring">
-            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
-        </Style>
-    </UserControl.Styles>
 
     <DockPanel>
         <!-- Toolbar -->
@@ -86,12 +79,14 @@
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
                             </Border>
+                            <TextBlock Classes="lsub" Text="{Binding DevicesNote}" />
                         </StackPanel>
 
                         <!-- Languages block -->
                         <StackPanel Spacing="9">
                             <TextBlock Classes="blk-t" Text="LANGUAGES" />
-                            <StackPanel Orientation="Horizontal" Spacing="8">
+                            <StackPanel Orientation="Horizontal" Spacing="8"
+                                        IsVisible="{Binding HasLanguages}">
                                 <ItemsControl ItemsSource="{Binding Languages}">
                                     <ItemsControl.ItemsPanel>
                                         <ItemsPanelTemplate>
@@ -101,18 +96,13 @@
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate x:DataType="vm:LanguageChip">
                                             <Border Classes="chip">
-                                                <StackPanel Orientation="Horizontal" Spacing="6">
-                                                    <TextBlock Text="{Binding Code}" VerticalAlignment="Center" />
-                                                    <TextBlock Text="×" VerticalAlignment="Center"
-                                                               Foreground="{DynamicResource Text3Brush}" />
-                                                </StackPanel>
+                                                <TextBlock Text="{Binding Code}" VerticalAlignment="Center" />
                                             </Border>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
-                                <Button Classes="btn ghost small" Content="+ Add language"
-                                        VerticalAlignment="Center" />
                             </StackPanel>
+                            <TextBlock Classes="lsub" Text="{Binding LanguagesNote}" />
                         </StackPanel>
 
                         <!-- Capture block -->
@@ -120,14 +110,13 @@
                             <TextBlock Classes="blk-t" Text="CAPTURE" />
                             <StackPanel Spacing="6">
                                 <TextBlock Classes="fldlabel" Text="UI test scheme" />
-                                <ComboBox Classes="sel" HorizontalAlignment="Stretch"
-                                          ItemsSource="{Binding Schemes}"
-                                          SelectedItem="{Binding SelectedScheme, Mode=TwoWay}" />
+                                <TextBox Classes="inp" IsReadOnly="True"
+                                         Text="{Binding SchemeText, Mode=OneWay}" />
                             </StackPanel>
                             <StackPanel Spacing="6">
                                 <TextBlock Classes="fldlabel" Text="Launch arguments" />
-                                <TextBox Classes="inp mono-inp"
-                                         Text="{Binding LaunchArguments, Mode=OneWay}" />
+                                <TextBox Classes="inp mono-inp" IsReadOnly="True"
+                                         Text="{Binding LaunchArgumentsText, Mode=OneWay}" />
                             </StackPanel>
                         </StackPanel>
 
@@ -136,65 +125,78 @@
                             <TextBlock Classes="blk-t" Text="FRAMEIT" />
                             <Border Classes="panel">
                                 <StackPanel>
-                                    <!-- Frame screenshots toggle -->
                                     <Border Classes="dl-row">
                                         <Grid ColumnDefinitions="*,Auto">
                                             <StackPanel Grid.Column="0" VerticalAlignment="Center" Spacing="3">
                                                 <TextBlock Classes="ltitle" Text="Frame screenshots" />
-                                                <TextBlock Classes="lsub"
-                                                           Text="Wrap each shot in a device frame with a title" />
+                                                <TextBlock Classes="lsub" Text="{Binding FrameitText}" />
                                             </StackPanel>
                                             <ToggleSwitch Grid.Column="1" Classes="tgl"
                                                           VerticalAlignment="Center"
-                                                          IsChecked="{Binding FrameScreenshots, Mode=TwoWay}" />
+                                                          IsEnabled="False"
+                                                          IsChecked="{Binding FrameitEnabled, Mode=OneWay}" />
                                         </Grid>
                                     </Border>
-                                    <!-- Background swatches -->
-                                    <Border Classes="dl-row">
+                                    <Border Classes="dl-row last" IsVisible="{Binding HasFrameTitle}">
                                         <StackPanel Spacing="9">
-                                            <TextBlock Classes="ltitle" Text="Background" />
-                                            <ItemsControl ItemsSource="{Binding Backgrounds}">
-                                                <ItemsControl.ItemsPanel>
-                                                    <ItemsPanelTemplate>
-                                                        <StackPanel Orientation="Horizontal" Spacing="10" />
-                                                    </ItemsPanelTemplate>
-                                                </ItemsControl.ItemsPanel>
-                                                <ItemsControl.ItemTemplate>
-                                                    <DataTemplate x:DataType="vm:SwatchOption">
-                                                        <Button Padding="0" Background="Transparent"
-                                                                BorderThickness="0" Cursor="Hand"
-                                                                Command="{Binding $parent[ItemsControl].((vm:ScreenshotsSectionViewModel)DataContext).SelectBackgroundCommand}"
-                                                                CommandParameter="{Binding}">
-                                                            <!-- accent ring shows when selected -->
-                                                            <Border Width="34" Height="34" CornerRadius="9"
-                                                                    BorderThickness="2"
-                                                                    IsVisible="True"
-                                                                    BorderBrush="Transparent"
-                                                                    Classes.ring="{Binding Selected}">
-                                                                <Border Width="24" Height="24" CornerRadius="6"
-                                                                        BorderThickness="1"
-                                                                        BorderBrush="{DynamicResource CardBorderBrush}"
-                                                                        Background="{Binding Hex, Converter={StaticResource HexToBrush}}" />
-                                                            </Border>
-                                                        </Button>
-                                                    </DataTemplate>
-                                                </ItemsControl.ItemTemplate>
-                                            </ItemsControl>
-                                        </StackPanel>
-                                    </Border>
-                                    <!-- Title input -->
-                                    <Border Classes="dl-row last">
-                                        <StackPanel Spacing="9">
-                                            <TextBlock Classes="ltitle" Text="Title (en-US)" />
-                                            <TextBox Classes="inp" Text="{Binding FrameTitle, Mode=OneWay}" />
+                                            <TextBlock Classes="ltitle" Text="Title" />
+                                            <TextBox Classes="inp" IsReadOnly="True"
+                                                     Text="{Binding FrameTitle, Mode=OneWay}" />
                                         </StackPanel>
                                     </Border>
                                 </StackPanel>
                             </Border>
                         </StackPanel>
 
-                        <TextBlock FontSize="11" Foreground="{DynamicResource Text3Brush}"
-                                   Text="Illustrative capture config — snapshot/frameit backend not wired yet." />
+                        <!-- Captured screenshots gallery (real PNGs) -->
+                        <StackPanel Spacing="9">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Grid.Column="0" Classes="blk-t" Text="CAPTURED" />
+                                <TextBlock Grid.Column="1" Classes="blk-x"
+                                           Text="{Binding CapturedCountText}" />
+                            </Grid>
+
+                            <!-- locale switcher (only when more than one locale) -->
+                            <ItemsControl ItemsSource="{Binding CapturedLocales}"
+                                          IsVisible="{Binding HasMultipleLocales}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal" Spacing="8" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="x:String">
+                                        <Button Classes="btn ghost small"
+                                                Content="{Binding}"
+                                                Command="{Binding $parent[ItemsControl].((vm:ScreenshotsSectionViewModel)DataContext).SelectLocaleCommand}"
+                                                CommandParameter="{Binding}" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <ItemsControl ItemsSource="{Binding Screenshots}"
+                                          IsVisible="{Binding HasScreenshots}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Columns="3" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="x:String">
+                                        <Border CornerRadius="9" Margin="6" ClipToBounds="True"
+                                                BorderThickness="1"
+                                                BorderBrush="{DynamicResource CardBorderBrush}"
+                                                Background="{DynamicResource Surface2Brush}">
+                                            <Image Stretch="UniformToFill" Height="220"
+                                                   Source="{Binding Converter={StaticResource PathToBitmap}}" />
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <TextBlock Classes="lsub" Text="{Binding EmptyGalleryText}"
+                                       IsVisible="{Binding !HasScreenshots}" />
+                        </StackPanel>
 
                     </StackPanel>
                 </ScrollViewer>
@@ -219,9 +221,9 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- Framed device preview composition -->
+                        <!-- Framed device preview composition (illustrative mock) -->
                         <Border CornerRadius="14" Padding="20,22"
-                                Background="{Binding SelectedBackground, Converter={StaticResource HexToBrush}}">
+                                Background="{DynamicResource AccentBrush}">
                             <StackPanel Spacing="14" HorizontalAlignment="Center">
                                 <TextBlock Text="Track every machine in real time"
                                            FontSize="15" FontWeight="SemiBold"
