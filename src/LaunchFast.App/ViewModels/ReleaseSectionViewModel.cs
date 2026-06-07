@@ -30,15 +30,18 @@ public partial class ReleaseSectionViewModel : ObservableObject
     readonly Project _project;
     readonly Action<Platform, string>? _runLane;
     readonly Func<Platform, string, bool> _hasLane;
+    readonly Func<DateTimeOffset> _clock;
 
     public ReleaseSectionViewModel(
         Project project,
         Action<Platform, string>? runLane = null,
-        Func<Platform, string, bool>? hasLane = null)
+        Func<Platform, string, bool>? hasLane = null,
+        Func<DateTimeOffset>? clock = null)
     {
         _project = project;
         _runLane = runLane;
         _hasLane = hasLane ?? ((_, _) => false);
+        _clock = clock ?? (() => DateTimeOffset.Now);
 
         Checks = new ObservableCollection<ReleaseCheckViewModel>();
         Prechecks = new ObservableCollection<ReleaseCheckViewModel>();
@@ -168,6 +171,13 @@ public partial class ReleaseSectionViewModel : ObservableObject
     public ObservableCollection<ReleaseCheckViewModel> Checks { get; }
     public ObservableCollection<ReleaseCheckViewModel> Prechecks { get; }
 
+    /// <summary>
+    /// "Last checked HH:mm:ss" — bumped on every <see cref="RunChecks"/> so the
+    /// "Re-run checks" button always gives visible feedback, even when the disk is
+    /// unchanged and the rebuilt checklist is identical.
+    /// </summary>
+    public string LastCheckedText { get; private set; } = "Not checked yet";
+
     /// <summary>Re-computes the pre-flight checklist + (illustrative) precheck list.</summary>
     [RelayCommand]
     public void RunChecks()
@@ -288,6 +298,9 @@ public partial class ReleaseSectionViewModel : ObservableObject
         OnPropertyChanged(nameof(CanSubmit));
         OnPropertyChanged(nameof(SubmitDisabledReason));
         OnPropertyChanged(nameof(CheckSummary));
+
+        LastCheckedText = $"Last checked {_clock().ToLocalTime():HH:mm:ss}";
+        OnPropertyChanged(nameof(LastCheckedText));
     }
 
     static ReleaseCheckViewModel Real(CheckStatus s, string name, string detail) =>

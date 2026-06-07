@@ -204,6 +204,20 @@ public partial class ScreenshotsSectionViewModel : ObservableObject
 
     public bool HasScreenshots => Screenshots.Count > 0;
 
+    /// <summary>
+    /// The on-disk directory containing the captured screenshots (the parent of the
+    /// first captured PNG), or null when nothing has been captured. Used to open the
+    /// shots in Finder via "Preview all".
+    /// </summary>
+    public string? ScreenshotsFolder =>
+        _config.Captured
+            .SelectMany(g => g.Paths)
+            .Select(Path.GetDirectoryName)
+            .FirstOrDefault(d => !string.IsNullOrEmpty(d));
+
+    /// <summary>True when there is a captured-screenshots folder to preview.</summary>
+    public bool CanPreview => ScreenshotsFolder is not null;
+
     /// <summary>Honest "N of M" / "N captured" count for the gallery header.</summary>
     public string CapturedCountText
     {

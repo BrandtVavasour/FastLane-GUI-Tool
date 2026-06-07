@@ -163,6 +163,28 @@ public class ReleaseSectionViewModelTests
     }
 
     [Test]
+    public void LastCheckedText_is_set_after_initial_run_and_bumps_on_rerun()
+    {
+        var project = TestProjects.MakeProjectWithStoreMetadata();
+        var now = new DateTimeOffset(2026, 6, 7, 9, 30, 15, TimeSpan.Zero);
+        var clock = now;
+
+        // ctor calls RunChecks() once.
+        var vm = new ReleaseSectionViewModel(project, clock: () => clock);
+
+        var first = vm.LastCheckedText;
+        Assert.That(first, Does.Contain(now.ToLocalTime().ToString("HH:mm:ss")));
+
+        // Advance the clock and re-run → the timestamp must change, giving feedback
+        // even though the rebuilt checklist is identical.
+        clock = now.AddSeconds(42);
+        vm.RunChecksCommand.Execute(null);
+
+        Assert.That(vm.LastCheckedText, Does.Contain(clock.ToLocalTime().ToString("HH:mm:ss")));
+        Assert.That(vm.LastCheckedText, Is.Not.EqualTo(first));
+    }
+
+    [Test]
     public void Attached_changelog_is_real_when_notes_present()
     {
         var project = TestProjects.MakeProjectWithStoreMetadata(); // iOS en-US has release_notes

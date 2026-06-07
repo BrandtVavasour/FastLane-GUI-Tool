@@ -104,7 +104,9 @@
                                                        VerticalAlignment="Center"
                                                        Foreground="{DynamicResource Text2Brush}"
                                                        FontSize="12" Margin="0,0,10,0" />
-                                            <Button Classes="btn accent" Content="Set up →" />
+                                            <Button Classes="btn accent" Content="Set up →"
+                                                    Command="{Binding $parent[ItemsControl].((vm:LauncherViewModel)DataContext).OpenDetailCommand}"
+                                                    CommandParameter="{Binding}" />
                                         </StackPanel>
                                     </StackPanel>
                                 </Grid>

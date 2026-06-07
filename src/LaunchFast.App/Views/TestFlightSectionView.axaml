@@ -17,7 +17,9 @@
                 BorderThickness="0,0,0,1">
             <Grid ColumnDefinitions="*,Auto,Auto" Margin="16,11">
                 <Button Grid.Column="1" Classes="btn" Margin="0,0,8,0"
-                        Content="Add testers…" />
+                        Content="Add testers…"
+                        ToolTip.Tip="Opens App Store Connect (TestFlight) in your browser"
+                        Click="OnAddTesters" />
                 <Button Grid.Column="2" Classes="accent" Content="Distribute build"
                         IsEnabled="{Binding CanDistribute}"
                         Command="{Binding DistributeCommand}" />

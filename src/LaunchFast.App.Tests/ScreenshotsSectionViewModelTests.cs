@@ -291,6 +291,52 @@ public class ScreenshotsSectionViewModelTests
     }
 
     [Test]
+    public void CanPreview_and_ScreenshotsFolder_point_at_the_captured_directory()
+    {
+        var config = new SnapshotConfig(
+            HasSnapfile: false,
+            Devices: [],
+            Languages: [],
+            Scheme: null,
+            LaunchArguments: null,
+            FrameitEnabled: false,
+            FrameTitle: null,
+            FrameBackground: null,
+            OutputDirectory: null,
+            Captured:
+            [
+                new ScreenshotGroup("en-US",
+                    ["/shots/en-US/iPhone 17 Pro Max-01_home_en.png"]),
+            ]);
+
+        var vm = new ScreenshotsSectionViewModel(
+            TestProjects.MakeFlutterProjectWithRealFastfiles(),
+            readConfig: _ => config);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(vm.CanPreview, Is.True);
+            Assert.That(vm.ScreenshotsFolder,
+                Is.EqualTo(Path.GetDirectoryName("/shots/en-US/iPhone 17 Pro Max-01_home_en.png")));
+        });
+    }
+
+    [Test]
+    public void CanPreview_is_false_and_ScreenshotsFolder_null_when_no_shots_captured()
+    {
+        // Real fastfiles fixture has no captured screenshots on disk.
+        var project = TestProjects.MakeFlutterProjectWithRealFastfiles();
+        var vm = new ScreenshotsSectionViewModel(project);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(vm.HasScreenshots, Is.False);
+            Assert.That(vm.CanPreview, Is.False);
+            Assert.That(vm.ScreenshotsFolder, Is.Null);
+        });
+    }
+
+    [Test]
     public void CanRunSnapshot_reflects_whether_the_screenshots_lane_exists()
     {
         var project = TestProjects.MakeProjectWithSnapshotConfig();
