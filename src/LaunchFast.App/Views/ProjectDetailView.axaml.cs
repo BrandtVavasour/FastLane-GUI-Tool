@@ -27,4 +27,14 @@ public partial class ProjectDetailView : UserControl
         // Refresh banner + gating with whatever was just written.
         vm.Load();
     }
+
+    async void OnCopyOutput(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not ProjectDetailViewModel vm) return;
+
+        var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
+        if (clipboard is null) return;
+
+        await clipboard.SetTextAsync(vm.Run.AllText);
+    }
 }

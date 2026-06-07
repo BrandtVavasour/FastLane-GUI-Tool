@@ -229,7 +229,7 @@ public partial class ProjectDetailViewModel : ObservableObject
         // Preflight: fastlane runs via `bundle exec`, so we need both a Gemfile
         // in the platform dir and bundler on PATH. Surface a friendly message in
         // the output panel and bail out before touching running state.
-        var gemfile = Preflight.CheckGemfile(lane.PlatformDir);
+        var gemfile = Preflight.CheckGemfile(lane.PlatformDir, _project.Path);
         var bundler = Preflight.CheckTool("bundle");
         if (!gemfile.Ok || !bundler.Ok)
         {

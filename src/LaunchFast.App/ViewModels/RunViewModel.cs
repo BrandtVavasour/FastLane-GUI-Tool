@@ -11,7 +11,23 @@ namespace LaunchFast.App.ViewModels;
 /// </summary>
 public partial class RunViewModel : ObservableObject
 {
-    public ObservableCollection<string> Lines { get; } = new();
+    public ObservableCollection<string> Lines { get; }
+
+    public RunViewModel()
+    {
+        Lines = new ObservableCollection<string>();
+        Lines.CollectionChanged += (_, _) =>
+        {
+            OnPropertyChanged(nameof(HasLines));
+            OnPropertyChanged(nameof(AllText));
+        };
+    }
+
+    /// <summary>True when there is any output to copy.</summary>
+    public bool HasLines => Lines.Count > 0;
+
+    /// <summary>The full run output as a single newline-joined string, for the clipboard.</summary>
+    public string AllText => string.Join("\n", Lines);
 
     [ObservableProperty]
     private bool _isRunning;

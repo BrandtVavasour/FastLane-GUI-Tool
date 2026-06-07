@@ -35,14 +35,17 @@
                 <Border DockPanel.Dock="Top" Background="{DynamicResource TermBarBrush}"
                         BorderBrush="{DynamicResource TermBorderBrush}"
                         BorderThickness="0,0,0,1" Padding="12,9">
-                    <Grid ColumnDefinitions="Auto,Auto,*,Auto">
+                    <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto">
                         <Border Grid.Column="0" Classes="run-pulse" Margin="0,0,7,0"
                                 IsVisible="{Binding Run.IsRunning}" />
                         <TextBlock Grid.Column="1" Text="{Binding RunningLaneLabel}"
                                    FontFamily="{DynamicResource MonoFontFamily}"
                                    FontSize="11.5" Foreground="{DynamicResource TermLabelBrush}"
                                    VerticalAlignment="Center" />
-                        <Button Grid.Column="3" Classes="stop" Content="◼ Stop"
+                        <Button Grid.Column="3" Classes="stop" Content="⧉ Copy" Margin="0,0,8,0"
+                                Click="OnCopyOutput"
+                                IsEnabled="{Binding Run.HasLines}" />
+                        <Button Grid.Column="4" Classes="stop" Content="◼ Stop"
                                 Command="{Binding StopCommand}"
                                 IsEnabled="{Binding IsRunning}" />
                     </Grid>
@@ -70,7 +73,7 @@
                     <ItemsControl ItemsSource="{Binding Run.Lines}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="x:String">
-                                <TextBlock Classes="term-line" Text="{Binding}" />
+                                <SelectableTextBlock Classes="term-line" Text="{Binding}" />
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>

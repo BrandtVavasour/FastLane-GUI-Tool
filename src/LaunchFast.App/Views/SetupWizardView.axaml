@@ -142,7 +142,7 @@
         </Style>
 
         <!-- apply panel terminal line -->
-        <Style Selector="TextBlock.applyline">
+        <Style Selector=":is(TextBlock).applyline">
             <Setter Property="FontFamily" Value="{DynamicResource MonoFontFamily}" />
             <Setter Property="FontSize" Value="12" />
             <Setter Property="LineHeight" Value="18" />
@@ -495,7 +495,7 @@
                     <ItemsControl ItemsSource="{Binding ApplyLog}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="x:String">
-                                <TextBlock Classes="applyline" Text="{Binding}" />
+                                <SelectableTextBlock Classes="applyline" Text="{Binding}" />
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>

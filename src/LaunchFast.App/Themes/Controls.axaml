@@ -248,7 +248,7 @@
     </Style>
 
     <!-- Terminal -->
-    <Style Selector="TextBlock.term-line">
+    <Style Selector=":is(TextBlock).term-line">
         <Setter Property="FontFamily" Value="{DynamicResource MonoFontFamily}" />
         <Setter Property="FontSize" Value="12" />
         <Setter Property="LineHeight" Value="19" />
