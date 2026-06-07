@@ -69,4 +69,32 @@ public class ProjectSecretScannerTests
         Assert.That(scan.FromFiles["API_URL"], Is.EqualTo("https://api.example.com"));
         Assert.That(scan.FromFiles.ContainsKey("MATCH_PASSWORD"), Is.False);
     }
+
+    [Test]
+    public void ReadEnvFiles_expands_dollar_and_tilde_paths_for_credential_discovery()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "lf-env-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            File.WriteAllText(Path.Combine(root, ".env.production"),
+                "APP_STORE_CONNECT_API_KEY_PATH=$HOME/.appstoreconnect/api_key.json\n" +
+                "PLAY_KEY=~/keys/play.json\n" +
+                "API_URL=https://api.example.com\n");
+
+            // Injected lookup keeps the test deterministic (no real $HOME dependency).
+            var env = ProjectSecretScanner.ReadEnvFiles(root,
+                name => name == "HOME" ? "/Users/dev" : null);
+
+            Assert.That(env["APP_STORE_CONNECT_API_KEY_PATH"],
+                Is.EqualTo("/Users/dev/.appstoreconnect/api_key.json"));
+            Assert.That(env["PLAY_KEY"], Is.EqualTo("/Users/dev/keys/play.json"));
+            // Plain values are untouched.
+            Assert.That(env["API_URL"], Is.EqualTo("https://api.example.com"));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
 }

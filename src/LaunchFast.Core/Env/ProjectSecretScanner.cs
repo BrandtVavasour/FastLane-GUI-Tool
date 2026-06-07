@@ -75,7 +75,8 @@ public static partial class ProjectSecretScanner
     /// Reads the project's <c>.env*</c> files (and <c>scripts/deploy-env.sh</c>)
     /// into a merged dictionary. Last file wins on key collisions.
     /// </summary>
-    public static IReadOnlyDictionary<string, string> ReadEnvFiles(string projectRoot)
+    public static IReadOnlyDictionary<string, string> ReadEnvFiles(
+        string projectRoot, Func<string, string?>? environmentLookup = null)
     {
         var merged = new Dictionary<string, string>(StringComparer.Ordinal);
 
@@ -91,6 +92,20 @@ public static partial class ProjectSecretScanner
 
         var deployEnv = Path.Combine(projectRoot, "scripts", "deploy-env.sh");
         if (File.Exists(deployEnv)) Merge(merged, File.ReadAllText(deployEnv));
+
+        // Expand $VAR / ${VAR} / leading ~ in values the way fastlane's dotenv does, so a
+        // value like APP_STORE_CONNECT_API_KEY_PATH=$HOME/.appstoreconnect/api_key.json
+        // resolves to a real path for every consumer — the run environment, store-status
+        // credential discovery, and signing path lookups. Each value is expanded against
+        // the raw file values first, then the process environment. Pure string
+        // substitution (single pass, no recursion / no shell) — see EnvExpander.
+        var baseLookup = environmentLookup ?? Environment.GetEnvironmentVariable;
+        var raw = new Dictionary<string, string>(merged, StringComparer.Ordinal);
+        foreach (var key in raw.Keys)
+        {
+            merged[key] = EnvExpander.Expand(raw[key],
+                name => raw.TryGetValue(name, out var v) ? v : baseLookup(name));
+        }
 
         return merged;
     }

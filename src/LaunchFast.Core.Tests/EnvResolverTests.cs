@@ -42,10 +42,12 @@ public class EnvResolverTests
     }
 
     [Test]
-    public void BuildEnv_expands_dollar_vars_in_file_values_but_not_secrets()
+    public void BuildEnv_merges_verbatim_expansion_happens_upstream_in_ReadEnvFiles()
     {
+        // BuildEnv does NOT expand: file values arrive already expanded from
+        // ReadEnvFiles, and Keychain secrets must pass through verbatim — a secret
+        // value containing '$' must never be substituted.
         var secrets = new FakeSecrets();
-        // A secret value that contains '$' must survive verbatim (not be expanded).
         secrets.Set("proj", "MATCH_PASSWORD", "pa$$word");
         var resolver = new EnvResolver(secrets);
 
@@ -53,9 +55,8 @@ public class EnvResolverTests
             new[] { "MATCH_PASSWORD" },
             new Dictionary<string, string>
             {
-                ["APP_STORE_CONNECT_API_KEY_PATH"] = "$HOME/.appstoreconnect/api_key.json",
-            },
-            environmentLookup: name => name == "HOME" ? "/Users/dev" : null);
+                ["APP_STORE_CONNECT_API_KEY_PATH"] = "/Users/dev/.appstoreconnect/api_key.json",
+            });
 
         Assert.That(env["APP_STORE_CONNECT_API_KEY_PATH"],
             Is.EqualTo("/Users/dev/.appstoreconnect/api_key.json"));
