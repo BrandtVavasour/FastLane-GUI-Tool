@@ -23,11 +23,81 @@ public sealed class ProcessPtyFactory : IPtyFactory
 internal sealed class ProcessPtyProcess : IPtyProcess
 {
     readonly Process _process;
+    readonly object _gate = new();
+    readonly List<string> _pendingOutput = [];
+    Action<string>? _outputHandlers;
+    Action<int>? _exitedHandlers;
+    bool _hasExited;
+    int _exitCode;
     int _exitedRaised;
     int _disposed;
 
-    public event Action<string>? OutputReceived;
-    public event Action<int>? Exited;
+    // Buffer early output and remember the exit code so a subscriber that attaches
+    // AFTER Start() — the normal usage, since callers wire handlers on the returned
+    // process — never misses lines or a fast Exited. Without this a quick child can
+    // fire before the caller subscribes, dropping output or hanging the run (this also
+    // surfaced as a flaky test under CI's contended scheduling).
+    public event Action<string>? OutputReceived
+    {
+        add
+        {
+            List<string>? replay = null;
+            lock (_gate)
+            {
+                _outputHandlers += value;
+                if (_pendingOutput.Count > 0)
+                {
+                    replay = [.. _pendingOutput];
+                    _pendingOutput.Clear();
+                }
+            }
+
+            if (replay is not null && value is not null)
+            {
+                foreach (var line in replay)
+                {
+                    value(line);
+                }
+            }
+        }
+        remove
+        {
+            lock (_gate)
+            {
+                _outputHandlers -= value;
+            }
+        }
+    }
+
+    public event Action<int>? Exited
+    {
+        add
+        {
+            bool fireNow = false;
+            int code = 0;
+            lock (_gate)
+            {
+                _exitedHandlers += value;
+                if (_hasExited)
+                {
+                    fireNow = true;
+                    code = _exitCode;
+                }
+            }
+
+            if (fireNow)
+            {
+                value?.Invoke(code);
+            }
+        }
+        remove
+        {
+            lock (_gate)
+            {
+                _exitedHandlers -= value;
+            }
+        }
+    }
 
     public ProcessPtyProcess(string command, string[] args, string cwd,
         IReadOnlyDictionary<string, string> env)
@@ -71,10 +141,23 @@ internal sealed class ProcessPtyProcess : IPtyProcess
 
     void OnDataReceived(object? sender, DataReceivedEventArgs e)
     {
-        if (e.Data is not null)
+        if (e.Data is null)
         {
-            OutputReceived?.Invoke(e.Data);
+            return;
         }
+
+        Action<string>? handlers;
+        lock (_gate)
+        {
+            handlers = _outputHandlers;
+            if (handlers is null)
+            {
+                _pendingOutput.Add(e.Data);
+                return;
+            }
+        }
+
+        handlers(e.Data);
     }
 
     void OnExited(object? sender, EventArgs e) => RaiseExited();
@@ -97,7 +180,15 @@ internal sealed class ProcessPtyProcess : IPtyProcess
             return;
         }
 
-        Exited?.Invoke(code);
+        Action<int>? handlers;
+        lock (_gate)
+        {
+            _hasExited = true;
+            _exitCode = code;
+            handlers = _exitedHandlers;
+        }
+
+        handlers?.Invoke(code);
     }
 
     public void Write(string input)
