@@ -96,7 +96,9 @@ public class ProjectShellViewModelTests
 
         shell.SelectSectionCommand.Execute(ProjectSection.Signing);
         Assert.That(shell.CurrentContent, Is.InstanceOf<SigningSectionViewModel>());
-        Assert.That(((SigningSectionViewModel)shell.CurrentContent!).Certificates, Is.Not.Empty);
+        // Certificate presence comes from the machine's real `security find-identity` and is
+        // covered deterministically in SigningSectionViewModelTests; not asserted here so the
+        // shell test stays environment-independent (e.g. CI runners with no signing identities).
 
         shell.SelectSectionCommand.Execute(ProjectSection.TestFlight);
         Assert.That(shell.CurrentContent, Is.InstanceOf<TestFlightSectionViewModel>());

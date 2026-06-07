@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Headless.NUnit;
 using LaunchFast.App.ViewModels;
 using LaunchFast.App.Views;
+using LaunchFast.Core.Signing;
 
 namespace LaunchFast.App.Tests;
 
@@ -11,7 +12,13 @@ public class SectionShellViewTests
     public void SigningSectionView_renders_with_placeholder_vm_without_throwing()
     {
         var project = TestProjects.MakeFlutterProjectWithRealFastfiles();
-        var vm = new SigningSectionViewModel(project, hasSyncLane: () => true);
+        // Inject canned `security find-identity` output so the cert list is deterministic.
+        // The real reader reads the machine's installed identities, which are absent on a
+        // clean CI runner — this keeps the render test environment-independent.
+        var reader = new IosSigningReader(() =>
+            "  1) A1B2C3D4E5F60718293A4B5C6D7E8F90A1B2C3D4 \"Apple Distribution: Example Co (7F8G9H)\"\n" +
+            "  2) 0011223344556677889900AABBCCDDEEFF001122 \"Apple Development: Dev (ABCDEF)\"");
+        var vm = new SigningSectionViewModel(project, reader: reader, hasSyncLane: () => true);
 
         var window = new Window { Content = new SigningSectionView { DataContext = vm } };
         window.Show();
