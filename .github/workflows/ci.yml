@@ -22,7 +22,29 @@ jobs:
         run: dotnet build LaunchFast.slnx
 
       - name: Test
-        run: dotnet test LaunchFast.slnx
+        run: dotnet test LaunchFast.slnx --logger "trx;LogFileName=results.trx" --results-directory TestResults
+
+      - name: Surface failing tests
+        if: failure()
+        run: |
+          python3 - <<'PY'
+          import glob, xml.etree.ElementTree as ET
+          ns = {'t': 'http://microsoft.com/schemas/VisualStudio/TeamTest/2010'}
+          found = False
+          for f in glob.glob('TestResults/**/*.trx', recursive=True):
+              try:
+                  tree = ET.parse(f)
+              except Exception:
+                  continue
+              for r in tree.findall('.//t:UnitTestResult', ns):
+                  if r.get('outcome') == 'Failed':
+                      found = True
+                      name = r.get('testName')
+                      msg = ' '.join(''.join(r.itertext()).split())[:500]
+                      print(f"::error::FAILED {name}: {msg}")
+          if not found:
+              print("::error::Test step failed but no failed test was parsed from TRX")
+          PY
 
       # NOTE: the IntegrationTests solution is intentionally NOT run in CI. Those
       # tests drive the real fastlane CLI, the macOS login keychain, and a checked-out
