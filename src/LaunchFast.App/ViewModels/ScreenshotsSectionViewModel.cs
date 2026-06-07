@@ -27,20 +27,16 @@ public partial class ScreenshotsSectionViewModel : ObservableObject
 {
     /// <summary>
     /// A standard superset of iOS device classes surfaced as toggles. A device is
-    /// "on" when it appears in the Snapfile (matched against these display names).
+    /// "on" when its <see cref="DeviceClass"/> key is configured in the Snapfile device
+    /// list OR present among the captured screenshots on disk.
     /// </summary>
-    static readonly (string Name, string Sub, string[] Match)[] StandardDevices =
+    static readonly (string Name, string Sub, string ClassKey)[] StandardDevices =
     {
-        ("iPhone 6.9″", "iPhone 16 Pro Max · 1320×2868",
-            new[] { "16 Pro Max", "15 Pro Max", "6.9" }),
-        ("iPhone 6.5″", "iPhone 11 Pro Max · 1242×2688",
-            new[] { "11 Pro Max", "XS Max", "6.5" }),
-        ("iPhone 5.5″", "iPhone 8 Plus · 1242×2208",
-            new[] { "8 Plus", "7 Plus", "5.5" }),
-        ("iPad Pro 13″", "iPad Pro (12.9/13-inch) · 2064×2752",
-            new[] { "iPad Pro (12.9", "iPad Pro 13", "iPad Pro (13" }),
-        ("iPad Pro 11″", "iPad Pro (11-inch) · 1668×2420",
-            new[] { "iPad Pro (11", "iPad Pro 11" }),
+        ("iPhone 6.9″", "iPhone 16/17 Pro Max · 1320×2868", DeviceClass.IPhone69),
+        ("iPhone 6.5″", "iPhone 11 Pro Max · 1242×2688", DeviceClass.IPhone65),
+        ("iPhone 5.5″", "iPhone 8 Plus · 1242×2208", DeviceClass.IPhone55),
+        ("iPad Pro 13″", "iPad Pro (12.9/13-inch) · 2064×2752", DeviceClass.IPad13),
+        ("iPad Pro 11″", "iPad Pro (11-inch) · 1668×2420", DeviceClass.IPad11),
     };
 
     readonly Action<Platform, string>? _runLane;
@@ -75,11 +71,20 @@ public partial class ScreenshotsSectionViewModel : ObservableObject
 
     static IEnumerable<SnapshotDeviceRow> BuildDevices(SnapshotConfig config)
     {
-        foreach (var (name, sub, match) in StandardDevices)
+        // A class key is "active" when it's configured in the Snapfile device list OR
+        // present among the device labels parsed from the captured screenshots on disk.
+        var active = config.Devices
+            .Select(DeviceClass.Classify)
+            .Concat(config.Captured
+                .SelectMany(g => g.Paths)
+                .Select(ScreenshotDevice.Label)
+                .Select(DeviceClass.Classify))
+            .Where(k => k is not null)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var (name, sub, classKey) in StandardDevices)
         {
-            var on = config.Devices.Any(d =>
-                match.Any(m => d.Contains(m, StringComparison.OrdinalIgnoreCase)));
-            yield return new SnapshotDeviceRow(name, sub, on);
+            yield return new SnapshotDeviceRow(name, sub, active.Contains(classKey));
         }
     }
 
@@ -104,8 +109,10 @@ public partial class ScreenshotsSectionViewModel : ObservableObject
 
     public string DevicesNote =>
         _config.HasSnapfile
-            ? "Toggles reflect the Snapfile device list."
-            : "No Snapfile — devices not configured.";
+            ? "Toggles reflect the Snapfile device list and captured screenshots."
+            : _config.CapturedCount > 0
+                ? "Toggles reflect captured screenshots on disk."
+                : "No Snapfile — devices not configured.";
 
     // ---- languages -----------------------------------------------------------
 

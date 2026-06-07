@@ -1,5 +1,6 @@
 using LaunchFast.App.ViewModels;
 using LaunchFast.Core.Models;
+using LaunchFast.Core.Screenshots;
 
 namespace LaunchFast.App.Tests;
 
@@ -88,11 +89,92 @@ public class ScreenshotsSectionViewModelTests
         Assert.Multiple(() =>
         {
             Assert.That(vm.NoSnapfile, Is.True);
+            // These shots are named "0_iphone.png" — no parseable device label, so they
+            // don't map to a device class and the toggles stay off.
             Assert.That(vm.SelectedDeviceCount, Is.EqualTo(0));
-            Assert.That(vm.DevicesNote, Does.Contain("No Snapfile"));
+            Assert.That(vm.DevicesNote, Does.Contain("captured screenshots"));
             // Languages derived from captured-screenshot locales on disk.
             Assert.That(vm.Languages.Select(l => l.Code), Does.Contain("en-US"));
             Assert.That(vm.HasScreenshots, Is.True);
+        });
+    }
+
+    [Test]
+    public void No_snapfile_toggles_reflect_captured_screenshots_on_disk()
+    {
+        // MakeProjectWithMixedDeviceScreenshots has NO Snapfile but captured
+        // iPhone 16 Pro Max + iPad Pro 13-inch (M5) screenshots on disk.
+        var project = TestProjects.MakeProjectWithMixedDeviceScreenshots();
+        var vm = new ScreenshotsSectionViewModel(project);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(vm.NoSnapfile, Is.True);
+            // 6.9" (Pro Max) and iPad 13" toggles On from captured shots; others Off.
+            Assert.That(vm.Devices.Single(d => d.Name == "iPhone 6.9″").On, Is.True);
+            Assert.That(vm.Devices.Single(d => d.Name == "iPad Pro 13″").On, Is.True);
+            Assert.That(vm.Devices.Single(d => d.Name == "iPhone 6.5″").On, Is.False);
+            Assert.That(vm.Devices.Single(d => d.Name == "iPhone 5.5″").On, Is.False);
+            Assert.That(vm.Devices.Single(d => d.Name == "iPad Pro 11″").On, Is.False);
+            Assert.That(vm.SelectedDeviceCount, Is.EqualTo(2));
+            Assert.That(vm.DevicesNote, Does.Contain("captured"));
+        });
+    }
+
+    [Test]
+    public void Toggle_reads_on_for_current_hardware_captured_without_snapfile()
+    {
+        // A config with NO Snapfile but a captured iPhone 17 Pro Max screenshot
+        // (current hardware the old stale match strings would have missed).
+        var config = new SnapshotConfig(
+            HasSnapfile: false,
+            Devices: [],
+            Languages: [],
+            Scheme: null,
+            LaunchArguments: null,
+            FrameitEnabled: false,
+            FrameTitle: null,
+            FrameBackground: null,
+            OutputDirectory: null,
+            Captured:
+            [
+                new ScreenshotGroup("en-US",
+                    ["/shots/en-US/iPhone 17 Pro Max-01_home_en.png"]),
+            ]);
+
+        var vm = new ScreenshotsSectionViewModel(
+            TestProjects.MakeFlutterProjectWithRealFastfiles(),
+            readConfig: _ => config);
+
+        Assert.That(vm.Devices.Single(d => d.Name == "iPhone 6.9″").On, Is.True);
+        Assert.That(vm.SelectedDeviceCount, Is.EqualTo(1));
+    }
+
+    [Test]
+    public void Snapfile_configured_device_with_no_shots_reads_on()
+    {
+        // A Snapfile device list (no captured shots) still drives the toggle On.
+        var config = new SnapshotConfig(
+            HasSnapfile: true,
+            Devices: ["iPhone 8 Plus"],
+            Languages: ["en-US"],
+            Scheme: null,
+            LaunchArguments: null,
+            FrameitEnabled: false,
+            FrameTitle: null,
+            FrameBackground: null,
+            OutputDirectory: null,
+            Captured: []);
+
+        var vm = new ScreenshotsSectionViewModel(
+            TestProjects.MakeFlutterProjectWithRealFastfiles(),
+            readConfig: _ => config);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(vm.Devices.Single(d => d.Name == "iPhone 5.5″").On, Is.True);
+            Assert.That(vm.SelectedDeviceCount, Is.EqualTo(1));
+            Assert.That(vm.DevicesNote, Does.Contain("Snapfile"));
         });
     }
 
