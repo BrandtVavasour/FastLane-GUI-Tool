@@ -92,7 +92,8 @@ public class ScreenshotsSectionViewModelTests
             // These shots are named "0_iphone.png" — no parseable device label, so they
             // don't map to a device class and the toggles stay off.
             Assert.That(vm.SelectedDeviceCount, Is.EqualTo(0));
-            Assert.That(vm.DevicesNote, Does.Contain("captured screenshots"));
+            // No classifiable shots → "No Snapfile — devices not configured."
+            Assert.That(vm.DevicesNote, Is.EqualTo("No Snapfile — devices not configured."));
             // Languages derived from captured-screenshot locales on disk.
             Assert.That(vm.Languages.Select(l => l.Code), Does.Contain("en-US"));
             Assert.That(vm.HasScreenshots, Is.True);
@@ -176,6 +177,102 @@ public class ScreenshotsSectionViewModelTests
             Assert.That(vm.SelectedDeviceCount, Is.EqualTo(1));
             Assert.That(vm.DevicesNote, Does.Contain("Snapfile"));
         });
+    }
+
+    [Test]
+    public void Snapfile_is_authoritative_disk_shots_do_not_add_toggles()
+    {
+        // Snapfile lists only "iPhone 16 Pro Max" (→ 6.9") but the only captured shots
+        // on disk are iPad Pro 13-inch — the disk signal must NOT light the iPad toggle.
+        var config = new SnapshotConfig(
+            HasSnapfile: true,
+            Devices: ["iPhone 16 Pro Max"],
+            Languages: ["en-US"],
+            Scheme: null,
+            LaunchArguments: null,
+            FrameitEnabled: false,
+            FrameTitle: null,
+            FrameBackground: null,
+            OutputDirectory: null,
+            Captured:
+            [
+                new ScreenshotGroup("en-US",
+                    ["/shots/en-US/iPad Pro 13-inch (M5)-01_home_en.png"]),
+            ]);
+
+        var vm = new ScreenshotsSectionViewModel(
+            TestProjects.MakeFlutterProjectWithRealFastfiles(),
+            readConfig: _ => config);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(vm.Devices.Single(d => d.Name == "iPhone 6.9″").On, Is.True);
+            Assert.That(vm.Devices.Single(d => d.Name == "iPad Pro 13″").On, Is.False);
+            Assert.That(vm.SelectedDeviceCount, Is.EqualTo(1));
+        });
+    }
+
+    [Test]
+    public void DevicesNote_reflects_which_source_drove_the_toggles()
+    {
+        // Branch 1: HasSnapfile → canonical Snapfile wording.
+        var snapfileConfig = new SnapshotConfig(
+            HasSnapfile: true,
+            Devices: ["iPhone 16 Pro Max"],
+            Languages: ["en-US"],
+            Scheme: null,
+            LaunchArguments: null,
+            FrameitEnabled: false,
+            FrameTitle: null,
+            FrameBackground: null,
+            OutputDirectory: null,
+            Captured: []);
+
+        var vmSnapfile = new ScreenshotsSectionViewModel(
+            TestProjects.MakeFlutterProjectWithRealFastfiles(),
+            readConfig: _ => snapfileConfig);
+        Assert.That(vmSnapfile.DevicesNote, Is.EqualTo("Toggles reflect the Snapfile device list."));
+
+        // Branch 2: No Snapfile, captured shots that classify → disk-fallback wording.
+        var diskConfig = new SnapshotConfig(
+            HasSnapfile: false,
+            Devices: [],
+            Languages: [],
+            Scheme: null,
+            LaunchArguments: null,
+            FrameitEnabled: false,
+            FrameTitle: null,
+            FrameBackground: null,
+            OutputDirectory: null,
+            Captured:
+            [
+                new ScreenshotGroup("en-US",
+                    ["/shots/en-US/iPhone 17 Pro Max-01_home_en.png"]),
+            ]);
+
+        var vmDisk = new ScreenshotsSectionViewModel(
+            TestProjects.MakeFlutterProjectWithRealFastfiles(),
+            readConfig: _ => diskConfig);
+        Assert.That(vmDisk.DevicesNote,
+            Is.EqualTo("No Snapfile — showing device classes with screenshots captured on disk."));
+
+        // Branch 3: No Snapfile, no classifiable shots → not configured wording.
+        var emptyConfig = new SnapshotConfig(
+            HasSnapfile: false,
+            Devices: [],
+            Languages: [],
+            Scheme: null,
+            LaunchArguments: null,
+            FrameitEnabled: false,
+            FrameTitle: null,
+            FrameBackground: null,
+            OutputDirectory: null,
+            Captured: []);
+
+        var vmEmpty = new ScreenshotsSectionViewModel(
+            TestProjects.MakeFlutterProjectWithRealFastfiles(),
+            readConfig: _ => emptyConfig);
+        Assert.That(vmEmpty.DevicesNote, Is.EqualTo("No Snapfile — devices not configured."));
     }
 
     [Test]

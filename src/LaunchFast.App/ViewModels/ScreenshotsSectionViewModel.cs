@@ -27,8 +27,9 @@ public partial class ScreenshotsSectionViewModel : ObservableObject
 {
     /// <summary>
     /// A standard superset of iOS device classes surfaced as toggles. A device is
-    /// "on" when its <see cref="DeviceClass"/> key is configured in the Snapfile device
-    /// list OR present among the captured screenshots on disk.
+    /// "on" when its <see cref="DeviceClass"/> key is present in the Snapfile device
+    /// list (when a Snapfile exists), or — as a fallback for projects with no Snapfile —
+    /// when the device class appears among the captured screenshot labels on disk.
     /// </summary>
     static readonly (string Name, string Sub, string ClassKey)[] StandardDevices =
     {
@@ -71,16 +72,26 @@ public partial class ScreenshotsSectionViewModel : ObservableObject
 
     static IEnumerable<SnapshotDeviceRow> BuildDevices(SnapshotConfig config)
     {
-        // A class key is "active" when it's configured in the Snapfile device list OR
-        // present among the device labels parsed from the captured screenshots on disk.
-        var active = config.Devices
-            .Select(DeviceClass.Classify)
-            .Concat(config.Captured
+        // Convention-first / tiered:
+        //   HasSnapfile → Snapfile device list is authoritative; disk is NOT consulted.
+        //   !HasSnapfile → fall back to device classes derived from captured screenshots.
+        HashSet<string> active;
+        if (config.HasSnapfile)
+        {
+            active = config.Devices
+                .Select(DeviceClass.Classify)
+                .Where(k => k is not null)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase)!;
+        }
+        else
+        {
+            active = config.Captured
                 .SelectMany(g => g.Paths)
                 .Select(ScreenshotDevice.Label)
-                .Select(DeviceClass.Classify))
-            .Where(k => k is not null)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+                .Select(DeviceClass.Classify)
+                .Where(k => k is not null)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase)!;
+        }
 
         foreach (var (name, sub, classKey) in StandardDevices)
         {
@@ -107,12 +118,27 @@ public partial class ScreenshotsSectionViewModel : ObservableObject
     /// <summary>True when the project has no Snapfile (so devices are unconfigured).</summary>
     public bool NoSnapfile => !_config.HasSnapfile;
 
-    public string DevicesNote =>
-        _config.HasSnapfile
-            ? "Toggles reflect the Snapfile device list and captured screenshots."
-            : _config.CapturedCount > 0
-                ? "Toggles reflect captured screenshots on disk."
+    public string DevicesNote
+    {
+        get
+        {
+            if (_config.HasSnapfile)
+            {
+                return "Toggles reflect the Snapfile device list.";
+            }
+
+            // No Snapfile — check whether any captured shots actually classify.
+            bool anyClassifiable = _config.Captured
+                .SelectMany(g => g.Paths)
+                .Select(ScreenshotDevice.Label)
+                .Select(DeviceClass.Classify)
+                .Any(k => k is not null);
+
+            return anyClassifiable
+                ? "No Snapfile — showing device classes with screenshots captured on disk."
                 : "No Snapfile — devices not configured.";
+        }
+    }
 
     // ---- languages -----------------------------------------------------------
 
