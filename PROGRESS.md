@@ -39,7 +39,7 @@ Update this as each phase lands. See `claude.md` for goals/architecture.
   smoke tests that RAN & PASSED here: real `fastlane lanes` vs `FastfileParser` (parser matches
   fastlane's own view of the real VendingMachine iOS lanes), real `ProcessPtyFactory` streaming,
   real Keychain roundtrip with special chars. GitHub Actions CI (`macos-latest`, builds+tests the
-  main solution only), `readme.md`, MIT `license.txt`.
+  main solution only), `readme.md`, MIT `LICENSE`.
 - ✅ **Final pass.** Removed unused package pins (JWT, DI container); tidied store-status
   kickoff; added multi-versionCode MapTracks test; **wired Preflight into the run path** and
   disabled run buttons while a run is in flight (both with tests); full end-to-end review →

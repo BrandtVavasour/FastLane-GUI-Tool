@@ -39,7 +39,7 @@ A Flutter… (now **.NET/Avalonia**, owner's choice) macOS app that:
   Prefer `sealed`, file-scoped namespaces, records for data, pure/testable units.
 - `global.json` pins the SDK (10.0.200, latestFeature roll-forward).
 - A **separate `IntegrationTests/`** solution for tests that need real fastlane / Keychain.
-- Lowercase docs (`readme.md`, `license.txt`, `claude.md`), `.github/workflows` CI.
+- Lowercase docs (`readme.md`, `claude.md`) + `LICENSE`, `.github/workflows` CI.
 
 ## Architecture
 

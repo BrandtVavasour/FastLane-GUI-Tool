@@ -62,4 +62,4 @@ The SDK version is pinned via `global.json`; packages use Central Package Manage
 
 ## License
 
-[MIT](license.txt) — © 2026 JABTech.
+[MIT](LICENSE) — © 2026 Brandt Vavasour.
