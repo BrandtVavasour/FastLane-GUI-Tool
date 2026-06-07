@@ -97,4 +97,47 @@ public class ProjectSecretScannerTests
             Directory.Delete(root, recursive: true);
         }
     }
+
+    [Test]
+    public void ReadEnvFiles_parses_quoted_deploy_env_value_with_trailing_comment()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "lf-env-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(Path.Combine(root, "scripts"));
+        try
+        {
+            File.WriteAllText(Path.Combine(root, ".env.production"), "MATCH_PASSWORD=plainpw\n");
+            // deploy-env.sh is read last (wins); its quoted value has a trailing comment
+            // that must NOT leak into the value (the bug that broke `match`).
+            File.WriteAllText(Path.Combine(root, "scripts", "deploy-env.sh"),
+                "export MATCH_PASSWORD=\"realpw\"  # the real one, sourced before fastlane\n");
+
+            var env = ProjectSecretScanner.ReadEnvFiles(root);
+
+            Assert.That(env["MATCH_PASSWORD"], Is.EqualTo("realpw"));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Test]
+    public void ReadEnvFiles_does_not_expand_single_quoted_values()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "lf-env-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            File.WriteAllText(Path.Combine(root, ".env"), "LITERAL='$HOME/x'\n");
+
+            var env = ProjectSecretScanner.ReadEnvFiles(root,
+                name => name == "HOME" ? "/Users/dev" : null);
+
+            Assert.That(env["LITERAL"], Is.EqualTo("$HOME/x"));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
 }

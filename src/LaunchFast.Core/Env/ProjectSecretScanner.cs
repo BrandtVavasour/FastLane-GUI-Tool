@@ -78,7 +78,7 @@ public static partial class ProjectSecretScanner
     public static IReadOnlyDictionary<string, string> ReadEnvFiles(
         string projectRoot, Func<string, string?>? environmentLookup = null)
     {
-        var merged = new Dictionary<string, string>(StringComparer.Ordinal);
+        var merged = new Dictionary<string, EnvValue>(StringComparer.Ordinal);
 
         if (Directory.Exists(projectRoot))
         {
@@ -93,24 +93,29 @@ public static partial class ProjectSecretScanner
         var deployEnv = Path.Combine(projectRoot, "scripts", "deploy-env.sh");
         if (File.Exists(deployEnv)) Merge(merged, File.ReadAllText(deployEnv));
 
-        // Expand $VAR / ${VAR} / leading ~ in values the way fastlane's dotenv does, so a
-        // value like APP_STORE_CONNECT_API_KEY_PATH=$HOME/.appstoreconnect/api_key.json
+        // Expand $VAR / ${VAR} / leading ~ in expandable values the way fastlane's dotenv
+        // does, so e.g. APP_STORE_CONNECT_API_KEY_PATH=$HOME/.appstoreconnect/api_key.json
         // resolves to a real path for every consumer — the run environment, store-status
         // credential discovery, and signing path lookups. Each value is expanded against
-        // the raw file values first, then the process environment. Pure string
-        // substitution (single pass, no recursion / no shell) — see EnvExpander.
+        // the raw file values first, then the process environment. Single-quoted values
+        // are literal (never expanded). Pure string substitution (single pass, no
+        // recursion / no shell) — see EnvExpander.
         var baseLookup = environmentLookup ?? Environment.GetEnvironmentVariable;
-        var raw = new Dictionary<string, string>(merged, StringComparer.Ordinal);
-        foreach (var key in raw.Keys)
+        var rawValues = merged.ToDictionary(kv => kv.Key, kv => kv.Value.Value, StringComparer.Ordinal);
+
+        var result = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var (key, ev) in merged)
         {
-            merged[key] = EnvExpander.Expand(raw[key],
-                name => raw.TryGetValue(name, out var v) ? v : baseLookup(name));
+            result[key] = ev.Expandable
+                ? EnvExpander.Expand(ev.Value,
+                    name => rawValues.TryGetValue(name, out var v) ? v : baseLookup(name))
+                : ev.Value;
         }
 
-        return merged;
+        return result;
     }
 
-    static void Merge(Dictionary<string, string> into, string content)
+    static void Merge(Dictionary<string, EnvValue> into, string content)
     {
         foreach (var (k, v) in EnvFileReader.Parse(content)) into[k] = v;
     }

@@ -25,7 +25,9 @@ public sealed class LaneRunner(IPtyFactory factory)
         var platform = lane.Platform == Platform.Ios ? "ios" : "android";
         var pty = factory.Start("bundle",
             ["exec", "fastlane", platform, lane.Name], platformDir, env);
-        pty.OutputReceived += onOutput;
+        // Strip ANSI colour/escape codes (fastlane emits them, especially over a real
+        // pty) so the plain-text output view doesn't show literal escape-code boxes.
+        pty.OutputReceived += line => onOutput(AnsiEscape.Strip(line));
         return new RunHandle(pty);
     }
 }
