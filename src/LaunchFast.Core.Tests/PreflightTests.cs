@@ -92,4 +92,22 @@ public class PreflightTests
     {
         Assert.That(Preflight.CheckTool("faketool", "/nonexistent").Ok, Is.False);
     }
+
+    [Test]
+    public void ResolveOnPath_returns_absolute_path_or_null()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "lf-tool-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        var tool = Path.Combine(dir, "mytool");
+        File.WriteAllText(tool, "x");
+        try
+        {
+            Assert.That(Preflight.ResolveOnPath("mytool", dir), Is.EqualTo(tool));
+            Assert.That(Preflight.ResolveOnPath("mytool", "/nonexistent"), Is.Null);
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
 }

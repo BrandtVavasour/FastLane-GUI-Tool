@@ -51,7 +51,10 @@ public sealed class ProjectScaffoldService(
         var toolPath = resolveToolPath?.Invoke();
         if (!string.IsNullOrEmpty(toolPath)) baseEnv["PATH"] = toolPath;
 
-        var proc = pty.Start("bundle", ["install"], platformDir, baseEnv);
+        // Run bundle by absolute path (posix_spawn doesn't search PATH; a Finder-launched
+        // app has a minimal host PATH) — resolve against the env PATH we just set.
+        var bundle = Preflight.ResolveOnPath("bundle", baseEnv.GetValueOrDefault("PATH")) ?? "bundle";
+        var proc = pty.Start(bundle, ["install"], platformDir, baseEnv);
         proc.OutputReceived += s => Output?.Invoke(s);
         proc.Exited += code =>
         {

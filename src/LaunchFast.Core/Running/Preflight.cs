@@ -64,9 +64,18 @@ public static class Preflight
     /// PATH) to resolve tools exactly as they would in the user's terminal.
     /// </summary>
     public static PreflightResult CheckTool(string tool, string? path = null) =>
-        FindOnPath(tool, path) is not null
+        ResolveOnPath(tool, path) is not null
             ? new(true, $"{tool} found")
             : new(false, $"`{tool}` not found on PATH.");
+
+    /// <summary>
+    /// The absolute path of <paramref name="tool"/> on the given PATH (or the process
+    /// PATH when null), or null when not found. Used to run a tool by absolute path so
+    /// it works under <c>posix_spawn</c> (which doesn't search PATH) and is immune to a
+    /// minimal host PATH (e.g. a Finder-launched app).
+    /// </summary>
+    public static string? ResolveOnPath(string tool, string? path = null) =>
+        FindOnPath(tool, path);
 
     static string? FindOnPath(string tool, string? path)
     {

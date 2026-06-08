@@ -22,7 +22,9 @@ public class ProjectScaffoldServiceTests
 
         Assert.That(File.ReadAllText(Path.Combine(root, "ios", "fastlane", "Fastfile")), Is.EqualTo("FF"));
         Assert.That(secrets.Get(root, "MATCH_PASSWORD"), Is.EqualTo("hunter2"));
-        Assert.That(pty.Command, Is.EqualTo("bundle"));
+        // bundle is resolved to an absolute path against the run PATH (or left bare when
+        // not found), so assert on the executable name rather than the full path.
+        Assert.That(Path.GetFileName(pty.Command), Is.EqualTo("bundle"));
         Assert.That(pty.LastCwd, Is.EqualTo(Path.Combine(root, "ios")));
     }
 

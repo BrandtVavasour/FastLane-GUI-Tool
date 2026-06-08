@@ -55,6 +55,29 @@ public class LaneRunnerTests
     }
 
     [Test]
+    public void Resolves_bundle_to_absolute_path_when_run_PATH_contains_it()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "lf-bundle-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        var bundlePath = Path.Combine(dir, "bundle");
+        File.WriteAllText(bundlePath, "#!/bin/sh\n");
+        try
+        {
+            var factory = new FakeFactory();
+            var runner = new LaneRunner(factory);
+            runner.Run(new Lane("beta", "", Platform.Ios), "/proj/ios",
+                new Dictionary<string, string> { ["PATH"] = dir }, _ => { });
+
+            // posix_spawn doesn't search PATH, so the command must be the absolute path.
+            Assert.That(factory.Cmd, Is.EqualTo(bundlePath));
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    [Test]
     public void Stop_triggers_completed()
     {
         var factory = new FakeFactory();
