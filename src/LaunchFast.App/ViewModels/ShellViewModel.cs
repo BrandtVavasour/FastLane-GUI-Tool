@@ -4,6 +4,7 @@ using LaunchFast.App.ViewModels.Wizard;
 using LaunchFast.Core.Env;
 using LaunchFast.Core.Models;
 using LaunchFast.Core.Running;
+using LaunchFast.Core.Updates;
 
 namespace LaunchFast.App.ViewModels;
 
@@ -17,20 +18,35 @@ public partial class ShellViewModel : ObservableObject
 {
     readonly ISecretStore _secrets;
     readonly IPtyFactory _ptyFactory;
+    readonly Func<CancellationToken, Task<ReleaseInfo?>>? _checkForUpdate;
 
     public LauncherViewModel Launcher { get; }
 
     [ObservableProperty]
     private object _currentView;
 
-    public ShellViewModel(LauncherViewModel launcher, ISecretStore secrets, IPtyFactory ptyFactory)
+    public ShellViewModel(LauncherViewModel launcher, ISecretStore secrets, IPtyFactory ptyFactory,
+        Func<CancellationToken, Task<ReleaseInfo?>>? checkForUpdate = null)
     {
         Launcher = launcher;
         _secrets = secrets;
         _ptyFactory = ptyFactory;
+        _checkForUpdate = checkForUpdate;
         _currentView = launcher;
         launcher.OpenDetailRequested = OpenDetail;
         launcher.OpenSetupRequested = project => OpenSetupWizard(project, install: true);
+        StartUpdateCheck();
+    }
+
+    void StartUpdateCheck()
+    {
+        if (_checkForUpdate is null) return;
+        _ = Task.Run(async () =>
+        {
+            var rel = await _checkForUpdate(CancellationToken.None);
+            if (rel is null) return;
+            Avalonia.Threading.Dispatcher.UIThread.Post(() => Launcher.SetAvailableUpdate(rel));
+        });
     }
 
     public void OpenDetail(Project project)

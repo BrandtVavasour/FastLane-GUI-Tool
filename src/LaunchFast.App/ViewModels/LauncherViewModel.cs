@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using LaunchFast.Core.Icons;
 using LaunchFast.Core.Models;
 using LaunchFast.Core.Scanning;
+using LaunchFast.Core.Updates;
 
 namespace LaunchFast.App.ViewModels;
 
@@ -38,6 +39,27 @@ public partial class LauncherViewModel(ProjectStore store) : ObservableObject
         var withIcon = project with { IconPath = IconExtractor.Resolve(path) };
         Cards.Add(new ProjectCardViewModel(withIcon));
     }
+
+    [ObservableProperty]
+    private ReleaseInfo? _availableUpdate;
+
+    public bool HasUpdate => AvailableUpdate is not null;
+
+    public string UpdateBannerText =>
+        AvailableUpdate is { } r ? $"⬆ Update available: {r.TagName}" : string.Empty;
+
+    public string UpdateUrl => AvailableUpdate?.HtmlUrl ?? string.Empty;
+
+    partial void OnAvailableUpdateChanged(ReleaseInfo? value)
+    {
+        OnPropertyChanged(nameof(HasUpdate));
+        OnPropertyChanged(nameof(UpdateBannerText));
+        OnPropertyChanged(nameof(UpdateUrl));
+    }
+
+    /// <summary>Sets (or clears) the available-update banner. Called by the shell after
+    /// the background update check completes.</summary>
+    public void SetAvailableUpdate(ReleaseInfo? update) => AvailableUpdate = update;
 
     [RelayCommand]
     void OpenProject(string path)
