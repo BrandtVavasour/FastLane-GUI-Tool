@@ -53,7 +53,17 @@ Pre-built macOS apps are attached to each [GitHub Release](https://github.com/Br
 
 1. Download `LaunchFast-<version>-osx-arm64.zip` (Apple Silicon).
 2. Unzip and drag `LaunchFast.app` to `/Applications`.
-3. First launch: right-click the app → **Open** (once — the app is unsigned).
+3. First launch: right-click the app → **Open**, then confirm (once — the app is
+   ad-hoc signed but not notarized).
+
+The app is ad-hoc signed, not Apple-notarized, so macOS quarantines the download. If
+right-click → Open still reports the app is **"damaged" / can't be opened**, clear the
+quarantine flag and launch it:
+
+```sh
+xattr -dr com.apple.quarantine /Applications/LaunchFast.app
+open /Applications/LaunchFast.app
+```
 
 The app checks GitHub on launch and shows an **"⬆ Update available"** banner in the
 launcher toolbar when a newer release exists; click it to open the release page, then

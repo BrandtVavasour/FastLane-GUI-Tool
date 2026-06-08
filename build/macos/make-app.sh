@@ -32,5 +32,13 @@ test -f "$APP_DIR/Contents/MacOS/$EXE" \
   || { echo "error: apphost '$EXE' not found in publish output — did AssemblyName change?" >&2; exit 1; }
 chmod +x "$APP_DIR/Contents/MacOS/$EXE"
 
+# Ad-hoc sign the WHOLE bundle (--deep seals the apphost + all the self-contained .NET
+# dylibs into one valid signature). arm64 requires a signature to run, and a valid
+# bundle seal turns the Gatekeeper "damaged" error on a quarantined download into the
+# normal bypassable "unidentified developer" prompt. NOT Developer-ID/notarized — see
+# the readme for the right-click→Open / quarantine-removal step.
+codesign --force --deep --sign - "$APP_DIR"
+codesign --verify --strict "$APP_DIR"
+
 ditto -c -k --keepParent "$APP_DIR" "$ZIP"
 echo "Built $ZIP"
