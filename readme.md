@@ -47,6 +47,28 @@ dotnet test IntegrationTests/IntegrationTests.slnx
 
 The SDK version is pinned via `global.json`; packages use Central Package Management.
 
+## Install / update
+
+Pre-built macOS apps are attached to each [GitHub Release](https://github.com/BrandtVavasour/FastLane-GUI-Tool/releases).
+
+1. Download `LaunchFast-<version>-osx-arm64.zip` (Apple Silicon).
+2. Unzip and drag `LaunchFast.app` to `/Applications`.
+3. First launch: right-click the app → **Open** (once — the app is unsigned).
+
+The app checks GitHub on launch and shows an **"⬆ Update available"** banner in the
+launcher toolbar when a newer release exists; click it to open the release page, then
+repeat the steps above.
+
+**Cutting a release (maintainer):** push a semver tag — the `release` workflow builds
+and publishes the app:
+
+```sh
+git tag v0.2.0
+git push origin v0.2.0
+```
+
+You can build the same artifact locally with `build/macos/make-app.sh 0.2.0`.
+
 ## Roadmap
 
 1. **Launcher + detect + run existing lanes** — done.

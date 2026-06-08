@@ -104,6 +104,10 @@ interfaces wired in `Services/AppServices.cs`.
   lanes are excluded.
 - **Secret safety:** `.gitignore` blocks `*.p8`, `.env*`, `deploy-env.sh`,
   service-account JSON, etc. Never commit real credentials. Test fixtures use fake values.
+- **Releases:** `git push` of a `vX.Y.Z` tag runs `.github/workflows/release.yml`, which
+  builds an unsigned `osx-arm64` `LaunchFast.app` via `build/macos/make-app.sh` and
+  attaches the zip to a GitHub Release. The app checks `releases/latest` on launch
+  (`UpdateService` + `Core/Updates/GitHubReleases`) and shows an update banner.
 
 ## Build / run / test
 

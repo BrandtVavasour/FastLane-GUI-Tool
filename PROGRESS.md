@@ -92,6 +92,17 @@ What landed:
 - Spec: `docs/superpowers/specs/2026-06-06-fastlane-setup-wizard-design.md`
 - Plan: `docs/superpowers/plans/2026-06-06-fastlane-setup-wizard.md`
 
+## Sub-project #3 — Release pipeline + in-app update check
+
+- Tag-triggered (`vX.Y.Z`) `release` workflow builds an unsigned `osx-arm64` `.app`
+  (`build/macos/make-app.sh` + `Info.plist` + icon) and publishes the zip to GitHub
+  Releases.
+- In-app update check: `Core/Updates` (`GitHubReleases.IsNewer`/`ParseLatest`,
+  `AppVersion`) + `UpdateService` (fail-silent) → launcher "⬆ Update available" banner
+  linking to the release page.
+- Spec: `docs/superpowers/specs/2026-06-08-ci-release-pipeline-design.md`
+- Plan: `docs/superpowers/plans/2026-06-08-ci-release-pipeline.md`
+
 ## Cross-cutting (loop requirements)
 
 - ✅ `.gitignore` hardened against secrets (`*.p8`, `.env*`, `deploy-env.sh`, SA JSON…).
