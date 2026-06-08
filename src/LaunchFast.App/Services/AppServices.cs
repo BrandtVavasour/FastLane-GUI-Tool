@@ -1,3 +1,5 @@
+using System;
+using System.Net.Http;
 using LaunchFast.App.ViewModels;
 using LaunchFast.Core.Env;
 using LaunchFast.Core.Running;
@@ -23,6 +25,8 @@ public static class AppServices
         var launcher = CreateLauncher();
         var secrets = new KeychainSecretStore();
         var ptyFactory = new DefaultPtyFactory();
-        return new ShellViewModel(launcher, secrets, ptyFactory);
+        var http = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
+        var updates = new UpdateService(http);
+        return new ShellViewModel(launcher, secrets, ptyFactory, checkForUpdate: updates.CheckAsync);
     }
 }

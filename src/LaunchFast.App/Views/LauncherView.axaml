@@ -25,6 +25,11 @@
                         Click="OnOpenProject" Margin="0,0,10,0" />
                 <Button Grid.Column="1" Classes="btn" Content="Register workspace…"
                         Click="OnRegisterWorkspace" />
+                <Button Grid.Column="2" Classes="btn accent"
+                        HorizontalAlignment="Right" Margin="0,0,12,0"
+                        IsVisible="{Binding HasUpdate}"
+                        Content="{Binding UpdateBannerText}"
+                        Click="OnOpenUpdate" />
                 <TextBlock Grid.Column="3" Classes="count-pill"
                            Text="{Binding Cards.Count, StringFormat='{}{0} projects'}" />
             </Grid>

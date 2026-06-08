@@ -1,3 +1,4 @@
+using System;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.Platform.Storage;
@@ -28,6 +29,15 @@ public partial class LauncherView : UserControl
         if (path is null || DataContext is not LauncherViewModel vm) return;
         vm.Store.AddWorkspace(path);
         vm.Load();
+    }
+
+    private void OnOpenUpdate(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (DataContext is not LauncherViewModel vm) return;
+        if (string.IsNullOrEmpty(vm.UpdateUrl)) return;
+        var top = TopLevel.GetTopLevel(this);
+        if (top is null) return;
+        _ = top.Launcher.LaunchUriAsync(new Uri(vm.UpdateUrl));
     }
 
     async System.Threading.Tasks.Task<string?> PickFolderAsync(string title)
