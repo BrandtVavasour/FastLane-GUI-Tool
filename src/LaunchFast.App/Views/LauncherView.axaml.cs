@@ -34,10 +34,16 @@ public partial class LauncherView : UserControl
     private void OnOpenUpdate(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if (DataContext is not LauncherViewModel vm) return;
-        if (string.IsNullOrEmpty(vm.UpdateUrl)) return;
+        // Only open a well-formed https release URL (the value comes from GitHub's API
+        // html_url, but validate the scheme defensively before handing it to the OS).
+        if (!Uri.TryCreate(vm.UpdateUrl, UriKind.Absolute, out var uri) ||
+            uri.Scheme != Uri.UriSchemeHttps)
+        {
+            return;
+        }
         var top = TopLevel.GetTopLevel(this);
         if (top is null) return;
-        _ = top.Launcher.LaunchUriAsync(new Uri(vm.UpdateUrl));
+        _ = top.Launcher.LaunchUriAsync(uri);
     }
 
     async System.Threading.Tasks.Task<string?> PickFolderAsync(string title)

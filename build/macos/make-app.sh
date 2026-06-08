@@ -28,6 +28,8 @@ if [ -f "$ROOT/build/macos/$APP_NAME.icns" ]; then
   cp "$ROOT/build/macos/$APP_NAME.icns" "$APP_DIR/Contents/Resources/$APP_NAME.icns"
 fi
 
+test -f "$APP_DIR/Contents/MacOS/$EXE" \
+  || { echo "error: apphost '$EXE' not found in publish output — did AssemblyName change?" >&2; exit 1; }
 chmod +x "$APP_DIR/Contents/MacOS/$EXE"
 
 ditto -c -k --keepParent "$APP_DIR" "$ZIP"
