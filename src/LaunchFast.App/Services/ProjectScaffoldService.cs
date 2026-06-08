@@ -4,7 +4,9 @@ using LaunchFast.Core.Scaffolding;
 
 namespace LaunchFast.App.Services;
 
-public sealed class ProjectScaffoldService(ISecretStore secrets, IPtyFactory pty, string projectId)
+public sealed class ProjectScaffoldService(
+    ISecretStore secrets, IPtyFactory pty, string projectId,
+    Func<string?>? resolveToolPath = null)
 {
     public event Action<string>? Output;
 
@@ -43,6 +45,12 @@ public sealed class ProjectScaffoldService(ISecretStore secrets, IPtyFactory pty
             .Cast<System.Collections.DictionaryEntry>()
             .Where(e => e.Key is string && e.Value is string)
             .ToDictionary(e => (string)e.Key, e => (string)e.Value!, StringComparer.Ordinal);
+
+        // Override the inherited (possibly minimal GUI) PATH with the user's
+        // interactive-login-shell PATH so the right bundler is found.
+        var toolPath = resolveToolPath?.Invoke();
+        if (!string.IsNullOrEmpty(toolPath)) baseEnv["PATH"] = toolPath;
+
         var proc = pty.Start("bundle", ["install"], platformDir, baseEnv);
         proc.OutputReceived += s => Output?.Invoke(s);
         proc.Exited += code =>

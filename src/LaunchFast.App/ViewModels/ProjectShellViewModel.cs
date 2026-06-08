@@ -29,6 +29,7 @@ public partial class ProjectShellViewModel : ObservableObject
     readonly StoreIdentifiers _identifiers;
     readonly RunHistoryStore _history;
     readonly IAppStoreConnectClient? _asc;
+    readonly Func<string?>? _resolveToolPath;
 
     readonly Dictionary<ProjectSection, object> _contentCache = new();
 
@@ -39,7 +40,8 @@ public partial class ProjectShellViewModel : ObservableObject
         StoreStatusProvider storeStatus,
         StoreIdentifiers identifiers,
         RunHistoryStore? history = null,
-        IAppStoreConnectClient? asc = null)
+        IAppStoreConnectClient? asc = null,
+        Func<string?>? resolveToolPath = null)
     {
         _project = project;
         _secrets = secrets;
@@ -48,6 +50,7 @@ public partial class ProjectShellViewModel : ObservableObject
         _identifiers = identifiers;
         _history = history ?? new RunHistoryStore();
         _asc = asc;
+        _resolveToolPath = resolveToolPath;
 
         Sections = new ObservableCollection<ProjectSectionViewModel>
         {
@@ -143,7 +146,8 @@ public partial class ProjectShellViewModel : ObservableObject
         {
             if (_lanes is not null) return _lanes;
             _lanes = new ProjectDetailViewModel(
-                _project, _secrets, _ptyFactory, _storeStatus, _identifiers, _history);
+                _project, _secrets, _ptyFactory, _storeStatus, _identifiers, _history,
+                _resolveToolPath);
             _lanes.Load();
             return _lanes;
         }

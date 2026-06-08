@@ -73,4 +73,23 @@ public class PreflightTests
 
         Assert.That(Preflight.CheckGemfile(dir, null).Ok, Is.True);
     }
+
+    [Test]
+    public void CheckTool_finds_tool_on_explicit_path()
+    {
+        var dir = NewTempDir();
+        var tool = Path.Combine(dir, "faketool");
+        File.WriteAllText(tool, "#!/bin/sh\n");
+        if (!OperatingSystem.IsWindows())
+            File.SetUnixFileMode(tool,
+                UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+
+        Assert.That(Preflight.CheckTool("faketool", dir).Ok, Is.True);
+    }
+
+    [Test]
+    public void CheckTool_fails_when_tool_absent_on_explicit_path()
+    {
+        Assert.That(Preflight.CheckTool("faketool", "/nonexistent").Ok, Is.False);
+    }
 }

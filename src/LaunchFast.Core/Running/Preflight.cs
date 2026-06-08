@@ -57,14 +57,20 @@ public static class Preflight
         catch { return false; }
     }
 
-    public static PreflightResult CheckTool(string tool) =>
-        FindOnPath(tool) is not null
+    /// <summary>
+    /// Checks whether <paramref name="tool"/> resolves on a PATH. When
+    /// <paramref name="path"/> is null the process PATH is used (the historical
+    /// behaviour); pass an explicit PATH (e.g. the user's interactive-login-shell
+    /// PATH) to resolve tools exactly as they would in the user's terminal.
+    /// </summary>
+    public static PreflightResult CheckTool(string tool, string? path = null) =>
+        FindOnPath(tool, path) is not null
             ? new(true, $"{tool} found")
             : new(false, $"`{tool}` not found on PATH.");
 
-    static string? FindOnPath(string tool)
+    static string? FindOnPath(string tool, string? path)
     {
-        foreach (var dir in (Environment.GetEnvironmentVariable("PATH") ?? "").Split(':'))
+        foreach (var dir in (path ?? Environment.GetEnvironmentVariable("PATH") ?? "").Split(':'))
         {
             var candidate = Path.Combine(dir, tool);
             if (File.Exists(candidate)) return candidate;

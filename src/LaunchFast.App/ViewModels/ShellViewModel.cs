@@ -55,7 +55,8 @@ public partial class ShellViewModel : ObservableObject
         var (provider, ids) = StoreStatusFactory.Create(project, env);
         var asc = StoreStatusFactory.CreateAscClient(env);
 
-        var shell = new ProjectShellViewModel(project, _secrets, _ptyFactory, provider, ids, asc: asc)
+        var shell = new ProjectShellViewModel(project, _secrets, _ptyFactory, provider, ids,
+            asc: asc, resolveToolPath: () => ShellEnvironment.Path)
         {
             GoBack = GoHome,
             OpenWizard = install => OpenSetupWizard(project, install),
@@ -74,7 +75,8 @@ public partial class ShellViewModel : ObservableObject
     /// </summary>
     public void OpenSetupWizard(Project project, bool install)
     {
-        var svc = new ProjectScaffoldService(_secrets, _ptyFactory, project.Path);
+        var svc = new ProjectScaffoldService(_secrets, _ptyFactory, project.Path,
+            resolveToolPath: () => ShellEnvironment.Path);
         var wizard = install
             ? SetupWizardViewModel.ForInstall(project, apply: p => svc.ApplyAsync(p, project.Path))
             : SetupWizardViewModel.ForAddToExisting(project, apply: p => svc.ApplyAsync(p, project.Path));

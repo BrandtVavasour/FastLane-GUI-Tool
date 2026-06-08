@@ -25,6 +25,7 @@ public partial class ProjectDetailViewModel : ObservableObject
     readonly StoreStatusProvider _storeStatus;
     readonly StoreIdentifiers _identifiers;
     readonly RunHistoryStore _history;
+    readonly Func<string?>? _resolveToolPath;
 
     IReadOnlyList<string> _required = [];
     IReadOnlyDictionary<string, string> _fromFiles = new Dictionary<string, string>();
@@ -43,7 +44,8 @@ public partial class ProjectDetailViewModel : ObservableObject
         IPtyFactory ptyFactory,
         StoreStatusProvider? storeStatus = null,
         StoreIdentifiers? identifiers = null,
-        RunHistoryStore? history = null)
+        RunHistoryStore? history = null,
+        Func<string?>? resolveToolPath = null)
     {
         _project = project;
         _secrets = secrets;
@@ -52,6 +54,7 @@ public partial class ProjectDetailViewModel : ObservableObject
         _storeStatus = storeStatus ?? new StoreStatusProvider(null, null);
         _identifiers = identifiers ?? new StoreIdentifiers(null, null);
         _history = history ?? new RunHistoryStore(NoOpHistoryDir());
+        _resolveToolPath = resolveToolPath;
     }
 
     /// <summary>
@@ -229,8 +232,13 @@ public partial class ProjectDetailViewModel : ObservableObject
         // Preflight: fastlane runs via `bundle exec`, so we need both a Gemfile
         // in the platform dir and bundler on PATH. Surface a friendly message in
         // the output panel and bail out before touching running state.
+        // The user's interactive-login-shell PATH (e.g. Homebrew Ruby), so `bundle`
+        // resolves exactly as it does in their terminal — not the minimal GUI PATH a
+        // Finder-launched app inherits. Null under test → process PATH (unchanged).
+        var toolPath = _resolveToolPath?.Invoke();
+
         var gemfile = Preflight.CheckGemfile(lane.PlatformDir, _project.Path);
-        var bundler = Preflight.CheckTool("bundle");
+        var bundler = Preflight.CheckTool("bundle", toolPath);
         if (!gemfile.Ok || !bundler.Ok)
         {
             var failure = !gemfile.Ok ? gemfile : bundler;
@@ -238,7 +246,12 @@ public partial class ProjectDetailViewModel : ObservableObject
             return;
         }
 
-        var env = _resolver.BuildEnv(ProjectId, _required, _fromFiles);
+        // PATH is a base default so the spawned `bundle` resolves correctly; the
+        // project's env (incl. any project-supplied PATH) overlays and wins.
+        var env = new Dictionary<string, string>(StringComparer.Ordinal);
+        if (!string.IsNullOrEmpty(toolPath)) env["PATH"] = toolPath;
+        foreach (var (k, v) in _resolver.BuildEnv(ProjectId, _required, _fromFiles))
+            env[k] = v;
 
         RunningLaneLabel = $"fastlane {lane.Platform.ToString().ToLowerInvariant()} {lane.Name}";
 
