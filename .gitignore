@@ -25,3 +25,7 @@ secrets/
 
 # brainstorming visual companion mockups
 .superpowers/
+
+# macOS packaging output
+/artifacts/
+/LaunchFast-*-osx-arm64.zip
